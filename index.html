@@ -271,7 +271,7 @@
     .footer-brand { display: flex; align-items: center; gap: 0.6rem; }
     .footer-brand img { width: 30px; height: 30px; }
     .footer-brand span { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.12em; }
-    .footer-links { display: flex; gap: 1.8rem; justify-content: center; list-style: none; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 0.9rem 1.4rem; justify-content: center; list-style: none; }
     .footer-links a { font-family: 'Barlow Condensed', sans-serif; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
     .footer-links a:hover { color: var(--steel-light); }
     .footer-meta { text-align: right; }
@@ -343,7 +343,7 @@
     .join-contact a { color: var(--slate); text-decoration: none; font-weight: 500; }
     .join-contact a:hover { color: var(--steel-light); }
 
-    @media (max-width: 860px) {
+    @media (max-width: 920px) {
       #clubs { padding: 5rem 1.5rem; }
       .clubs-grid { grid-template-columns: 1fr; }
       .join-grid { grid-template-columns: 1fr; }
@@ -376,8 +376,24 @@
     .mk-forming { fill: var(--steel-light); }
     .mk-founding-ring { fill: rgba(91,129,189,0.22); }
     .mk-founding { fill: var(--slate); stroke: var(--navy-1); stroke-width: 0.5; }
-    @media (max-width: 860px) {
+    @media (max-width: 920px) {
       .network { grid-template-columns: 1fr; gap: 2rem; margin-top: 3.5rem; }
+    }
+
+    /* ── MOBILE HARDENING ───────────────────────── */
+    html { overflow-x: hidden; }
+    img, svg { max-width: 100%; }
+    @media (max-width: 540px) {
+      .hero-title { font-size: clamp(40px, 12vw, 56px); }
+      nav { padding: 0.9rem 1.1rem; }
+      .nav-cta { padding: 0.55rem 1rem; font-size: 0.72rem; letter-spacing: 0.1em; }
+      .brand-word { font-size: 1.15rem; letter-spacing: 0.1em; }
+      .tag-chip { flex-wrap: wrap; justify-content: flex-start; font-size: 0.72rem; letter-spacing: 0.12em; padding: 0.4rem 0.8rem; }
+      .clubs-head h2, .network-title { font-size: clamp(34px, 11vw, 52px); }
+      .join-head h2 { font-size: clamp(40px, 13vw, 64px); }
+      .network-lists { gap: 1.8rem; }
+      .footer-links { gap: 0.7rem 1.1rem; }
+      .footer-links a { font-size: 0.72rem; letter-spacing: 0.1em; }
     }
   </style>
 </head>
