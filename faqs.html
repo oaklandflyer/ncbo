@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQs — NCBO</title>
+  <meta name="description" content="Answers to common questions about NCBO — what it is, how to join, costs, starting a club, and competing.">
+  <link rel="icon" href="assets/ncbo-logo.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header id="site-nav"></header>
+
+  <section class="page-hero">
+    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="wrap">
+      <p class="eyebrow">FAQs</p>
+      <h1 class="h-display">Questions, answered.</h1>
+      <p>Everything you need to know about joining NCBO, starting a club, and how the whole thing works. Still stuck? Reach out.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="faq" id="faq"></div>
+      <div class="center reveal" style="margin-top:3rem">
+        <p class="lead">Didn't find your answer?</p>
+        <a class="btn btn-primary" href="contact.html" style="margin-top:1rem">Contact us</a>
+      </div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js"></script>
+  <script>
+    window.NCBO_PAGE = function (R) { R.faqs(document.querySelector('#faq')); };
+  </script>
+  <script src="assets/site.js"></script>
+</body>
+</html>

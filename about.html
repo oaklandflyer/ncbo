@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — NCBO</title>
+  <meta name="description" content="Who we are: NCBO is the governing body for collegiate bodybuilding. Meet the founding team and advisory board building a real collegiate sport.">
+  <link rel="icon" href="assets/ncbo-logo.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header id="site-nav"></header>
+
+  <section class="page-hero">
+    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="wrap">
+      <p class="eyebrow">Who We Are</p>
+      <h1 class="h-display">Building a real<br>collegiate sport.</h1>
+      <p>NCBO is the governing body for collegiate bodybuilding. We sit above independently-run student clubs and give them a season, competition, coaching, and a national network.</p>
+    </div>
+  </section>
+
+  <!-- MISSION -->
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <p class="eyebrow">Our mission</p>
+        <h2 class="h-display" style="margin-top:1rem">Clubs.<br>Competition.<br><span class="accent">Community.</span></h2>
+      </div>
+      <div class="reveal">
+        <p class="lead">We organize student athletes into school-affiliated clubs, run them across a season, and put schools head-to-head. At a traditional open show, "collegiate" is just an eligibility checkbox. NCBO adds the part that's been missing — a club at your school, a season to train for, and people who show up year-round.</p>
+        <p class="lead">Our job is the unglamorous infrastructure: the playbook, the coaching access, the legitimacy on campus, and the network that ties it all together. The clubs stay yours. We make them bigger than themselves.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE MODEL -->
+  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:2.4rem; max-width:640px">
+        <p class="eyebrow">The model</p>
+        <h2 class="h-display" style="margin-top:1rem">We sit above the clubs,<br>not in place of them.</h2>
+        <p class="lead" style="margin-top:1rem">Think of NCBO as the layer that an individual club can't build on its own — like a governing body sitting over independently-run programs.</p>
+      </div>
+      <div class="cards" id="pillars"></div>
+    </div>
+  </section>
+
+  <!-- LEADERSHIP -->
+  <section class="section">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:2.2rem">
+        <p class="eyebrow">Leadership</p>
+        <h2 class="h-display" style="margin-top:1rem">The founding team.</h2>
+      </div>
+      <div class="people" id="leadership"></div>
+    </div>
+  </section>
+
+  <!-- ADVISORY -->
+  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:2.2rem">
+        <p class="eyebrow">Advisory board</p>
+        <h2 class="h-display" style="margin-top:1rem">Pros in our corner.</h2>
+      </div>
+      <div class="people" id="advisory"></div>
+    </div>
+  </section>
+
+  <!-- JOIN THE TEAM -->
+  <section class="section center">
+    <div class="wrap">
+      <div class="reveal" style="max-width:620px; margin-inline:auto">
+        <h2 class="h-display">Want to help<br>build NCBO?</h2>
+        <p class="lead" style="margin-top:1rem">We're filling executive, club lead, and advisory roles as we grow. If you want in on the founding team, we'd like to hear from you.</p>
+        <div class="hero-actions" style="justify-content:center; margin-top:1.6rem">
+          <a class="btn btn-primary" id="board-btn" href="#">Get involved</a>
+          <a class="btn btn-ghost btn-arrow" href="contact.html">Contact us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js"></script>
+  <script>
+    window.NCBO_PAGE = function (R) {
+      const D = window.NCBO_DATA, $ = s => document.querySelector(s);
+      R.pillars($('#pillars'));
+      R.people($('#leadership'), D.leadership);
+      R.people($('#advisory'), D.advisory);
+      if (D.forms && D.forms.board) $('#board-btn').href = D.forms.board;
+    };
+  </script>
+  <script src="assets/site.js"></script>
+</body>
+</html>
