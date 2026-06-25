@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find a Club — NCBO</title>
+  <meta name="description" content="See which schools already have NCBO clubs. Find your campus, meet your club lead, and get involved — or start a club if yours isn't here yet.">
+  <link rel="icon" href="assets/ncbo-logo.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header id="site-nav"></header>
+
+  <section class="page-hero">
+    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="wrap">
+      <p class="eyebrow">Chapters</p>
+      <h1 class="h-display">Find a club.</h1>
+      <p>These campuses are building NCBO clubs right now. Find your school, meet your lead, and get in. Don't see your school? You can start it.</p>
+      <div class="hero-actions" style="margin-top:1.8rem">
+        <a class="btn btn-primary" href="start-a-club.html">Start a club</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP SLOT -->
+  <section class="section--tight">
+    <div class="wrap">
+      <div class="reveal" style="border:1px solid var(--line); border-radius:var(--r); overflow:hidden; aspect-ratio:21/9; position:relative">
+        <div class="photo-slot" data-empty="true">
+          <img alt="Club map" src="assets/img/club-map.jpg" onload="this.closest('.photo-slot').setAttribute('data-empty','false')">
+          <div class="photo-ph">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>
+            <span class="lab">Add a club map here</span>
+            <span class="path">assets/img/club-map.jpg — or embed a Google My Map iframe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLUBS GRID -->
+  <section class="section" style="padding-top:1rem">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:2rem">
+        <p class="eyebrow">Member clubs</p>
+        <h2 class="h-display" style="margin-top:1rem">Where we are.</h2>
+      </div>
+      <div class="clubs-grid" id="clubs"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
+    <div class="wrap center">
+      <div class="reveal" style="max-width:620px; margin-inline:auto">
+        <h2 class="h-display">Your school's<br>not here yet?</h2>
+        <p class="lead" style="margin-top:1rem">Most clubs start with one student who wanted it. We hand you the playbook, templates, and support to launch fast.</p>
+        <a class="btn btn-primary" href="start-a-club.html" style="margin-top:1.6rem">Start a club</a>
+      </div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js"></script>
+  <script>
+    window.NCBO_PAGE = function (R) {
+      R.clubs(document.querySelector('#clubs'));
+    };
+  </script>
+  <script src="assets/site.js"></script>
+</body>
+</html>
