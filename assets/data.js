@@ -17,9 +17,11 @@ window.NCBO_DATA = {
     full: "National Collegiate Bodybuilding Organization",
     tagline: "Clubs. Competition. Community.",
     established: "Est. 2024",
-    email: "hello@ncbo.org",            // <-- replace with your real contact email
-    instagram: "https://instagram.com/ncbo",   // <-- replace with real handle
-    instagramHandle: "@ncbo"
+    email: "thencbo@gmail.com",
+    instagram: "https://instagram.com/ncboofficial",
+    instagramHandle: "@ncboofficial",
+    tiktok: "https://tiktok.com/@ncboofficial",
+    tiktokHandle: "@ncboofficial"
   },
 
   /* --- Primary navigation ----------------------------------------------- *
@@ -152,13 +154,12 @@ window.NCBO_DATA = {
 
   /* --- Leadership (About page) ----------------------------------------- */
   leadership: [
-    { name: "Andrew Coutinho", role: "President & Founder",            img: "assets/img/team-andrew.jpg" },
-    { name: "Neha Kotha",      role: "VP of Operations",              img: "assets/img/team-neha.jpg" },
-    { name: "Luke Rudolph",    role: "Director of Finance",           img: "assets/img/team-luke.jpg" },
-    { name: "Vincent Panzica", role: "Director of Expansion",         img: "assets/img/team-vincent.jpg" },
-    { name: "Rachel Hare",     role: "Director of Club Relations",    img: "assets/img/team-rachel.jpg" },
-    { name: "Alex Swanson",    role: "Director of Operations & Events", img: "assets/img/team-alex.jpg" },
-    { name: "Olivia Durbin",   role: "Marketing Lead",                img: "assets/img/team-olivia.jpg" }
+    { name: "Andrew Coutinho", role: "CEO & Founder",                      img: "assets/img/team-andrew.jpg" },
+    { name: "Neha Kotha",      role: "VP of Operations · leads the exec team", img: "assets/img/team-neha.jpg" },
+    { name: "Luke Rudolph",    role: "Director of Finance",                img: "assets/img/team-luke.jpg" },
+    { name: "Vincent Panzica", role: "Director of Club Development",       img: "assets/img/team-vincent.jpg" },
+    { name: "Alex Swanson",    role: "Director of Events",                 img: "assets/img/team-alex.jpg" },
+    { name: "Olivia Durbin",   role: "Director of Marketing",             img: "assets/img/team-olivia.jpg" }
   ],
 
   /* --- Advisory board (About page) ------------------------------------- */
@@ -188,7 +189,7 @@ window.NCBO_DATA = {
   /* --- Forms (replace # with your real Google Form links) -------------- */
   forms: {
     becomeMember: "#",                                  // member signup
-    startClub:    "#",                                  // start a club application
+    startClub:    "https://forms.gle/p1raPYK4cnLqD4Rb7", // start a club application
     contact:      "#",                                  // general contact form (optional)
     board:        "https://forms.gle/pHHXN3kaTstF2Sw79" // board recruitment (from your records)
   }
