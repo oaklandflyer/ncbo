@@ -74,6 +74,7 @@
     const host = $('#site-footer');
     if (!host || !D.org) return;
     const ig = D.org.instagram || '#';
+    const tt = D.org.tiktok || '';
     host.innerHTML = `
       <footer class="site-footer">
         <div class="wrap">
@@ -100,6 +101,7 @@
                 <li><a href="faqs.html">FAQs</a></li>
                 <li><a href="contact.html">Contact</a></li>
                 <li><a href="${ig}" target="_blank" rel="noopener">Instagram ${D.org.instagramHandle || ''}</a></li>
+                ${tt ? `<li><a href="${tt}" target="_blank" rel="noopener">TikTok ${D.org.tiktokHandle || ''}</a></li>` : ''}
               </ul>
             </div>
           </div>
@@ -109,6 +111,9 @@
               <a href="${ig}" target="_blank" rel="noopener" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
               </a>
+              ${tt ? `<a href="${tt}" target="_blank" rel="noopener" aria-label="TikTok">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.4c-1.2.1-2.3-.2-3.4-.8v5.9c0 3.2-2.5 5.6-5.6 5.6S5.4 17.6 5.4 14.5c0-2.9 2.3-5.3 5.2-5.5v2.5c-1.5.2-2.6 1.4-2.6 3 0 1.7 1.3 3 3 3s3-1.3 3-3V3h2.5z"/></svg>
+              </a>` : ''}
               <a href="mailto:${D.org.email}" aria-label="Email">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
               </a>
