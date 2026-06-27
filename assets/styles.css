@@ -179,7 +179,15 @@ body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate
   mask-image: radial-gradient(circle at 50% 45%, #000 55%, transparent 74%);
 }
 .hero-inner { position: relative; z-index: 2; max-width: 860px; }
-.hero h1 { margin: 1.4rem 0 0; font-size: clamp(2.7rem, 7.5vw, 5.6rem); }
+.hero h1 {
+  margin: 1.4rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  font-size: clamp(2.7rem, 7.5vw, 5.6rem);
+}
 .tag-chip {
   display: inline-flex; gap: 0.5rem; align-items: center;
   font-family: var(--font-display); font-weight: 600; letter-spacing: 0.18em;
@@ -479,4 +487,66 @@ footer.site-footer { background: var(--navy-deep); border-top: 1px solid var(--l
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
   .marquee-track { animation: none; }
   .up { opacity: 1; transform: none; }
+}
+
+/* ── interactive US club map ─────────────────────────────────────────── */
+.map-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(91,134,196,0.10), transparent 60%),
+    var(--navy-deep);
+  padding: clamp(1rem, 3vw, 2.2rem);
+}
+.map-stage { width: 100%; }
+.us-map { width: 100%; height: auto; display: block; overflow: visible; }
+.us-states path {
+  fill: rgba(91,134,196,0.07);
+  stroke: rgba(91,134,196,0.35);
+  stroke-width: 0.8;
+  transition: fill .2s ease;
+}
+.us-map:hover .us-states path { fill: rgba(91,134,196,0.10); }
+
+.club-dot { cursor: pointer; }
+.club-dot .dot-halo {
+  fill: var(--steel);
+  opacity: 0.18;
+  transition: opacity .2s ease, r .2s ease;
+}
+.club-dot .dot-core {
+  stroke: #fff;
+  stroke-width: 1.4;
+  transition: r .2s ease, fill .2s ease;
+}
+.club-dot.active .dot-core { fill: #fff; }
+.club-dot.forming .dot-core { fill: rgba(255,255,255,0.18); }
+.club-dot:hover .dot-halo { opacity: 0.4; }
+.club-dot:hover .dot-core { fill: #fff; }
+@keyframes dotPulse { 0%,100% { opacity:0.18; } 50% { opacity:0.42; } }
+.club-dot.active .dot-halo { animation: dotPulse 2.6s ease-in-out infinite; }
+
+.map-foot {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  align-items: center; justify-content: space-between;
+  margin-top: 1.4rem;
+}
+.map-hint { color: var(--silver); margin: 0; font-size: 0.95rem; }
+.map-hint b { color: var(--white); }
+.map-legend { display: flex; gap: 1.2rem; }
+.map-legend .lg {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-family: var(--font-display); font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; font-size: 0.78rem; color: var(--silver);
+}
+.map-legend .lg i {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.4px solid #fff; display: inline-block;
+}
+.map-legend .lg.active i { background: #fff; }
+.map-legend .lg.forming i { background: rgba(255,255,255,0.18); }
+
+.club-card.club-flash {
+  box-shadow: 0 0 0 2px var(--steel), var(--shadow);
+  transition: box-shadow .3s ease;
 }

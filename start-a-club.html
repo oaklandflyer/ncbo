@@ -51,42 +51,14 @@
 
   <!-- APPLY -->
   <section class="section" id="apply">
-    <div class="wrap split">
-      <div class="reveal">
-        <p class="eyebrow">Apply</p>
+    <div class="wrap center">
+      <div class="reveal" style="max-width:620px; margin-inline:auto">
+        <p class="eyebrow center-line">Apply</p>
         <h2 class="h-display" style="margin-top:1rem">Tell us about<br>your campus.</h2>
-        <p class="lead" style="margin-top:1rem">Fill this out and our Expansion team will reach out with next steps. If you'd rather use our full application form, hit the button.</p>
-        <a class="btn btn-primary" id="apply-form-btn" href="#" style="margin-top:1.4rem">Open the application form</a>
-      </div>
-      <div class="reveal">
-        <form class="form" data-startclub>
-          <div class="field">
-            <label for="name">Your name</label>
-            <input id="name" name="name" type="text" required>
-          </div>
-          <div class="field">
-            <label for="email">School email</label>
-            <input id="email" name="email" type="email" required>
-          </div>
-          <div class="field">
-            <label for="school">School</label>
-            <input id="school" name="school" type="text" required>
-          </div>
-          <div class="field">
-            <label for="role">Are you a…</label>
-            <select id="role" name="role">
-              <option>Student wanting to start a club</option>
-              <option>Existing club looking to affiliate</option>
-              <option>Faculty / advisor</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="msg">Anything we should know?</label>
-            <textarea id="msg" name="msg" placeholder="Existing interest, gym access, timeline…"></textarea>
-          </div>
-          <button class="btn btn-primary" type="submit">Send application</button>
-          <p class="nl-msg" aria-live="polite"></p>
-        </form>
+        <p class="lead" style="margin-top:1rem">Fill out our application form and our Club Development team will reach out with next steps.</p>
+        <div class="hero-actions" style="justify-content:center; margin-top:1.6rem">
+          <a class="btn btn-primary" id="apply-form-btn" href="https://forms.gle/p1raPYK4cnLqD4Rb7" target="_blank" rel="noopener">Open the application form</a>
+        </div>
       </div>
     </div>
   </section>
@@ -109,13 +81,6 @@
         `<div class="step reveal"><div class="s-num">${s.step}</div><h3>${s.title}</h3><p>${s.text}</p></div>`).join('');
       const link = D.forms && D.forms.startClub;
       if (link && link !== '#') { $('#apply-cta').href = link; $('#apply-form-btn').href = link; }
-      // form handler
-      const form = $('form[data-startclub]');
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        form.querySelector('.nl-msg').textContent = "Thanks — we'll be in touch about bringing NCBO to your campus.";
-        form.reset();
-      });
     };
   </script>
   <script src="assets/site.js"></script>
