@@ -40,7 +40,7 @@ window.NCBO_DATA = {
   /* --- Marquee value words (the scrolling strip) ------------------------ */
   marquee: [
     "Clubs", "Competition", "Community", "Strength",
-    "Discipline", "Brotherhood & Sisterhood", "A Real Season", "Pathway"
+    "Discipline", "A Real Season", "Pathway"
   ],
 
   /* --- Home hero -------------------------------------------------------- */
