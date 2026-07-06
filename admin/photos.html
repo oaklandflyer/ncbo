@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>NCBO — Photo Manager (admin)</title>
+<script src="../assets/data.js"></script>
+<style>
+  :root{
+    --navy-deep:#060B1A; --navy:#0A1228; --navy-1:#0E1830; --navy-2:#14213F; --line:#1E2C4F;
+    --steel:#5B86C4; --steel-light:#8FB0DD; --steel-deep:#3C5E96;
+    --silver:#C9CDD1; --silver-dim:#8A94A8; --white:#F5F7FA;
+    --ok:#4CAF7D; --err:#E0645A; --warn:#D8A94C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--navy); color:var(--white);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height:1.45;
+  }
+  a{color:var(--steel-light);}
+  header.top{
+    padding:1.6rem clamp(1rem,4vw,2.5rem); border-bottom:1px solid var(--line);
+    background:var(--navy-1); position:sticky; top:0; z-index:5;
+  }
+  header.top h1{margin:0 0 .2rem; font-size:1.3rem;}
+  header.top p{margin:0; color:var(--silver-dim); font-size:.9rem;}
+  .wrap{max-width:960px; margin:0 auto; padding:1.6rem clamp(1rem,4vw,2.5rem) 4rem;}
+  .panel{
+    background:var(--navy-1); border:1px solid var(--line); border-radius:10px;
+    padding:1.2rem 1.4rem; margin-bottom:1.6rem;
+  }
+  .panel h2{margin:0 0 .9rem; font-size:1rem; text-transform:uppercase; letter-spacing:.06em; color:var(--steel-light);}
+  .row{display:flex; flex-wrap:wrap; gap:.8rem; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:.3rem; flex:1; min-width:160px;}
+  .field label{font-size:.78rem; color:var(--silver-dim);}
+  input[type=text], input[type=password]{
+    background:var(--navy); border:1px solid var(--line); color:var(--white);
+    padding:.55rem .7rem; border-radius:6px; font-size:.9rem; width:100%;
+  }
+  input:focus{outline:2px solid var(--steel); outline-offset:1px;}
+  button{
+    font-family:inherit; font-weight:600; font-size:.85rem; cursor:pointer;
+    border-radius:6px; border:1px solid var(--line); background:var(--navy-2); color:var(--white);
+    padding:.55rem 1rem; transition: background .15s, transform .15s;
+  }
+  button:hover:not(:disabled){background:var(--steel-deep);}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  button.primary{background:var(--steel); border-color:var(--steel);}
+  button.primary:hover:not(:disabled){background:var(--steel-light); color:#0A1228;}
+  button.small{padding:.35rem .65rem; font-size:.76rem;}
+  .note{font-size:.82rem; color:var(--silver-dim); margin-top:.7rem;}
+  .note.warn{color:var(--warn);}
+  .status-line{font-size:.82rem; margin-top:.6rem; min-height:1.2em;}
+  .status-line.ok{color:var(--ok);}
+  .status-line.err{color:var(--err);}
+  .status-line.busy{color:var(--steel-light);}
+
+  .slots{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem;}
+  .slot{
+    background:var(--navy-1); border:1px solid var(--line); border-radius:10px;
+    padding:.9rem; display:flex; flex-direction:column; gap:.55rem;
+  }
+  .slot .thumb{
+    width:100%; aspect-ratio:4/3; border-radius:6px; overflow:hidden;
+    background:var(--navy-2) center/cover no-repeat; position:relative;
+    display:flex; align-items:center; justify-content:center; border:1px dashed var(--line);
+  }
+  .slot .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .slot .thumb .ph{color:var(--silver-dim); font-size:.75rem; text-align:center; padding:.5rem;}
+  .slot .label{font-weight:700; font-size:.9rem;}
+  .slot .path{font-size:.72rem; color:var(--silver-dim); font-family:ui-monospace,Menlo,monospace; word-break:break-all;}
+  .slot input[type=file]{font-size:.78rem; color:var(--silver);}
+  .slot .btnrow{display:flex; gap:.5rem; align-items:center;}
+  .badge{
+    font-size:.7rem; padding:.15rem .5rem; border-radius:100px; border:1px solid var(--line);
+    color:var(--silver-dim); text-transform:uppercase; letter-spacing:.04em;
+  }
+  .badge.filled{color:var(--ok); border-color:var(--ok);}
+  .toolbar{display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; margin-bottom:1.2rem;}
+  .filter-input{max-width:280px;}
+  details.security summary{cursor:pointer; color:var(--steel-light); font-size:.85rem;}
+  details.security{margin-top:.8rem;}
+  code{background:var(--navy); padding:.1rem .35rem; border-radius:4px; font-size:.85em;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>NCBO Photo Manager</h1>
+  <p>Internal tool — not linked from the site. Fills in the placeholder photos listed in <code>assets/data.js</code> by committing straight to GitHub.</p>
+</header>
+
+<div class="wrap">
+
+  <section class="panel" id="connectPanel">
+    <h2>1 · Connect to GitHub</h2>
+    <div class="row">
+      <div class="field">
+        <label for="owner">Repo owner</label>
+        <input type="text" id="owner" value="oaklandflyer">
+      </div>
+      <div class="field">
+        <label for="repo">Repo name</label>
+        <input type="text" id="repo" value="ncbo">
+      </div>
+      <div class="field">
+        <label for="branch">Branch</label>
+        <input type="text" id="branch" value="main">
+      </div>
+      <div class="field" style="flex:2; min-width:260px;">
+        <label for="token">Personal access token</label>
+        <input type="password" id="token" placeholder="github_pat_...">
+      </div>
+    </div>
+    <div class="row" style="margin-top:.9rem;">
+      <label style="font-size:.82rem; color:var(--silver-dim); display:flex; gap:.4rem; align-items:center;">
+        <input type="checkbox" id="remember" style="width:auto;"> remember token on this device
+      </label>
+      <button id="testBtn">Test connection</button>
+      <button id="forgetBtn" class="small">Forget saved token</button>
+    </div>
+    <div id="connectStatus" class="status-line"></div>
+
+    <details class="security">
+      <summary>Token &amp; security notes</summary>
+      <div class="note">
+        Create a <b>fine-grained</b> personal access token at
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>,
+        scoped only to the <code>ncbo</code> repository, with <b>Contents: Read and write</b> permission and nothing else.
+        The token is only ever sent directly from your browser to <code>api.github.com</code> — this page has no
+        server of its own and nobody else sees it. If you check "remember token", it's saved in this browser's
+        local storage only; use "Forget saved token" when you're done on a shared computer. Each upload here is
+        a real commit to the <code id="branchLabel">main</code> branch, which GitHub Pages deploys automatically.
+      </div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <h2>2 · Fill in photos</h2>
+    <div class="toolbar">
+      <input type="text" id="filter" class="filter-input" placeholder="Filter by name or path…">
+      <span class="badge" id="countBadge">0 slots</span>
+      <span style="flex:1"></span>
+      <label style="font-size:.82rem; color:var(--silver-dim); display:flex; gap:.4rem; align-items:center;">
+        <input type="checkbox" id="compress" checked style="width:auto;"> resize &amp; compress before upload
+      </label>
+    </div>
+    <div class="slots" id="slots"></div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const D = window.NCBO_DATA || {};
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  const ownerEl = $('#owner'), repoEl = $('#repo'), branchEl = $('#branch'), tokenEl = $('#token');
+  const rememberEl = $('#remember'), connectStatus = $('#connectStatus');
+  const LS_KEY = 'ncbo_admin_token_v1';
+
+  // restore remembered token
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) { tokenEl.value = saved; rememberEl.checked = true; }
+  } catch (e) {}
+
+  rememberEl.addEventListener('change', () => {
+    if (!rememberEl.checked) { try { localStorage.removeItem(LS_KEY); } catch(e){} }
+  });
+  tokenEl.addEventListener('input', () => {
+    if (rememberEl.checked) { try { localStorage.setItem(LS_KEY, tokenEl.value); } catch(e){} }
+  });
+  $('#forgetBtn').addEventListener('click', () => {
+    tokenEl.value = ''; rememberEl.checked = false;
+    try { localStorage.removeItem(LS_KEY); } catch(e){}
+    setStatus(connectStatus, 'Saved token cleared.', 'ok');
+  });
+  branchEl.addEventListener('input', () => { $('#branchLabel').textContent = branchEl.value || 'main'; });
+
+  function setStatus(el, msg, kind){
+    el.textContent = msg || '';
+    el.className = 'status-line' + (kind ? ' ' + kind : '');
+  }
+
+  function ghHeaders(){
+    return {
+      'Authorization': 'Bearer ' + tokenEl.value.trim(),
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+  }
+  function apiBase(){
+    return `https://api.github.com/repos/${ownerEl.value.trim()}/${repoEl.value.trim()}`;
+  }
+  function rawUrl(path){
+    return `https://raw.githubusercontent.com/${ownerEl.value.trim()}/${repoEl.value.trim()}/${branchEl.value.trim() || 'main'}/${path}`;
+  }
+
+  $('#testBtn').addEventListener('click', async () => {
+    setStatus(connectStatus, 'Checking…', 'busy');
+    if (!tokenEl.value.trim()) { setStatus(connectStatus, 'Paste a token first.', 'err'); return; }
+    try {
+      const res = await fetch(apiBase(), { headers: ghHeaders() });
+      if (res.status === 401) { setStatus(connectStatus, 'Token rejected (401). Check it was copied in full and hasn\'t expired.', 'err'); return; }
+      if (res.status === 404) { setStatus(connectStatus, 'Repo not found or token lacks access to it (404).', 'err'); return; }
+      if (!res.ok) { setStatus(connectStatus, `GitHub returned ${res.status}.`, 'err'); return; }
+      const data = await res.json();
+      setStatus(connectStatus, `Connected to ${data.full_name}${data.permissions && data.permissions.push ? ' — push access confirmed.' : ' — warning: this token may not have write access.'}`, 'ok');
+    } catch (e) {
+      setStatus(connectStatus, 'Network error reaching GitHub: ' + e.message, 'err');
+    }
+  });
+
+  /* ---------- build slot list from the same data the live site renders ---------- */
+  function collectSlots(){
+    const out = [];
+    (D.tiles || []).forEach(t => out.push({ path: t.img, label: t.title, group: 'Home tile' }));
+    (D.voices || []).forEach((v,i) => out.push({ path: v.img, label: v.name + ' — ' + v.club, group: 'Member voice' }));
+    (D.clubs || []).forEach(c => out.push({ path: c.img, label: c.school, group: 'Club card' }));
+    (D.leadership || []).forEach(p => out.push({ path: p.img, label: p.name, group: 'Leadership' }));
+    (D.advisory || []).forEach(p => out.push({ path: p.img, label: p.name, group: 'Advisory board' }));
+    (D.news || []).forEach(n => out.push({ path: n.img, label: n.title, group: 'News' }));
+    return out.filter(s => s.path);
+  }
+
+  const slots = collectSlots();
+  $('#countBadge').textContent = slots.length + ' slots';
+
+  function extToMime(path){
+    const ext = (path.split('.').pop() || '').toLowerCase();
+    if (ext === 'png') return 'image/png';
+    if (ext === 'webp') return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  function compressImage(file, mime){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 1600;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width >= height) { height = Math.round(height * MAX / width); width = MAX; }
+            else { width = Math.round(width * MAX / height); height = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL(mime, 0.82));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function readRaw(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = (e) => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function getExistingSha(path){
+    const res = await fetch(`${apiBase()}/contents/${encodeURIComponent(path).replace(/%2F/g,'/')}?ref=${encodeURIComponent(branchEl.value.trim() || 'main')}`, { headers: ghHeaders() });
+    if (res.status === 200) { const j = await res.json(); return j.sha; }
+    return null;
+  }
+
+  async function uploadSlot(slot, file, statusEl, thumbImg, badgeEl){
+    if (!tokenEl.value.trim()) { setStatus(statusEl, 'Connect with a token first (above).', 'err'); return; }
+    setStatus(statusEl, 'Preparing…', 'busy');
+    try {
+      const doCompress = $('#compress').checked;
+      const mime = extToMime(slot.path);
+      const dataUrl = doCompress ? await compressImage(file, mime) : await readRaw(file);
+      const base64 = dataUrl.split(',')[1];
+
+      setStatus(statusEl, 'Checking for existing file…', 'busy');
+      const sha = await getExistingSha(slot.path);
+
+      setStatus(statusEl, 'Uploading…', 'busy');
+      const body = {
+        message: (sha ? 'Update photo: ' : 'Add photo: ') + slot.path,
+        content: base64,
+        branch: branchEl.value.trim() || 'main'
+      };
+      if (sha) body.sha = sha;
+
+      const res = await fetch(`${apiBase()}/contents/${encodeURIComponent(slot.path).replace(/%2F/g,'/')}`, {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders()),
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setStatus(statusEl, `Failed (${res.status}): ${j.message || 'unknown error'}`, 'err');
+        return;
+      }
+      setStatus(statusEl, 'Saved ✓ live site will update on next Pages deploy.', 'ok');
+      thumbImg.src = dataUrl;
+      badgeEl.textContent = 'Filled'; badgeEl.classList.add('filled');
+    } catch (e) {
+      setStatus(statusEl, 'Error: ' + e.message, 'err');
+    }
+  }
+
+  const slotsHost = $('#slots');
+  slotsHost.innerHTML = slots.map((s, i) => `
+    <div class="slot" data-idx="${i}" data-search="${(s.label + ' ' + s.path + ' ' + s.group).toLowerCase()}">
+      <div class="thumb" id="thumb-${i}">
+        <img id="img-${i}" alt="" style="display:none"
+             onload="this.style.display='block'; this.parentElement.querySelector('.ph').style.display='none';"
+             onerror="this.style.display='none'; this.parentElement.querySelector('.ph').style.display='block';">
+        <div class="ph">No photo yet<br>${s.path}</div>
+      </div>
+      <div class="label">${s.label}</div>
+      <div class="path">${s.group} · ${s.path}</div>
+      <input type="file" accept="image/*" id="file-${i}">
+      <div class="btnrow">
+        <button class="primary small" id="upload-${i}">Upload</button>
+        <span class="badge" id="badge-${i}">Empty</span>
+      </div>
+      <div class="status-line" id="status-${i}"></div>
+    </div>
+  `).join('');
+
+  slots.forEach((s, i) => {
+    const imgEl = $('#img-' + i);
+    imgEl.src = rawUrl(s.path);
+    const fileEl = $('#file-' + i);
+    const statusEl = $('#status-' + i);
+    const badgeEl = $('#badge-' + i);
+    fileEl.addEventListener('change', () => {
+      const f = fileEl.files[0];
+      if (f) setStatus(statusEl, f.name + ' ready to upload.', '');
+    });
+    $('#upload-' + i).addEventListener('click', () => {
+      const f = fileEl.files[0];
+      if (!f) { setStatus(statusEl, 'Choose a file first.', 'err'); return; }
+      uploadSlot(s, f, statusEl, imgEl, badgeEl);
+    });
+  });
+
+  $('#filter').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    $$('.slot', slotsHost).forEach(el => {
+      el.style.display = !q || el.dataset.search.includes(q) ? '' : 'none';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
