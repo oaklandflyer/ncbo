@@ -99,8 +99,9 @@ select p.display_name, p.role, s.name as school
  where p.id = '55555555-5555-5555-5555-555555555555';
 
 \echo ''
-\echo '=== 15. a non-.edu address NOT on the allowlist is still rejected ==='
-insert into auth.users (email) values ('randomer@gmail.com');
+\echo '=== 15. a non-.edu address NOT on the allowlist signs up PENDING ==='
+insert into auth.users (id, email) values ('99999999-9999-9999-9999-999999999999', 'randomer@gmail.com');
+select display_name, status from profiles where id = '99999999-9999-9999-9999-999999999999';
 
 \echo ''
 \echo '=== 16. a member CANNOT read or write the allowlist ==='
@@ -108,4 +109,48 @@ set role authenticated;
 set test.uid = '22222222-2222-2222-2222-222222222222';
 select count(*) as allowlist_rows_visible_to_member from allowed_emails;
 insert into allowed_emails (email) values ('me@gmail.com');
+reset role;
+
+\echo ''
+\echo '=== 17. .edu at a KNOWN school is approved automatically ==='
+reset role;
+insert into auth.users (id, email) values ('66666666-6666-6666-6666-666666666666', 'newkid@psu.edu');
+select display_name, status, (school_id is not null) as school_linked
+  from profiles where id = '66666666-6666-6666-6666-666666666666';
+
+\echo ''
+\echo '=== 18. .edu at an UNKNOWN school lands in the queue ==='
+insert into auth.users (id, email) values ('77777777-7777-7777-7777-777777777777', 'student@ohio-state.edu');
+select display_name, status, (school_id is not null) as school_linked
+  from profiles where id = '77777777-7777-7777-7777-777777777777';
+
+\echo ''
+\echo '=== 19. a pre-vetted staff address is approved on the spot ==='
+insert into allowed_emails (email, note) values ('pro@ocbpro.com', 'Advisory');
+insert into auth.users (id, email) values ('88888888-8888-8888-8888-888888888888', 'pro@ocbpro.com');
+select display_name, status from profiles where id = '88888888-8888-8888-8888-888888888888';
+
+\echo ''
+\echo '=== 20. a pending user CANNOT approve themselves ==='
+set role authenticated;
+set test.uid = '77777777-7777-7777-7777-777777777777';
+update profiles set status = 'approved' where id = '77777777-7777-7777-7777-777777777777';
+
+\echo ''
+\echo '=== 21. a pending user CANNOT read the board, but CAN see their own row ==='
+select count(*) as channels_visible_to_pending from channels;
+select count(*) as posts_visible_to_pending from post_feed;
+select status as own_status_visible from profiles where id = '77777777-7777-7777-7777-777777777777';
+
+\echo ''
+\echo '=== 22. a pending user CANNOT post ==='
+insert into questions (author_id, body) values ('77777777-7777-7777-7777-777777777777', 'let me in');
+
+\echo ''
+\echo '=== 23. an admin CAN approve them, and then the board opens up ==='
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set status = 'approved', approved_at = now(), approved_by = auth.uid()
+  where id = '77777777-7777-7777-7777-777777777777';
+set test.uid = '77777777-7777-7777-7777-777777777777';
+select count(*) as channels_visible_after_approval from channels;
 reset role;

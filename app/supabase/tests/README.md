@@ -18,9 +18,9 @@ Needs Postgres 16 locally.
 ./run.sh
 ```
 
-Expected: tests 1, 3, 4, 6, 8, 10 fail loudly (that IS the pass — those are
-the operations that must be refused), and 2, 5, 7, 9, 11, 12, 13 succeed.
-Read the output; there's no assertion harness.
+Expected: tests 1, 3, 4, 6, 8, 10, 16, 20, 22 fail loudly (that IS the pass —
+those are the operations that must be refused); the rest succeed. Read the
+output; there's no assertion harness.
 
 ## What's covered
 
@@ -39,3 +39,13 @@ Read the output; there's no assertion harness.
 | 11 | An advisor can answer |
 | 12 | An admin can change a role |
 | 13 | Members cannot read raw `posts` — only the anonymised view |
+| 14 | An allowlisted non-.edu address can sign up, with no school, as `member` |
+| 15 | A non-.edu address not on the list signs up **pending** |
+| 16 | A member can neither read nor write the allowlist |
+| 17 | A .edu at a known school is approved automatically |
+| 18 | A .edu at an unknown school lands in the queue |
+| 19 | A pre-vetted staff address is approved on the spot |
+| 20 | A pending user cannot approve themselves |
+| 21 | A pending user cannot read the board, but can see their own row |
+| 22 | A pending user cannot post |
+| 23 | An admin can approve, and the board then opens up |
