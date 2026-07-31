@@ -15,7 +15,7 @@ chmod 755 "$DIR"
 sleep 2
 
 psql -h "$DIR" -p 5433 -U "$(whoami)" -q -v ON_ERROR_STOP=1 -f "$HERE/00_supabase_shim.sql"
-for m in "$HERE"/../migrations/*.sql; do
+for m in $(ls "$HERE"/../migrations/*.sql | sort); do
   echo "applying $(basename "$m")"
   psql -h "$DIR" -p 5433 -U "$(whoami)" -q -v ON_ERROR_STOP=1 -f "$m"
 done
