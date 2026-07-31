@@ -91,7 +91,7 @@
                 <li><a href="join.html">Become a Member</a></li>
                 <li><a href="clubs.html">Find a Club</a></li>
                 <li><a href="start-a-club.html">Start a Club</a></li>
-                <li><a href="news.html">News</a></li>
+                <li><a href="members.html">Member Hub</a></li>
               </ul>
             </div>
             <div class="footer-col">
@@ -192,18 +192,6 @@
               <span class="badge ${c.status.toLowerCase()}">${c.status}</span>
             </div>
           </div>
-        </div>`).join('');
-    },
-    tiers(el) {
-      if (!el) return;
-      el.innerHTML = D.tiers.map(t => `
-        <div class="tier ${t.featured ? 'featured' : ''} reveal">
-          <div class="tier-name">${t.name}</div>
-          <div class="tier-tag">${t.tagline}</div>
-          <div class="tier-price">${t.price}</div>
-          <div class="tier-note">${t.note}</div>
-          <ul>${t.features.map(f => `<li>${f}</li>`).join('')}</ul>
-          <a class="btn btn-primary" href="${(D.forms && D.forms.becomeMember) || '#'}">Join ${t.name}</a>
         </div>`).join('');
     },
     steps(el) {
