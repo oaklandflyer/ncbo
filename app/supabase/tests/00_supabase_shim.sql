@@ -10,3 +10,6 @@ create table auth.users (
 -- Real auth.uid() reads the JWT sub claim; here it reads a GUC we set per test.
 create or replace function auth.uid() returns uuid
 language sql stable as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
+
+grant usage on schema auth to anon, authenticated;
+grant execute on function auth.uid() to anon, authenticated;
