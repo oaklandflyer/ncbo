@@ -1,0 +1,9 @@
+# Supabase CLI config. `project_id` is the ref this repo links to — the one in
+# your dashboard URL. It is not a secret; it's in every API request the app
+# makes. Credentials (access token, database password) never live here: the
+# CLI keeps the token in your keychain and prompts for the password.
+project_id = "bjfxgwjnkfjrgrpqubab"
+
+[db]
+# Match the remote so a local `supabase start` behaves the same.
+major_version = 17
