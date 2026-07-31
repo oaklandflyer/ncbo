@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Hub — NCBO</title>
+  <meta name="description" content="The NCBO member hub — season calendar, competition and prep resources, club channels, and the member Q&A board. Access code required.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://thencbo.org/members.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
+  <meta property="og:title" content="Member Hub — NCBO">
+  <meta property="og:description" content="Members-only season hub for NCBO athletes and club leads. Access code required.">
+  <meta property="og:url" content="https://thencbo.org/members.html">
+  <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
+  <meta name="theme-color" content="#0A1228">
+  <link rel="icon" href="assets/ncbo-logo.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/channels-qa.css">
+</head>
+<body>
+  <header id="site-nav"></header>
+
+  <!-- ACCESS GATE -->
+  <main class="gate" id="gate"></main>
+
+  <!-- MEMBER APP (revealed once the code checks out) -->
+  <div class="app" id="app" hidden>
+    <header class="app-bar" id="app-bar"></header>
+
+    <nav class="app-tabs" aria-label="Member sections">
+      <div class="app-tabs-inner" role="tablist">
+        <button class="app-tab" role="tab" type="button" data-panel="dashboard" aria-selected="true"  aria-controls="panel-dashboard">Dashboard</button>
+        <button class="app-tab" role="tab" type="button" data-panel="channels"  aria-selected="false" aria-controls="panel-channels">Channels &amp; Q&amp;A</button>
+        <button class="app-tab" role="tab" type="button" data-panel="resources" aria-selected="false" aria-controls="panel-resources">Resources</button>
+        <button class="app-tab" role="tab" type="button" data-panel="directory" aria-selected="false" aria-controls="panel-directory">Directory</button>
+      </div>
+    </nav>
+
+    <section class="app-panel" id="panel-dashboard" role="tabpanel" aria-label="Dashboard"></section>
+
+    <section class="app-panel" id="panel-channels" role="tabpanel" aria-label="Channels and Q&amp;A" hidden>
+      <div class="wrap">
+        <div class="panel-head">
+          <p class="eyebrow">The board</p>
+          <h2>Channels &amp; Q&amp;A.</h2>
+          <p>Pick a channel, read what's already been answered, and add what hasn't.</p>
+        </div>
+        <div id="qa-root"></div>
+      </div>
+    </section>
+
+    <section class="app-panel" id="panel-resources" role="tabpanel" aria-label="Resources" hidden></section>
+    <section class="app-panel" id="panel-directory" role="tabpanel" aria-label="Club directory" hidden></section>
+  </div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/member-data.js"></script>
+  <script src="assets/usmap.js"></script>
+  <script src="assets/channels-qa.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/site.js"></script>
+</body>
+</html>
