@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>NCBO — Photo Manager (admin)</title>
+<title>NCBO — Admin (content & photos)</title>
 <script src="../assets/data.js"></script>
 <style>
   :root{
@@ -21,98 +21,139 @@
   }
   a{color:var(--steel-light);}
   header.top{
-    padding:1.6rem clamp(1rem,4vw,2.5rem); border-bottom:1px solid var(--line);
-    background:var(--navy-1); position:sticky; top:0; z-index:5;
+    padding:1.3rem clamp(1rem,4vw,2.5rem) 0; border-bottom:1px solid var(--line);
+    background:var(--navy-1); position:sticky; top:0; z-index:20;
   }
-  header.top h1{margin:0 0 .2rem; font-size:1.3rem;}
-  header.top p{margin:0; color:var(--silver-dim); font-size:.9rem;}
-  .wrap{max-width:960px; margin:0 auto; padding:1.6rem clamp(1rem,4vw,2.5rem) 4rem;}
+  header.top h1{margin:0 0 .2rem; font-size:1.25rem;}
+  header.top p{margin:0 0 1rem; color:var(--silver-dim); font-size:.88rem;}
+  .tabs{display:flex; flex-wrap:wrap; gap:.2rem;}
+  .tab{
+    padding:.6rem .9rem; border:none; border-bottom:2px solid transparent; background:none;
+    color:var(--silver-dim); font-weight:600; font-size:.85rem; cursor:pointer; border-radius:0;
+  }
+  .tab:hover{color:var(--white);}
+  .tab.active{color:var(--white); border-bottom-color:var(--steel);}
+  .wrap{max-width:1000px; margin:0 auto; padding:1.4rem clamp(1rem,4vw,2.5rem) 6rem;}
   .panel{
     background:var(--navy-1); border:1px solid var(--line); border-radius:10px;
-    padding:1.2rem 1.4rem; margin-bottom:1.6rem;
+    padding:1.2rem 1.4rem; margin-bottom:1.4rem;
   }
   .panel h2{margin:0 0 .9rem; font-size:1rem; text-transform:uppercase; letter-spacing:.06em; color:var(--steel-light);}
+  .panel h3{margin:1.2rem 0 .6rem; font-size:.9rem; color:var(--white);}
   .row{display:flex; flex-wrap:wrap; gap:.8rem; align-items:flex-end;}
   .field{display:flex; flex-direction:column; gap:.3rem; flex:1; min-width:160px;}
-  .field label{font-size:.78rem; color:var(--silver-dim);}
-  input[type=text], input[type=password]{
+  .field.full{flex-basis:100%;}
+  .field label{font-size:.75rem; color:var(--silver-dim); text-transform:uppercase; letter-spacing:.04em;}
+  input[type=text], input[type=password], textarea, select{
     background:var(--navy); border:1px solid var(--line); color:var(--white);
-    padding:.55rem .7rem; border-radius:6px; font-size:.9rem; width:100%;
+    padding:.5rem .65rem; border-radius:6px; font-size:.9rem; width:100%; font-family:inherit;
   }
-  input:focus{outline:2px solid var(--steel); outline-offset:1px;}
+  textarea{resize:vertical; min-height:3.2em; line-height:1.4;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--steel); outline-offset:1px;}
   button{
     font-family:inherit; font-weight:600; font-size:.85rem; cursor:pointer;
     border-radius:6px; border:1px solid var(--line); background:var(--navy-2); color:var(--white);
-    padding:.55rem 1rem; transition: background .15s, transform .15s;
+    padding:.5rem 1rem; transition: background .15s;
   }
   button:hover:not(:disabled){background:var(--steel-deep);}
   button:disabled{opacity:.45; cursor:not-allowed;}
   button.primary{background:var(--steel); border-color:var(--steel);}
   button.primary:hover:not(:disabled){background:var(--steel-light); color:#0A1228;}
-  button.small{padding:.35rem .65rem; font-size:.76rem;}
+  button.small{padding:.32rem .6rem; font-size:.76rem;}
+  button.danger{border-color:var(--err); color:var(--err);}
+  button.danger:hover:not(:disabled){background:var(--err); color:#fff;}
   .note{font-size:.82rem; color:var(--silver-dim); margin-top:.7rem;}
-  .note.warn{color:var(--warn);}
   .status-line{font-size:.82rem; margin-top:.6rem; min-height:1.2em;}
   .status-line.ok{color:var(--ok);}
   .status-line.err{color:var(--err);}
   .status-line.busy{color:var(--steel-light);}
 
-  .slots{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem;}
-  .slot{
-    background:var(--navy-1); border:1px solid var(--line); border-radius:10px;
-    padding:.9rem; display:flex; flex-direction:column; gap:.55rem;
+  .card{
+    background:var(--navy); border:1px solid var(--line); border-radius:10px;
+    padding:1rem; margin-bottom:1rem; position:relative;
   }
-  .slot .thumb{
-    width:100%; aspect-ratio:4/3; border-radius:6px; overflow:hidden;
-    background:var(--navy-2) center/cover no-repeat; position:relative;
-    display:flex; align-items:center; justify-content:center; border:1px dashed var(--line);
+  .card-head{display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-bottom:.7rem;}
+  .card-head .t{font-weight:700; font-size:.9rem;}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:.8rem;}
+  @media(max-width:620px){ .grid-2{grid-template-columns:1fr;} }
+
+  .photo-block{display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; margin-top:.4rem;}
+  .thumb{
+    width:150px; aspect-ratio:4/3; border-radius:6px; overflow:hidden; flex:none;
+    background:var(--navy-2); border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center;
   }
-  .slot .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-  .slot .thumb .ph{color:var(--silver-dim); font-size:.75rem; text-align:center; padding:.5rem;}
-  .slot .label{font-weight:700; font-size:.9rem;}
-  .slot .path{font-size:.72rem; color:var(--silver-dim); font-family:ui-monospace,Menlo,monospace; word-break:break-all;}
-  .slot input[type=file]{font-size:.78rem; color:var(--silver);}
-  .slot .btnrow{display:flex; gap:.5rem; align-items:center;}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:none;}
+  .thumb .ph{color:var(--silver-dim); font-size:.7rem; text-align:center; padding:.4rem;}
+  .photo-ctrl{flex:1; min-width:200px; display:flex; flex-direction:column; gap:.45rem;}
+  .photo-ctrl .path{font-size:.72rem; color:var(--silver-dim); font-family:ui-monospace,Menlo,monospace; word-break:break-all;}
+  input[type=file]{font-size:.78rem; color:var(--silver);}
   .badge{
-    font-size:.7rem; padding:.15rem .5rem; border-radius:100px; border:1px solid var(--line);
+    font-size:.68rem; padding:.12rem .5rem; border-radius:100px; border:1px solid var(--line);
     color:var(--silver-dim); text-transform:uppercase; letter-spacing:.04em;
   }
   .badge.filled{color:var(--ok); border-color:var(--ok);}
-  .toolbar{display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; margin-bottom:1.2rem;}
-  .filter-input{max-width:280px;}
   details.security summary{cursor:pointer; color:var(--steel-light); font-size:.85rem;}
   details.security{margin-top:.8rem;}
   code{background:var(--navy); padding:.1rem .35rem; border-radius:4px; font-size:.85em;}
+
+  .savebar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:var(--navy-1); border-top:1px solid var(--line);
+    padding:.8rem clamp(1rem,4vw,2.5rem); display:flex; align-items:center; gap:1rem;
+  }
+  .savebar .msg{flex:1; font-size:.82rem; color:var(--silver-dim);}
+  .savebar .msg.ok{color:var(--ok);} .savebar .msg.err{color:var(--err);} .savebar .msg.busy{color:var(--steel-light);}
+  .dirty-dot{width:.55rem; height:.55rem; border-radius:50%; background:var(--warn); display:none;}
+  .dirty .dirty-dot{display:inline-block;}
+  .string-list{display:flex; flex-direction:column; gap:.4rem;}
+  .string-list .sl-row{display:flex; gap:.4rem;}
+  .string-list .sl-row input{flex:1;}
+  .add-btn{margin-top:.3rem;}
+
+  /* cropper modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(3,6,16,.8); z-index:100;
+    display:none; align-items:center; justify-content:center; padding:1rem;
+  }
+  .modal-bg.open{display:flex;}
+  .modal{
+    background:var(--navy-1); border:1px solid var(--line); border-radius:12px;
+    padding:1.2rem; max-width:560px; width:100%;
+  }
+  .modal h3{margin:0 0 .8rem; font-size:1rem; color:var(--steel-light);}
+  .crop-viewport{
+    position:relative; margin:0 auto; overflow:hidden; background:var(--navy-deep);
+    border:1px solid var(--line); border-radius:6px; touch-action:none; cursor:grab; max-width:100%;
+  }
+  .crop-viewport.dragging{cursor:grabbing;}
+  .crop-viewport img{position:absolute; top:0; left:0; transform-origin:0 0; user-select:none; -webkit-user-drag:none; pointer-events:none;}
+  .crop-viewport .grid-overlay{position:absolute; inset:0; pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.18) 1px,transparent 1px);
+    background-size:33.33% 33.33%;}
+  .crop-controls{display:flex; align-items:center; gap:.7rem; margin:.9rem 0;}
+  .crop-controls input[type=range]{flex:1;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:.6rem;}
 </style>
 </head>
 <body>
 
 <header class="top">
-  <h1>NCBO Photo Manager</h1>
-  <p>Internal tool — not linked from the site. Fills in the placeholder photos listed in <code>assets/data.js</code> by committing straight to GitHub.</p>
+  <h1>NCBO Admin</h1>
+  <p>Internal tool — not linked from the site. Edit site content &amp; photos, then commit straight to GitHub.</p>
+  <div class="tabs" id="tabs"></div>
 </header>
 
 <div class="wrap">
 
+  <!-- Connect (shown on every tab) -->
   <section class="panel" id="connectPanel">
-    <h2>1 · Connect to GitHub</h2>
+    <h2>Connect to GitHub</h2>
     <div class="row">
-      <div class="field">
-        <label for="owner">Repo owner</label>
-        <input type="text" id="owner" value="oaklandflyer">
-      </div>
-      <div class="field">
-        <label for="repo">Repo name</label>
-        <input type="text" id="repo" value="ncbo">
-      </div>
-      <div class="field">
-        <label for="branch">Branch</label>
-        <input type="text" id="branch" value="main">
-      </div>
-      <div class="field" style="flex:2; min-width:260px;">
-        <label for="token">Personal access token</label>
-        <input type="password" id="token" placeholder="github_pat_...">
-      </div>
+      <div class="field"><label for="owner">Repo owner</label><input type="text" id="owner" value="oaklandflyer"></div>
+      <div class="field"><label for="repo">Repo name</label><input type="text" id="repo" value="ncbo"></div>
+      <div class="field"><label for="branch">Branch</label><input type="text" id="branch" value="main"></div>
+      <div class="field" style="flex:2; min-width:260px;"><label for="token">Personal access token</label><input type="password" id="token" placeholder="github_pat_..."></div>
     </div>
     <div class="row" style="margin-top:.9rem;">
       <label style="font-size:.82rem; color:var(--silver-dim); display:flex; gap:.4rem; align-items:center;">
@@ -122,7 +163,6 @@
       <button id="forgetBtn" class="small">Forget saved token</button>
     </div>
     <div id="connectStatus" class="status-line"></div>
-
     <details class="security">
       <summary>Token &amp; security notes</summary>
       <div class="note">
@@ -130,234 +170,602 @@
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>,
         scoped only to the <code>ncbo</code> repository, with <b>Contents: Read and write</b> permission and nothing else.
         The token is only ever sent directly from your browser to <code>api.github.com</code> — this page has no
-        server of its own and nobody else sees it. If you check "remember token", it's saved in this browser's
-        local storage only; use "Forget saved token" when you're done on a shared computer. Each upload here is
-        a real commit to the <code id="branchLabel">main</code> branch, which GitHub Pages deploys automatically.
+        server of its own and nobody else sees it. Each save here is a real commit to the
+        <code id="branchLabel">main</code> branch, which GitHub Pages deploys automatically.
       </div>
     </details>
   </section>
 
-  <section class="panel">
-    <h2>2 · Fill in photos</h2>
-    <div class="toolbar">
-      <input type="text" id="filter" class="filter-input" placeholder="Filter by name or path…">
-      <span class="badge" id="countBadge">0 slots</span>
-      <span style="flex:1"></span>
-      <label style="font-size:.82rem; color:var(--silver-dim); display:flex; gap:.4rem; align-items:center;">
-        <input type="checkbox" id="compress" checked style="width:auto;"> resize &amp; compress before upload
-      </label>
-    </div>
-    <div class="slots" id="slots"></div>
-  </section>
+  <div id="sections"></div>
 
+</div>
+
+<!-- Save bar -->
+<div class="savebar" id="savebar">
+  <span class="dirty-dot"></span>
+  <span class="msg" id="saveMsg">All changes saved.</span>
+  <button id="revertBtn" class="small">Revert edits</button>
+  <button id="saveBtn" class="primary">Save content changes</button>
+</div>
+
+<!-- Cropper -->
+<div class="modal-bg" id="cropModal">
+  <div class="modal">
+    <h3>Adjust photo — drag to reposition, slider to zoom</h3>
+    <div class="crop-viewport" id="cropViewport">
+      <img id="cropImg" alt="">
+      <div class="grid-overlay"></div>
+    </div>
+    <div class="crop-controls">
+      <span style="font-size:.8rem;color:var(--silver-dim);">Zoom</span>
+      <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1">
+    </div>
+    <div class="modal-actions">
+      <button id="cropCancel">Cancel</button>
+      <button id="cropApply" class="primary">Use this crop</button>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
-  const D = window.NCBO_DATA || {};
-  const $ = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'item';
 
-  const ownerEl = $('#owner'), repoEl = $('#repo'), branchEl = $('#branch'), tokenEl = $('#token');
-  const rememberEl = $('#remember'), connectStatus = $('#connectStatus');
-  const LS_KEY = 'ncbo_admin_token_v1';
+  const ORIG = window.NCBO_DATA || {};
+  let DATA = clone(ORIG);
+  let dirty = false;
 
-  // restore remembered token
-  try {
-    const saved = localStorage.getItem(LS_KEY);
-    if (saved) { tokenEl.value = saved; rememberEl.checked = true; }
-  } catch (e) {}
+  /* ---------------- GitHub connection ---------------- */
+  const ownerEl=$('#owner'), repoEl=$('#repo'), branchEl=$('#branch'), tokenEl=$('#token');
+  const rememberEl=$('#remember'), connectStatus=$('#connectStatus');
+  const LS_KEY='ncbo_admin_token_v1';
+  try{ const saved=localStorage.getItem(LS_KEY); if(saved){ tokenEl.value=saved; rememberEl.checked=true; } }catch(e){}
+  rememberEl.addEventListener('change',()=>{ if(!rememberEl.checked){ try{localStorage.removeItem(LS_KEY);}catch(e){} } });
+  tokenEl.addEventListener('input',()=>{ if(rememberEl.checked){ try{localStorage.setItem(LS_KEY,tokenEl.value);}catch(e){} } });
+  $('#forgetBtn').addEventListener('click',()=>{ tokenEl.value=''; rememberEl.checked=false; try{localStorage.removeItem(LS_KEY);}catch(e){} setStatus(connectStatus,'Saved token cleared.','ok'); });
+  branchEl.addEventListener('input',()=>{ $('#branchLabel').textContent=branchEl.value||'main'; });
 
-  rememberEl.addEventListener('change', () => {
-    if (!rememberEl.checked) { try { localStorage.removeItem(LS_KEY); } catch(e){} }
+  function setStatus(el,msg,kind){ el.textContent=msg||''; el.className='status-line'+(kind?' '+kind:''); }
+  function ghHeaders(){ return {'Authorization':'Bearer '+tokenEl.value.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}; }
+  function apiBase(){ return `https://api.github.com/repos/${ownerEl.value.trim()}/${repoEl.value.trim()}`; }
+  function branchName(){ return branchEl.value.trim()||'main'; }
+  function rawUrl(path){ return `https://raw.githubusercontent.com/${ownerEl.value.trim()}/${repoEl.value.trim()}/${branchName()}/${path}?t=${Date.now()}`; }
+
+  $('#testBtn').addEventListener('click', async ()=>{
+    setStatus(connectStatus,'Checking…','busy');
+    if(!tokenEl.value.trim()){ setStatus(connectStatus,'Paste a token first.','err'); return; }
+    try{
+      const res=await fetch(apiBase(),{headers:ghHeaders()});
+      if(res.status===401){ setStatus(connectStatus,'Token rejected (401). Check it was copied in full and hasn\'t expired.','err'); return; }
+      if(res.status===404){ setStatus(connectStatus,'Repo not found or token lacks access (404).','err'); return; }
+      if(!res.ok){ setStatus(connectStatus,`GitHub returned ${res.status}.`,'err'); return; }
+      const d=await res.json();
+      setStatus(connectStatus,`Connected to ${d.full_name}${d.permissions&&d.permissions.push?' — push access confirmed.':' — warning: token may lack write access.'}`,'ok');
+    }catch(e){ setStatus(connectStatus,'Network error reaching GitHub: '+e.message,'err'); }
   });
-  tokenEl.addEventListener('input', () => {
-    if (rememberEl.checked) { try { localStorage.setItem(LS_KEY, tokenEl.value); } catch(e){} }
-  });
-  $('#forgetBtn').addEventListener('click', () => {
-    tokenEl.value = ''; rememberEl.checked = false;
-    try { localStorage.removeItem(LS_KEY); } catch(e){}
-    setStatus(connectStatus, 'Saved token cleared.', 'ok');
-  });
-  branchEl.addEventListener('input', () => { $('#branchLabel').textContent = branchEl.value || 'main'; });
-
-  function setStatus(el, msg, kind){
-    el.textContent = msg || '';
-    el.className = 'status-line' + (kind ? ' ' + kind : '');
-  }
-
-  function ghHeaders(){
-    return {
-      'Authorization': 'Bearer ' + tokenEl.value.trim(),
-      'Accept': 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28'
-    };
-  }
-  function apiBase(){
-    return `https://api.github.com/repos/${ownerEl.value.trim()}/${repoEl.value.trim()}`;
-  }
-  function rawUrl(path){
-    return `https://raw.githubusercontent.com/${ownerEl.value.trim()}/${repoEl.value.trim()}/${branchEl.value.trim() || 'main'}/${path}`;
-  }
-
-  $('#testBtn').addEventListener('click', async () => {
-    setStatus(connectStatus, 'Checking…', 'busy');
-    if (!tokenEl.value.trim()) { setStatus(connectStatus, 'Paste a token first.', 'err'); return; }
-    try {
-      const res = await fetch(apiBase(), { headers: ghHeaders() });
-      if (res.status === 401) { setStatus(connectStatus, 'Token rejected (401). Check it was copied in full and hasn\'t expired.', 'err'); return; }
-      if (res.status === 404) { setStatus(connectStatus, 'Repo not found or token lacks access to it (404).', 'err'); return; }
-      if (!res.ok) { setStatus(connectStatus, `GitHub returned ${res.status}.`, 'err'); return; }
-      const data = await res.json();
-      setStatus(connectStatus, `Connected to ${data.full_name}${data.permissions && data.permissions.push ? ' — push access confirmed.' : ' — warning: this token may not have write access.'}`, 'ok');
-    } catch (e) {
-      setStatus(connectStatus, 'Network error reaching GitHub: ' + e.message, 'err');
-    }
-  });
-
-  /* ---------- build slot list from the same data the live site renders ---------- */
-  function collectSlots(){
-    const out = [];
-    (D.tiles || []).forEach(t => out.push({ path: t.img, label: t.title, group: 'Home tile' }));
-    (D.voices || []).forEach((v,i) => out.push({ path: v.img, label: v.name + ' — ' + v.club, group: 'Member voice' }));
-    (D.clubs || []).forEach(c => out.push({ path: c.img, label: c.school, group: 'Club card' }));
-    (D.leadership || []).forEach(p => out.push({ path: p.img, label: p.name, group: 'Leadership' }));
-    (D.advisory || []).forEach(p => out.push({ path: p.img, label: p.name, group: 'Advisory board' }));
-    (D.news || []).forEach(n => out.push({ path: n.img, label: n.title, group: 'News' }));
-    return out.filter(s => s.path);
-  }
-
-  const slots = collectSlots();
-  $('#countBadge').textContent = slots.length + ' slots';
-
-  function extToMime(path){
-    const ext = (path.split('.').pop() || '').toLowerCase();
-    if (ext === 'png') return 'image/png';
-    if (ext === 'webp') return 'image/webp';
-    return 'image/jpeg';
-  }
-
-  function compressImage(file, mime){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(reader.error);
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onerror = reject;
-        img.onload = () => {
-          const MAX = 1600;
-          let { width, height } = img;
-          if (width > MAX || height > MAX) {
-            if (width >= height) { height = Math.round(height * MAX / width); width = MAX; }
-            else { width = Math.round(width * MAX / height); height = MAX; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL(mime, 0.82));
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-  function readRaw(file){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(reader.error);
-      reader.onload = (e) => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
-  }
 
   async function getExistingSha(path){
-    const res = await fetch(`${apiBase()}/contents/${encodeURIComponent(path).replace(/%2F/g,'/')}?ref=${encodeURIComponent(branchEl.value.trim() || 'main')}`, { headers: ghHeaders() });
-    if (res.status === 200) { const j = await res.json(); return j.sha; }
+    const res=await fetch(`${apiBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branchName())}&t=${Date.now()}`,{headers:ghHeaders()});
+    if(res.status===200){ const j=await res.json(); return j.sha; }
     return null;
   }
+  async function commitFile(path, contentBase64, message){
+    const sha=await getExistingSha(path);
+    const body={ message, content:contentBase64, branch:branchName() };
+    if(sha) body.sha=sha;
+    const res=await fetch(`${apiBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}`,{
+      method:'PUT', headers:Object.assign({'Content-Type':'application/json'},ghHeaders()), body:JSON.stringify(body)
+    });
+    if(!res.ok){ const j=await res.json().catch(()=>({})); throw new Error(`${res.status}: ${j.message||'unknown error'}`); }
+    return res.json();
+  }
+  function utf8ToBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
 
-  async function uploadSlot(slot, file, statusEl, thumbImg, badgeEl){
-    if (!tokenEl.value.trim()) { setStatus(statusEl, 'Connect with a token first (above).', 'err'); return; }
-    setStatus(statusEl, 'Preparing…', 'busy');
-    try {
-      const doCompress = $('#compress').checked;
-      const mime = extToMime(slot.path);
-      const dataUrl = doCompress ? await compressImage(file, mime) : await readRaw(file);
-      const base64 = dataUrl.split(',')[1];
+  /* ---------------- image cropper ---------------- */
+  const cropModal=$('#cropModal'), cropVp=$('#cropViewport'), cropImg=$('#cropImg'), cropZoom=$('#cropZoom');
+  let cropState=null; // {natW,natH,vw,vh,baseScale,zoom,tx,ty,aspect,onDone}
 
-      setStatus(statusEl, 'Checking for existing file…', 'busy');
-      const sha = await getExistingSha(slot.path);
-
-      setStatus(statusEl, 'Uploading…', 'busy');
-      const body = {
-        message: (sha ? 'Update photo: ' : 'Add photo: ') + slot.path,
-        content: base64,
-        branch: branchEl.value.trim() || 'main'
+  function openCropper(file, aspect, onDone){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxVpW=Math.min(480, window.innerWidth-80);
+        const vw=maxVpW, vh=Math.round(vw/aspect);
+        cropVp.style.width=vw+'px'; cropVp.style.height=vh+'px';
+        cropImg.src=e.target.result;
+        const baseScale=Math.max(vw/img.naturalWidth, vh/img.naturalHeight);
+        cropState={ natW:img.naturalWidth, natH:img.naturalHeight, vw, vh, baseScale, zoom:1, tx:0, ty:0, aspect, onDone, src:e.target.result };
+        cropZoom.value=1;
+        // center
+        centerCrop();
+        applyCropTransform();
+        cropModal.classList.add('open');
       };
-      if (sha) body.sha = sha;
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function dispScale(){ return cropState.baseScale*cropState.zoom; }
+  function centerCrop(){
+    const s=dispScale();
+    cropState.tx=(cropState.vw - cropState.natW*s)/2;
+    cropState.ty=(cropState.vh - cropState.natH*s)/2;
+    clampCrop();
+  }
+  function clampCrop(){
+    const s=dispScale();
+    const dw=cropState.natW*s, dh=cropState.natH*s;
+    cropState.tx=Math.min(0, Math.max(cropState.vw-dw, cropState.tx));
+    cropState.ty=Math.min(0, Math.max(cropState.vh-dh, cropState.ty));
+  }
+  function applyCropTransform(){
+    const s=dispScale();
+    cropImg.style.transform=`translate(${cropState.tx}px,${cropState.ty}px) scale(${s})`;
+  }
+  cropZoom.addEventListener('input',()=>{
+    if(!cropState) return;
+    // keep viewport center stable while zooming
+    const cx=cropState.vw/2, cy=cropState.vh/2;
+    const sOld=dispScale();
+    const imgX=(cx-cropState.tx)/sOld, imgY=(cy-cropState.ty)/sOld;
+    cropState.zoom=parseFloat(cropZoom.value);
+    const sNew=dispScale();
+    cropState.tx=cx-imgX*sNew; cropState.ty=cy-imgY*sNew;
+    clampCrop(); applyCropTransform();
+  });
+  (function enableDrag(){
+    let dragging=false, lastX=0, lastY=0;
+    const down=e=>{ if(!cropState) return; dragging=true; cropVp.classList.add('dragging'); const p=pt(e); lastX=p.x; lastY=p.y; e.preventDefault(); };
+    const move=e=>{ if(!dragging) return; const p=pt(e); cropState.tx+=p.x-lastX; cropState.ty+=p.y-lastY; lastX=p.x; lastY=p.y; clampCrop(); applyCropTransform(); };
+    const up=()=>{ dragging=false; cropVp.classList.remove('dragging'); };
+    const pt=e=> e.touches&&e.touches[0]?{x:e.touches[0].clientX,y:e.touches[0].clientY}:{x:e.clientX,y:e.clientY};
+    cropVp.addEventListener('mousedown',down); window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
+    cropVp.addEventListener('touchstart',down,{passive:false}); window.addEventListener('touchmove',move,{passive:false}); window.addEventListener('touchend',up);
+  })();
+  $('#cropCancel').addEventListener('click',()=>{ cropModal.classList.remove('open'); cropState=null; });
+  $('#cropApply').addEventListener('click',()=>{
+    if(!cropState) return;
+    const s=dispScale();
+    const sx=-cropState.tx/s, sy=-cropState.ty/s, sw=cropState.vw/s, sh=cropState.vh/s;
+    const outW=Math.min(1400, Math.round(sw));
+    const outH=Math.round(outW/cropState.aspect);
+    const canvas=document.createElement('canvas'); canvas.width=outW; canvas.height=outH;
+    const ctx=canvas.getContext('2d');
+    const im=new Image();
+    im.onload=()=>{
+      ctx.drawImage(im, sx, sy, sw, sh, 0, 0, outW, outH);
+      const done=cropState.onDone;
+      cropModal.classList.remove('open'); const st=cropState; cropState=null;
+      done(canvas, st);
+    };
+    im.src=cropState.src;
+  });
 
-      const res = await fetch(`${apiBase()}/contents/${encodeURIComponent(slot.path).replace(/%2F/g,'/')}`, {
-        method: 'PUT',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders()),
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setStatus(statusEl, `Failed (${res.status}): ${j.message || 'unknown error'}`, 'err');
-        return;
-      }
-      setStatus(statusEl, 'Saved ✓ live site will update on next Pages deploy.', 'ok');
-      thumbImg.src = dataUrl;
-      badgeEl.textContent = 'Filled'; badgeEl.classList.add('filled');
-    } catch (e) {
-      setStatus(statusEl, 'Error: ' + e.message, 'err');
+  /* ---------------- photo upload widget ---------------- */
+  // getPath/setPath let new items generate their image path on the fly.
+  function photoWidget(opts){
+    // opts: {aspect, getPath, setPath, label}
+    const el=document.createElement('div'); el.className='photo-block';
+    const thumb=document.createElement('div'); thumb.className='thumb';
+    thumb.style.aspectRatio=String(opts.aspect);
+    const img=document.createElement('img');
+    const ph=document.createElement('div'); ph.className='ph';
+    img.onload=()=>{ img.style.display='block'; ph.style.display='none'; };
+    img.onerror=()=>{ img.style.display='none'; ph.style.display='block'; };
+    thumb.appendChild(img); thumb.appendChild(ph);
+
+    const ctrl=document.createElement('div'); ctrl.className='photo-ctrl';
+    const pathEl=document.createElement('div'); pathEl.className='path';
+    const file=document.createElement('input'); file.type='file'; file.accept='image/*';
+    const btnrow=document.createElement('div'); btnrow.style.display='flex'; btnrow.style.gap='.5rem'; btnrow.style.alignItems='center';
+    const uploadBtn=document.createElement('button'); uploadBtn.className='primary small'; uploadBtn.textContent='Upload'; uploadBtn.disabled=true;
+    const badge=document.createElement('span'); badge.className='badge'; badge.textContent='';
+    const status=document.createElement('div'); status.className='status-line';
+    btnrow.appendChild(uploadBtn); btnrow.appendChild(badge);
+    ctrl.appendChild(pathEl); ctrl.appendChild(file); ctrl.appendChild(btnrow); ctrl.appendChild(status);
+    el.appendChild(thumb); el.appendChild(ctrl);
+
+    let croppedCanvas=null;
+    function refreshPath(){
+      const p=opts.getPath()||'(path set when you fill in the fields)';
+      pathEl.textContent=p;
+      ph.innerHTML='No photo yet<br>'+esc(p);
+      const real=opts.getPath();
+      if(real){ img.src=rawUrl(real); } else { img.style.display='none'; ph.style.display='block'; }
     }
+    refreshPath();
+    el.refreshPath=refreshPath;
+
+    file.addEventListener('change',()=>{
+      const f=file.files[0]; if(!f) return;
+      openCropper(f, opts.aspect, (canvas)=>{
+        croppedCanvas=canvas;
+        img.src=canvas.toDataURL('image/jpeg',0.9); // preview
+        uploadBtn.disabled=false;
+        setStatus(status,'Cropped — ready to upload.','');
+      });
+    });
+    uploadBtn.addEventListener('click', async ()=>{
+      if(!croppedCanvas){ setStatus(status,'Choose and crop a file first.','err'); return; }
+      if(!tokenEl.value.trim()){ setStatus(status,'Connect with a token first (top of page).','err'); return; }
+      let path=opts.getPath();
+      if(!path){ if(opts.ensurePath){ path=opts.ensurePath(); refreshPath(); } }
+      if(!path){ setStatus(status,'Fill in the name/fields first so a photo path exists.','err'); return; }
+      const ext=(path.split('.').pop()||'jpg').toLowerCase();
+      const mime=ext==='png'?'image/png':ext==='webp'?'image/webp':'image/jpeg';
+      const dataUrl=croppedCanvas.toDataURL(mime, mime==='image/png'?undefined:0.85);
+      const base64=dataUrl.split(',')[1];
+      setStatus(status,'Uploading…','busy');
+      try{
+        await commitFile(path, base64, 'Update photo: '+path);
+        setStatus(status,'Saved ✓ live site updates on next Pages deploy.','ok');
+        badge.textContent='Filled'; badge.classList.add('filled');
+      }catch(e){ setStatus(status,'Failed ('+e.message+')','err'); }
+    });
+    return el;
   }
 
-  const slotsHost = $('#slots');
-  slotsHost.innerHTML = slots.map((s, i) => `
-    <div class="slot" data-idx="${i}" data-search="${(s.label + ' ' + s.path + ' ' + s.group).toLowerCase()}">
-      <div class="thumb" id="thumb-${i}">
-        <img id="img-${i}" alt="" style="display:none"
-             onload="this.style.display='block'; this.parentElement.querySelector('.ph').style.display='none';"
-             onerror="this.style.display='none'; this.parentElement.querySelector('.ph').style.display='block';">
-        <div class="ph">No photo yet<br>${s.path}</div>
-      </div>
-      <div class="label">${s.label}</div>
-      <div class="path">${s.group} · ${s.path}</div>
-      <input type="file" accept="image/*" id="file-${i}">
-      <div class="btnrow">
-        <button class="primary small" id="upload-${i}">Upload</button>
-        <span class="badge" id="badge-${i}">Empty</span>
-      </div>
-      <div class="status-line" id="status-${i}"></div>
-    </div>
-  `).join('');
+  /* ---------------- generic field helpers ---------------- */
+  function markDirty(){ dirty=true; $('#savebar').classList.add('dirty'); const m=$('#saveMsg'); m.textContent='Unsaved content changes.'; m.className='msg'; }
 
-  slots.forEach((s, i) => {
-    const imgEl = $('#img-' + i);
-    imgEl.src = rawUrl(s.path);
-    const fileEl = $('#file-' + i);
-    const statusEl = $('#status-' + i);
-    const badgeEl = $('#badge-' + i);
-    fileEl.addEventListener('change', () => {
-      const f = fileEl.files[0];
-      if (f) setStatus(statusEl, f.name + ' ready to upload.', '');
-    });
-    $('#upload-' + i).addEventListener('click', () => {
-      const f = fileEl.files[0];
-      if (!f) { setStatus(statusEl, 'Choose a file first.', 'err'); return; }
-      uploadSlot(s, f, statusEl, imgEl, badgeEl);
-    });
-  });
+  function fieldText(labelText, get, set, opts={}){
+    const f=document.createElement('div'); f.className='field'+(opts.full?' full':'');
+    const lab=document.createElement('label'); lab.textContent=labelText;
+    let input;
+    if(opts.textarea){ input=document.createElement('textarea'); if(opts.rows) input.rows=opts.rows; }
+    else { input=document.createElement('input'); input.type='text'; }
+    input.value=get()==null?'':get();
+    input.addEventListener('input',()=>{ set(input.value); markDirty(); });
+    f.appendChild(lab); f.appendChild(input); f.__input=input; return f;
+  }
+  function fieldCheck(labelText, get, set){
+    const f=document.createElement('label');
+    f.style.cssText='display:flex;gap:.45rem;align-items:center;font-size:.85rem;color:var(--silver-dim);';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.style.width='auto'; cb.checked=!!get();
+    cb.addEventListener('change',()=>{ set(cb.checked); markDirty(); });
+    f.appendChild(cb); f.appendChild(document.createTextNode(labelText)); return f;
+  }
+  // editable list of plain strings (e.g. marquee, features)
+  function stringList(arr, opts={}){
+    const wrap=document.createElement('div'); wrap.className='string-list';
+    function render(){
+      wrap.innerHTML='';
+      arr.forEach((val,i)=>{
+        const row=document.createElement('div'); row.className='sl-row';
+        const inp=document.createElement('input'); inp.type='text'; inp.value=val;
+        inp.addEventListener('input',()=>{ arr[i]=inp.value; markDirty(); });
+        const del=document.createElement('button'); del.className='small danger'; del.textContent='✕';
+        del.addEventListener('click',()=>{ arr.splice(i,1); markDirty(); render(); });
+        row.appendChild(inp); row.appendChild(del); wrap.appendChild(row);
+      });
+      const add=document.createElement('button'); add.className='small add-btn'; add.textContent='+ '+(opts.addLabel||'Add');
+      add.addEventListener('click',()=>{ arr.push(''); markDirty(); render(); });
+      wrap.appendChild(add);
+    }
+    render(); return wrap;
+  }
 
-  $('#filter').addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    $$('.slot', slotsHost).forEach(el => {
-      el.style.display = !q || el.dataset.search.includes(q) ? '' : 'none';
+  // generic list-of-objects editor with add/remove
+  function objectList(arr, cfg){
+    // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(), fields(item, card)}
+    const host=document.createElement('div');
+    function render(){
+      host.innerHTML='';
+      arr.forEach((item,idx)=>{
+        const card=document.createElement('div'); card.className='card';
+        const head=document.createElement('div'); head.className='card-head';
+        const t=document.createElement('div'); t.className='t';
+        t.textContent=(cfg.titleKey? (item[cfg.titleKey]||'(new)') : ('#'+(idx+1)));
+        const del=document.createElement('button'); del.className='small danger'; del.textContent='Remove';
+        del.addEventListener('click',()=>{ if(confirm('Remove this entry?')){ arr.splice(idx,1); markDirty(); render(); } });
+        head.appendChild(t); head.appendChild(del); card.appendChild(head);
+
+        cfg.fields(item, card, ()=>{ if(cfg.titleKey) t.textContent=item[cfg.titleKey]||'(new)'; });
+
+        if(cfg.imgKey){
+          const w=photoWidget({
+            aspect:cfg.aspect||4/3,
+            getPath:()=>item[cfg.imgKey],
+            setPath:v=>{ item[cfg.imgKey]=v; },
+            ensurePath:()=>{
+              if(item[cfg.imgKey]) return item[cfg.imgKey];
+              const base=slug(item[cfg.titleKey]||cfg.imgPrefix||'photo');
+              item[cfg.imgKey]=`assets/img/${cfg.imgPrefix||'img'}-${base}.jpg`;
+              markDirty(); return item[cfg.imgKey];
+            }
+          });
+          card.__photo=w; card.appendChild(w);
+        }
+        host.appendChild(card);
+      });
+      if(cfg.newItem){
+        const add=document.createElement('button'); add.className='add-btn'; add.textContent='+ '+(cfg.addLabel||'Add entry');
+        add.addEventListener('click',()=>{ arr.push(cfg.newItem()); markDirty(); render(); });
+        host.appendChild(add);
+      }
+    }
+    render(); return host;
+  }
+
+  function panel(title){ const p=document.createElement('section'); p.className='panel'; const h=document.createElement('h2'); h.textContent=title; p.appendChild(h); return p; }
+  function subhead(text){ const h=document.createElement('h3'); h.textContent=text; return h; }
+  function noteEl(text){ const n=document.createElement('div'); n.className='note'; n.innerHTML=text; return n; }
+
+  /* ---------------- section builders (by nav) ---------------- */
+  const builders = {
+    'Home': ()=>{
+      const frag=document.createDocumentFragment();
+
+      // Hero
+      let p=panel('Hero'); DATA.hero=DATA.hero||{};
+      const h=DATA.hero;
+      const r1=document.createElement('div'); r1.className='row';
+      r1.appendChild(fieldText('Eyebrow', ()=>h.eyebrow, v=>h.eyebrow=v, {full:true}));
+      p.appendChild(r1);
+      h.title=h.title||['','',''];
+      p.appendChild(subhead('Headline (three lines — the accent span in line 3 is styled highlight)'));
+      [0,1,2].forEach(i=>{ const r=document.createElement('div'); r.className='row'; r.appendChild(fieldText('Line '+(i+1), ()=>h.title[i], v=>h.title[i]=v, {full:true})); p.appendChild(r); });
+      const r2=document.createElement('div'); r2.className='row';
+      r2.appendChild(fieldText('Sub-text', ()=>h.sub, v=>h.sub=v, {full:true, textarea:true, rows:3}));
+      p.appendChild(r2);
+      h.primary=h.primary||{}; h.ghost=h.ghost||{};
+      const rb=document.createElement('div'); rb.className='row';
+      rb.appendChild(fieldText('Primary button label', ()=>h.primary.label, v=>h.primary.label=v));
+      rb.appendChild(fieldText('Primary button link', ()=>h.primary.href, v=>h.primary.href=v));
+      rb.appendChild(fieldText('Ghost button label', ()=>h.ghost.label, v=>h.ghost.label=v));
+      rb.appendChild(fieldText('Ghost button link', ()=>h.ghost.href, v=>h.ghost.href=v));
+      p.appendChild(rb);
+      frag.appendChild(p);
+
+      // Marquee
+      p=panel('Marquee words'); DATA.marquee=DATA.marquee||[];
+      p.appendChild(stringList(DATA.marquee,{addLabel:'Add word'})); frag.appendChild(p);
+
+      // Tiles
+      p=panel('Home tiles'); DATA.tiles=DATA.tiles||[];
+      p.appendChild(objectList(DATA.tiles,{
+        titleKey:'title', imgKey:'img', imgPrefix:'tile', aspect:4/3, addLabel:'Add tile',
+        newItem:()=>({kicker:'',title:'',text:'',href:'',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Kicker', ()=>it.kicker, v=>it.kicker=v));
+          g.appendChild(fieldText('Title', ()=>it.title, v=>{it.title=v;upd();}));
+          g.appendChild(fieldText('Link (href)', ()=>it.href, v=>it.href=v));
+          g.appendChild(fieldText('Image path', ()=>it.img, v=>it.img=v));
+          card.appendChild(g);
+          card.appendChild(fieldRowFull(fieldText('Text', ()=>it.text, v=>it.text=v, {full:true,textarea:true})));
+        }
+      })); frag.appendChild(p);
+
+      // About band
+      p=panel('“What we are” band'); DATA.about=DATA.about||{};
+      const a=DATA.about; a.headline=a.headline||['',''];a.body=a.body||['',''];a.stats=a.stats||[];
+      p.appendChild(fieldRowFull(fieldText('Label', ()=>a.label, v=>a.label=v, {full:true})));
+      p.appendChild(subhead('Headline (two lines)'));
+      [0,1].forEach(i=>p.appendChild(fieldRowFull(fieldText('Line '+(i+1), ()=>a.headline[i], v=>a.headline[i]=v, {full:true}))));
+      p.appendChild(subhead('Body paragraphs'));
+      [0,1].forEach(i=>p.appendChild(fieldRowFull(fieldText('Paragraph '+(i+1), ()=>a.body[i], v=>a.body[i]=v, {full:true,textarea:true,rows:3}))));
+      p.appendChild(subhead('Stats'));
+      p.appendChild(objectList(a.stats,{
+        addLabel:'Add stat', newItem:()=>({num:'',lab:''}),
+        fields:(it,card)=>{ const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Number', ()=>it.num, v=>it.num=v));
+          g.appendChild(fieldText('Label', ()=>it.lab, v=>it.lab=v)); card.appendChild(g); }
+      })); frag.appendChild(p);
+
+      // Pillars
+      p=panel('Value pillars'); DATA.pillars=DATA.pillars||[];
+      p.appendChild(objectList(DATA.pillars,{
+        titleKey:'title', addLabel:'Add pillar', newItem:()=>({title:'',text:''}),
+        fields:(it,card,upd)=>{
+          card.appendChild(fieldRowFull(fieldText('Title', ()=>it.title, v=>{it.title=v;upd();}, {full:true})));
+          card.appendChild(fieldRowFull(fieldText('Text', ()=>it.text, v=>it.text=v, {full:true,textarea:true})));
+        }
+      })); frag.appendChild(p);
+
+      // Voices
+      p=panel('Member voices'); DATA.voices=DATA.voices||[];
+      p.appendChild(objectList(DATA.voices,{
+        titleKey:'name', imgKey:'img', imgPrefix:'voice', aspect:4/3, addLabel:'Add voice',
+        newItem:()=>({quote:'',name:'',club:'',img:''}),
+        fields:(it,card,upd)=>{
+          card.appendChild(fieldRowFull(fieldText('Quote', ()=>it.quote, v=>it.quote=v, {full:true,textarea:true,rows:3})));
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+          g.appendChild(fieldText('Club', ()=>it.club, v=>it.club=v));
+          card.appendChild(g);
+        }
+      })); frag.appendChild(p);
+
+      return frag;
+    },
+
+    'Join': ()=>{
+      const frag=document.createDocumentFragment();
+      let p=panel('Membership tiers'); DATA.tiers=DATA.tiers||[];
+      p.appendChild(objectList(DATA.tiers,{
+        titleKey:'name', addLabel:'Add tier', newItem:()=>({name:'',price:'$0',note:'',tagline:'',features:[]}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+          g.appendChild(fieldText('Price', ()=>it.price, v=>it.price=v));
+          g.appendChild(fieldText('Note', ()=>it.note, v=>it.note=v));
+          g.appendChild(fieldText('Tagline', ()=>it.tagline, v=>it.tagline=v));
+          card.appendChild(g);
+          card.appendChild(fieldCheck('Featured (highlighted card)', ()=>it.featured, v=>it.featured=v));
+          card.appendChild(subhead('Features'));
+          it.features=it.features||[];
+          card.appendChild(stringList(it.features,{addLabel:'Add feature'}));
+        }
+      })); frag.appendChild(p);
+
+      p=panel('How to join — steps'); DATA.joinSteps=DATA.joinSteps||[];
+      p.appendChild(objectList(DATA.joinSteps,{
+        titleKey:'title', addLabel:'Add step', newItem:()=>({step:'',title:'',text:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Step #', ()=>it.step, v=>it.step=v));
+          g.appendChild(fieldText('Title', ()=>it.title, v=>{it.title=v;upd();}));
+          card.appendChild(g);
+          card.appendChild(fieldRowFull(fieldText('Text', ()=>it.text, v=>it.text=v, {full:true,textarea:true})));
+        }
+      })); frag.appendChild(p);
+
+      p=panel('Member signup form'); DATA.forms=DATA.forms||{};
+      p.appendChild(fieldRowFull(fieldText('Become-a-member form link', ()=>DATA.forms.becomeMember, v=>DATA.forms.becomeMember=v, {full:true})));
+      frag.appendChild(p);
+      return frag;
+    },
+
+    'Find a Club': ()=>{
+      const frag=document.createDocumentFragment();
+      const p=panel('Clubs'); DATA.clubs=DATA.clubs||[];
+      p.appendChild(noteEl('Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.'));
+      p.appendChild(objectList(DATA.clubs,{
+        titleKey:'school', imgKey:'img', imgPrefix:'club', aspect:16/10, addLabel:'Add club',
+        newItem:()=>({school:'',name:'',lead:'',status:'Forming',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('School', ()=>it.school, v=>{it.school=v;upd();}));
+          g.appendChild(fieldText('Club name', ()=>it.name, v=>it.name=v));
+          g.appendChild(fieldText('Lead / contact', ()=>it.lead, v=>it.lead=v));
+          const sf=document.createElement('div'); sf.className='field';
+          const lab=document.createElement('label'); lab.textContent='Status';
+          const sel=document.createElement('select');
+          ['Active','Forming','Coming soon'].forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(it.status===o)op.selected=true; sel.appendChild(op); });
+          if(it.status && !['Active','Forming','Coming soon'].includes(it.status)){ const op=document.createElement('option'); op.value=it.status; op.textContent=it.status; op.selected=true; sel.appendChild(op); }
+          sel.addEventListener('change',()=>{ it.status=sel.value; markDirty(); });
+          sf.appendChild(lab); sf.appendChild(sel);
+          g.appendChild(sf);
+          card.appendChild(g);
+        }
+      })); frag.appendChild(p);
+      return frag;
+    },
+
+    'Start a Club': ()=>{
+      const frag=document.createDocumentFragment();
+      const p=panel('Start-a-club application'); DATA.forms=DATA.forms||{};
+      p.appendChild(noteEl('The Start a Club page is form-driven. Set the Google Form link members are sent to when they apply.'));
+      p.appendChild(fieldRowFull(fieldText('Start-a-club form link', ()=>DATA.forms.startClub, v=>DATA.forms.startClub=v, {full:true})));
+      frag.appendChild(p);
+      return frag;
+    },
+
+    'About': ()=>{
+      const frag=document.createDocumentFragment();
+      let p=panel('Leadership team — positions & photos'); DATA.leadership=DATA.leadership||[];
+      p.appendChild(noteEl('Edit each person’s <b>position/role</b>, reorder isn’t needed — order here is the order shown. Upload square photos (they crop to a square on the site).'));
+      p.appendChild(objectList(DATA.leadership,{
+        titleKey:'name', imgKey:'img', imgPrefix:'team', aspect:1, addLabel:'Add team member',
+        newItem:()=>({name:'',role:'',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+          g.appendChild(fieldText('Position / role', ()=>it.role, v=>it.role=v));
+          card.appendChild(g);
+        }
+      })); frag.appendChild(p);
+
+      p=panel('Advisory board'); DATA.advisory=DATA.advisory||[];
+      p.appendChild(objectList(DATA.advisory,{
+        titleKey:'name', imgKey:'img', imgPrefix:'advisor', aspect:1, addLabel:'Add advisor',
+        newItem:()=>({name:'',role:'',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+          g.appendChild(fieldText('Position / role', ()=>it.role, v=>it.role=v));
+          card.appendChild(g);
+        }
+      })); frag.appendChild(p);
+      return frag;
+    },
+
+    'FAQs': ()=>{
+      const frag=document.createDocumentFragment();
+      const p=panel('Frequently asked questions'); DATA.faqs=DATA.faqs||[];
+      p.appendChild(objectList(DATA.faqs,{
+        titleKey:'q', addLabel:'Add FAQ', newItem:()=>({q:'',a:''}),
+        fields:(it,card,upd)=>{
+          card.appendChild(fieldRowFull(fieldText('Question', ()=>it.q, v=>{it.q=v;upd();}, {full:true})));
+          card.appendChild(fieldRowFull(fieldText('Answer', ()=>it.a, v=>it.a=v, {full:true,textarea:true,rows:3})));
+        }
+      })); frag.appendChild(p);
+      return frag;
+    },
+
+    'News': ()=>{
+      const frag=document.createDocumentFragment();
+      const p=panel('News / updates'); DATA.news=DATA.news||[];
+      p.appendChild(objectList(DATA.news,{
+        titleKey:'title', imgKey:'img', imgPrefix:'news', aspect:16/9, addLabel:'Add news item',
+        newItem:()=>({date:'Coming soon',tag:'',title:'',text:'',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Date', ()=>it.date, v=>it.date=v));
+          g.appendChild(fieldText('Tag', ()=>it.tag, v=>it.tag=v));
+          card.appendChild(g);
+          card.appendChild(fieldRowFull(fieldText('Title', ()=>it.title, v=>{it.title=v;upd();}, {full:true})));
+          card.appendChild(fieldRowFull(fieldText('Text', ()=>it.text, v=>it.text=v, {full:true,textarea:true})));
+        }
+      })); frag.appendChild(p);
+      return frag;
+    }
+  };
+
+  function fieldRowFull(fieldEl){ const r=document.createElement('div'); r.className='row'; r.appendChild(fieldEl); return r; }
+
+  /* ---------------- tab navigation ---------------- */
+  const NAV=['Home','Join','Find a Club','Start a Club','About','FAQs','News'];
+  const tabsHost=$('#tabs'), sectionsHost=$('#sections');
+  let current=NAV[0];
+  function renderTabs(){
+    tabsHost.innerHTML='';
+    NAV.forEach(name=>{
+      const b=document.createElement('button'); b.className='tab'+(name===current?' active':''); b.textContent=name;
+      b.addEventListener('click',()=>{ current=name; renderTabs(); renderSection(); });
+      tabsHost.appendChild(b);
     });
+  }
+  function renderSection(){
+    sectionsHost.innerHTML='';
+    sectionsHost.appendChild(builders[current]());
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  /* ---------------- save / revert ---------------- */
+  function serialize(){
+    const header='/* ============================================================================\n'+
+      '   NCBO_DATA — single source of truth for site content.\n'+
+      '   Generated/edited via the admin content manager (admin/photos.html).\n'+
+      '   You can still hand-edit this file; the admin overwrites the whole object.\n'+
+      '   ========================================================================== */\n';
+    return header+'window.NCBO_DATA = '+JSON.stringify(DATA, null, 2)+';\n';
+  }
+  const saveMsg=$('#saveMsg');
+  $('#saveBtn').addEventListener('click', async ()=>{
+    if(!tokenEl.value.trim()){ saveMsg.textContent='Connect with a token first (top of page).'; saveMsg.className='msg err'; return; }
+    saveMsg.textContent='Saving content to assets/data.js…'; saveMsg.className='msg busy';
+    try{
+      await commitFile('assets/data.js', utf8ToBase64(serialize()), 'Update site content via admin');
+      dirty=false; $('#savebar').classList.remove('dirty');
+      saveMsg.textContent='Saved ✓ live site updates on next Pages deploy.'; saveMsg.className='msg ok';
+    }catch(e){ saveMsg.textContent='Save failed ('+e.message+')'; saveMsg.className='msg err'; }
   });
+  $('#revertBtn').addEventListener('click',()=>{
+    if(dirty && !confirm('Discard all unsaved content edits?')) return;
+    DATA=clone(ORIG); dirty=false; $('#savebar').classList.remove('dirty');
+    saveMsg.textContent='Edits reverted to last-loaded content.'; saveMsg.className='msg';
+    renderSection();
+  });
+  window.addEventListener('beforeunload', e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+
+  renderTabs(); renderSection();
 })();
 </script>
 
