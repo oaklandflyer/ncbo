@@ -17,7 +17,7 @@ check-in, tokens, and the club-lead surfaces are not built yet.
 
 **Permissions live in the database, not in this app.** Every table has
 row-level security, and the policies in
-`supabase/migrations/0001_init.sql` are what decide who can read and write
+`supabase/migrations/` are what decide who can read and write
 what. The React code hides buttons people can't use, but that's courtesy —
 anyone can call the Supabase API directly with their own session token, so if
 a rule isn't in a policy, it isn't enforced.
@@ -28,9 +28,13 @@ Two consequences worth keeping in mind when you edit things:
   entirely. It belongs in the Supabase dashboard and nowhere else. This app
   only ever uses the anon key, which is safe to ship to browsers precisely
   because RLS constrains it.
-- **Run the policy tests after touching a policy.** A broken policy fails
-  silently — the app keeps working and just shows people more than it should.
-  See `supabase/tests/`.
+- **Run the policy tests after touching a policy** (`npm run db:test`). A
+  broken policy fails silently — the app keeps working and just shows people
+  more than it should. See `supabase/tests/`.
+- **Schema changes go through `npm run db:push`, not the dashboard editor.**
+  The CLI keeps a ledger of what's applied; pasting SQL by hand doesn't, and
+  a migration skipped that way can install a function that only fails later.
+  See `supabase/README.md`.
 
 ---
 
@@ -41,12 +45,16 @@ Two consequences worth keeping in mind when you edit things:
 At [supabase.com](https://supabase.com), create a project. From
 **Settings → API**, copy the project URL and the `anon` public key.
 
-### 2. Run the migration
+### 2. Run the migrations
 
-**SQL Editor → New query**, run each file in `supabase/migrations/` in
-order: `0001_init.sql`, `0002_allowed_emails.sql`, `0003_approvals.sql`.
-Together they create the schema and policies, seed the six channels plus the
-founding schools and clubs, and add the staff allowlist and approval queue.
+Through the CLI, never the dashboard SQL editor — see `supabase/README.md`
+for why that distinction earned its own section.
+
+```sh
+npx supabase login
+npx supabase link --project-ref YOUR-PROJECT-REF
+npm run db:push
+```
 
 ### 3. Configure auth
 
@@ -79,6 +87,9 @@ update public.profiles
 The SQL Editor can do this because the privilege guard allows trusted
 server-side contexts — that's the bootstrap path, since there's no admin yet
 to authorise it. From then on, use **Admin → Members & roles** in the app.
+
+(This one is fine to run in the dashboard: it's a one-off data change to a
+single row, not a schema change, so it doesn't belong in a migration.)
 
 ### 5. Run it
 
@@ -130,6 +141,8 @@ like anyone else.
 Sign-in is a magic link, but that's a one-time cost per device, not per visit
 — Supabase issues a refresh token, so people stay signed in until they
 explicitly sign out.
+
+### What each role can do
 
 | Role | Can |
 |---|---|
