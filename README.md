@@ -81,6 +81,20 @@ Everything is plain HTML/CSS/JS. No build step, no dependencies, no server.
 
 ---
 
+## Two member surfaces — which is which
+
+| | `members.html` | `app/` |
+|---|---|---|
+| What | Static page, shared access code | Real app: accounts, roles, database |
+| Runs on | GitHub Pages, this repo | Next.js + Supabase, deployed separately |
+| Security | Convenience lock (code is readable in the JS) | Row-level security in Postgres |
+
+`members.html` is live now and documented below. `app/` is the real
+application being built alongside it — see `app/README.md` for setup. Once the
+app covers what the static page does, the static page can retire.
+
+---
+
 ## The member hub (`members.html`)
 
 Members enter an access code to get to the season hub: dashboard (announcements
