@@ -43,9 +43,10 @@ At [supabase.com](https://supabase.com), create a project. From
 
 ### 2. Run the migration
 
-**SQL Editor → New query**, paste the contents of
-`supabase/migrations/0001_init.sql`, run it. That creates the schema, the
-policies, and seeds the six channels plus the founding schools and clubs.
+**SQL Editor → New query**, run each file in `supabase/migrations/` in
+order — `0001_init.sql` first, then `0002_allowed_emails.sql`. Together they
+create the schema and policies, seed the six channels plus the founding
+schools and clubs, and add the staff allowlist.
 
 ### 3. Configure auth
 
@@ -59,8 +60,26 @@ origin, and add `https://your-domain/auth/callback` to Redirect URLs (plus
 
 ### 4. Make yourself an admin
 
-Sign in once with your own `.edu` address so a profile row exists. Then in the
-SQL Editor:
+You need a profile row before you can be promoted, and the trigger creates one
+on signup. You don't need the app running for this — **Authentication → Users
+→ Add user** fires the same trigger.
+
+**If you have a `.edu` address**, add a user with it and skip to the SQL below.
+
+**If you don't** — you've graduated, or you're an advisor from the industry —
+allowlist yourself first, in the SQL Editor:
+
+```sql
+insert into public.allowed_emails (email, note)
+values ('you@gmail.com', 'Founder');
+```
+
+Then add the user. Do the same for every advisor and exec-team member who
+isn't a current student: allowlist the address, then they can sign in. Being
+on the list only grants entry — everyone still arrives as `member`, and an
+admin promotes them.
+
+Now promote yourself, in the SQL Editor:
 
 ```sql
 update public.profiles set role = 'admin'
@@ -89,6 +108,17 @@ three variables from `.env.example` as environment variables, with
 ---
 
 ## Roles
+
+### Who can have an account
+
+Members sign in with a `.edu` address — that's what ties them to a school and
+a club, and it's enforced by a trigger, not by the UI.
+
+Everyone else — advisory board, exec team, anyone who has graduated — needs
+their address added to `allowed_emails` first, by an admin. That list is
+admin-only to read as well as write; it's a staff roster, and members have no
+reason to see it. Allowlisted accounts get no school affiliation, because
+they aren't students.
 
 | Role | Can |
 |---|---|

@@ -87,3 +87,25 @@ set test.uid = '22222222-2222-2222-2222-222222222222';
 select count(*) as raw_posts_visible_to_member from posts;
 select count(*) as feed_posts_visible_to_member from post_feed;
 reset role;
+
+\echo ''
+\echo '=== 14. a non-.edu address on the allowlist CAN sign up (staff) ==='
+reset role;
+insert into allowed_emails (email, note) values ('  Coach@IFBBpro.COM ', 'Advisory board — posing');
+select email from allowed_emails;
+insert into auth.users (id, email) values ('55555555-5555-5555-5555-555555555555', 'coach@ifbbpro.com');
+select p.display_name, p.role, s.name as school
+  from profiles p left join schools s on s.id = p.school_id
+ where p.id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 15. a non-.edu address NOT on the allowlist is still rejected ==='
+insert into auth.users (email) values ('randomer@gmail.com');
+
+\echo ''
+\echo '=== 16. a member CANNOT read or write the allowlist ==='
+set role authenticated;
+set test.uid = '22222222-2222-2222-2222-222222222222';
+select count(*) as allowlist_rows_visible_to_member from allowed_emails;
+insert into allowed_emails (email) values ('me@gmail.com');
+reset role;
