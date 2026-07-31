@@ -587,22 +587,6 @@
 
     'Join': ()=>{
       const frag=document.createDocumentFragment();
-      let p=panel('Membership tiers'); DATA.tiers=DATA.tiers||[];
-      p.appendChild(objectList(DATA.tiers,{
-        titleKey:'name', addLabel:'Add tier', newItem:()=>({name:'',price:'$0',note:'',tagline:'',features:[]}),
-        fields:(it,card,upd)=>{
-          const g=document.createElement('div'); g.className='grid-2';
-          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
-          g.appendChild(fieldText('Price', ()=>it.price, v=>it.price=v));
-          g.appendChild(fieldText('Note', ()=>it.note, v=>it.note=v));
-          g.appendChild(fieldText('Tagline', ()=>it.tagline, v=>it.tagline=v));
-          card.appendChild(g);
-          card.appendChild(fieldCheck('Featured (highlighted card)', ()=>it.featured, v=>it.featured=v));
-          card.appendChild(subhead('Features'));
-          it.features=it.features||[];
-          card.appendChild(stringList(it.features,{addLabel:'Add feature'}));
-        }
-      })); frag.appendChild(p);
 
       p=panel('How to join — steps'); DATA.joinSteps=DATA.joinSteps||[];
       p.appendChild(objectList(DATA.joinSteps,{
