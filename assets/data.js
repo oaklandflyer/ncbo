@@ -128,10 +128,6 @@ window.NCBO_DATA = {
       {
         "num": "2024",
         "lab": "Founded"
-      },
-      {
-        "num": "1",
-        "lab": "National title — the goal"
       }
     ]
   },
@@ -156,8 +152,8 @@ window.NCBO_DATA = {
   "voices": [
     {
       "quote": "NCBO turned lifting alone into showing up with a team. Having a club at my school changed how I train and who I train with.",
-      "name": "Founding member",
-      "club": "Pitt club",
+      "name": "NCBO member",
+      "club": "Bodybuilding and Fitness Club at Pitt",
       "img": "assets/img/voice-1.jpg"
     },
     {
@@ -306,7 +302,7 @@ window.NCBO_DATA = {
     {
       "name": "Lauren Rowe",
       "role": "Marketing Team Member",
-      "img": ""
+      "img": "assets/img/team-lauren-rowe.jpg"
     }
   ],
   "advisory": [
