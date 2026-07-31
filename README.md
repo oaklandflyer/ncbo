@@ -30,7 +30,12 @@ Change the text between the quotes, save, refresh the page.
 | `faqs.html` | FAQ accordion |
 | `contact.html` | Contact info + form |
 | `news.html` | News & Updates |
+| `members.html` | Member hub — access-code gate + member app |
 | `assets/data.js` | **All site content. Edit this.** |
+| `assets/member-data.js` | **All member-hub content, including the access code.** |
+| `assets/app.js` / `app.css` | Member hub: gate, tabs, dashboard, resources, directory |
+| `assets/channels-qa.js` / `.css` | Member hub: channel rail + Q&A board |
+| `assets/usmap.js` | Reusable US club map (state outlines + campus pins) |
 | `assets/styles.css` | Design system (colors, layout). Edit only for look changes. |
 | `assets/site.js` | Builds the shared nav/footer and renders the data. Don't edit unless adding features. |
 | `assets/ncbo-logo.webp` / `.png` | Logo |
@@ -73,6 +78,36 @@ Search the file for `<--` and `PLACEHOLDER` to jump straight to each one.
 3. Done — `index.html` is the entry point.
 
 Everything is plain HTML/CSS/JS. No build step, no dependencies, no server.
+
+---
+
+## The member hub (`members.html`)
+
+Members enter an access code to get to the season hub: dashboard (announcements
++ calendar), channels & Q&A board, resources library, and a club directory with
+the interactive map.
+
+**Editing it:** everything lives in `assets/member-data.js` — the access code,
+announcements, calendar, resource links, channels, and seeded Q&A. It's kept out
+of `data.js` on purpose, because the admin content manager rewrites `data.js`
+wholesale and would wipe it.
+
+**Rotating the code:** change `access.codes` in `assets/member-data.js`. Members
+who ticked "keep me signed in" are signed out automatically once the old code
+stops matching. You can list more than one code if you want a club-lead code
+alongside the member one.
+
+**What the gate is and isn't:** this is a static site with no server, so the
+code is a convenience lock, not authentication — anyone who opens dev tools can
+read it out of the file. Treat what's behind it like a printed members-only
+handout: fine for schedules, resources, and Q&A; not for personal contact info,
+payment details, or anything you'd be upset to see forwarded. If you need a real
+login later, that means adding a backend (or a host like Netlify with password
+protection).
+
+The Q&A ask box saves drafts to the member's own browser only; set
+`ask.form` in `member-data.js` to a Google Form link to give them a real way to
+send questions in.
 
 ---
 
