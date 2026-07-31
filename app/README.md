@@ -7,9 +7,9 @@ the marketing site in the repo root, which stays a static GitHub Pages build.
 security) · deployed on Vercel. All three have free tiers that fit an
 organisation this size.
 
-**What's built so far:** sign-in with a `.edu` address, the four roles, the
-Topics channels, and the Q&A board. Events, standings, check-in, tokens, and
-the club-lead surfaces are not built yet.
+**What's built so far:** magic-link sign-in with an approval queue, the four
+roles, a club home, the Topics channels, and the Q&A board. Events, standings,
+check-in, tokens, and the club-lead surfaces are not built yet.
 
 ---
 
@@ -44,9 +44,9 @@ At [supabase.com](https://supabase.com), create a project. From
 ### 2. Run the migration
 
 **SQL Editor → New query**, run each file in `supabase/migrations/` in
-order — `0001_init.sql` first, then `0002_allowed_emails.sql`. Together they
-create the schema and policies, seed the six channels plus the founding
-schools and clubs, and add the staff allowlist.
+order: `0001_init.sql`, `0002_allowed_emails.sql`, `0003_approvals.sql`.
+Together they create the schema and policies, seed the six channels plus the
+founding schools and clubs, and add the staff allowlist and approval queue.
 
 ### 3. Configure auth
 
@@ -64,26 +64,16 @@ You need a profile row before you can be promoted, and the trigger creates one
 on signup. You don't need the app running for this — **Authentication → Users
 → Add user** fires the same trigger.
 
-**If you have a `.edu` address**, add a user with it and skip to the SQL below.
+Add a user with whatever address you want as the founding admin — a `.edu` at
+a seeded school will come out approved, anything else comes out pending. It
+doesn't matter which, because the next step overrides both.
 
-**If you don't** — you've graduated, or you're an advisor from the industry —
-allowlist yourself first, in the SQL Editor:
-
-```sql
-insert into public.allowed_emails (email, note)
-values ('you@gmail.com', 'Founder');
-```
-
-Then add the user. Do the same for every advisor and exec-team member who
-isn't a current student: allowlist the address, then they can sign in. Being
-on the list only grants entry — everyone still arrives as `member`, and an
-admin promotes them.
-
-Now promote yourself, in the SQL Editor:
+Then, in the SQL Editor:
 
 ```sql
-update public.profiles set role = 'admin'
-where id = (select id from auth.users where email = 'you@yourschool.edu');
+update public.profiles
+   set role = 'admin', status = 'approved', approved_at = now()
+ where id = (select id from auth.users where email = 'you@yourschool.edu');
 ```
 
 The SQL Editor can do this because the privilege guard allows trusted
@@ -111,14 +101,35 @@ three variables from `.env.example` as environment variables, with
 
 ### Who can have an account
 
-Members sign in with a `.edu` address — that's what ties them to a school and
-a club, and it's enforced by a trigger, not by the UI.
+Anyone can sign up. What varies is whether the account goes live immediately
+or waits for you:
 
-Everyone else — advisory board, exec team, anyone who has graduated — needs
-their address added to `allowed_emails` first, by an admin. That list is
-admin-only to read as well as write; it's a staff roster, and members have no
-reason to see it. Allowlisted accounts get no school affiliation, because
-they aren't students.
+| Address | What happens |
+|---|---|
+| `.edu` at a school NCBO already runs | **Approved instantly**, linked to that school |
+| On the `allowed_emails` list | **Approved instantly** — pre-vetted staff |
+| Anything else | **Pending** until an admin approves it |
+
+The reasoning: a `pitt.edu` address has already proved the person is at Pitt,
+better than a human scanning a queue can. Making an admin approve every
+student would be manual work duplicating a check the database does for free —
+and the queue would back up exactly during recruiting season. So the queue
+holds only the accounts that genuinely need judgment: advisors, exec team,
+graduates, and students at schools not yet in NCBO.
+
+Pending accounts can sign in and see their own status. They cannot read the
+board — enforced by policy, not by the UI. Approve them at
+**Admin → Waiting for approval**.
+
+`allowed_emails` is now optional: it's a shortcut for staff you already know
+are coming, so they skip the queue. Without it they simply land in the queue
+like anyone else.
+
+### Staying signed in
+
+Sign-in is a magic link, but that's a one-time cost per device, not per visit
+— Supabase issues a refresh token, so people stay signed in until they
+explicitly sign out.
 
 | Role | Can |
 |---|---|
@@ -127,9 +138,10 @@ they aren't students.
 | `advisor` | Everything a member can, plus **answer questions** and moderate posts |
 | `admin` | Everything, plus assign roles and clubs, and edit reference data |
 
-New signups are `member`. Only an admin can change a role — enforced by the
-`guard_profile_privileges` trigger, so it holds even if someone calls the API
-directly.
+New signups are `member`. Only an admin can change a role, approve an account,
+or reassign a club — all enforced by the `guard_profile_privileges` trigger,
+so they hold even if someone calls the API directly. Without that trigger, "a
+member may edit their own profile" would let a pending account approve itself.
 
 ## Privacy
 

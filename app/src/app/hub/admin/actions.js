@@ -32,3 +32,38 @@ export async function updateMember(prev, formData) {
   revalidatePath('/hub/admin');
   return { ok: true };
 }
+
+/**
+ * Approve or reject a pending account.
+ *
+ * Same story as updateMember: the `guard_profile_privileges` trigger refuses
+ * a status change from anyone who isn't an admin, so this cannot be driven
+ * by a member POSTing the action directly.
+ */
+export async function setStatus(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const id = String(formData.get('id') || '');
+  const status = String(formData.get('status') || '');
+  if (!['approved', 'suspended'].includes(status)) return { error: 'Unknown status.' };
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      status,
+      approved_at: status === 'approved' ? new Date().toISOString() : null,
+      approved_by: status === 'approved' ? user.id : null,
+    })
+    .eq('id', id);
+
+  if (error) {
+    return { error: error.message.includes('Only an admin')
+      ? 'Only an admin can approve an account.'
+      : error.message };
+  }
+
+  revalidatePath('/hub/admin');
+  revalidatePath('/hub');
+  return { ok: true };
+}
