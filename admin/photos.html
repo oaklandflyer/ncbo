@@ -450,6 +450,54 @@
     render(); return wrap;
   }
 
+  // editable list of image paths (hero background rotation)
+  function photoList(arr, cfg={}){
+    const host=document.createElement('div');
+    const prefix=cfg.prefix||'photo';
+    function nextPath(){
+      for(let n=1;n<50;n++){
+        const p=`assets/img/${prefix}-${n}.jpg`;
+        if(arr.indexOf(p)===-1) return p;
+      }
+      return `assets/img/${prefix}-${Date.now()}.jpg`;
+    }
+    function move(i,to){
+      if(to<0||to>=arr.length) return;
+      const [it]=arr.splice(i,1); arr.splice(to,0,it); markDirty(); render();
+    }
+    function render(){
+      host.innerHTML='';
+      arr.forEach((path,i)=>{
+        const card=document.createElement('div'); card.className='card';
+        const head=document.createElement('div'); head.className='card-head';
+        const t=document.createElement('div'); t.className='t'; t.textContent='#'+(i+1);
+        const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:.4rem;';
+        const up=document.createElement('button'); up.className='small'; up.textContent='↑'; up.title='Move earlier';
+        up.disabled=i===0; up.addEventListener('click',()=>move(i,i-1));
+        const dn=document.createElement('button'); dn.className='small'; dn.textContent='↓'; dn.title='Move later';
+        dn.disabled=i===arr.length-1; dn.addEventListener('click',()=>move(i,i+1));
+        const del=document.createElement('button'); del.className='small danger'; del.textContent='Remove';
+        del.addEventListener('click',()=>{ if(confirm('Remove this photo from the rotation? (The image file itself stays in the repo.)')){ arr.splice(i,1); markDirty(); render(); } });
+        btns.appendChild(up); btns.appendChild(dn); btns.appendChild(del);
+        head.appendChild(t); head.appendChild(btns); card.appendChild(head);
+
+        card.appendChild(fieldRowFull(fieldText('Image path', ()=>arr[i], v=>{ arr[i]=v; w.refreshPath(); })));
+        const w=photoWidget({
+          aspect:cfg.aspect||16/9,
+          getPath:()=>arr[i],
+          setPath:v=>{ arr[i]=v; },
+          ensurePath:()=>{ if(!arr[i]){ arr[i]=nextPath(); markDirty(); } return arr[i]; }
+        });
+        card.appendChild(w);
+        host.appendChild(card);
+      });
+      const add=document.createElement('button'); add.className='add-btn'; add.textContent='+ '+(cfg.addLabel||'Add photo');
+      add.addEventListener('click',()=>{ arr.push(nextPath()); markDirty(); render(); });
+      host.appendChild(add);
+    }
+    render(); return host;
+  }
+
   // generic list-of-objects editor with add/remove
   function objectList(arr, cfg){
     // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(), fields(item, card)}
@@ -522,6 +570,14 @@
       p.appendChild(rb);
       frag.appendChild(p);
 
+      // Hero background photos
+      p=panel('Hero background photos'); DATA.heroPhotos=DATA.heroPhotos||[];
+      p.appendChild(noteEl('These crossfade behind the headline, in this order, one every 6.5 seconds. '+
+        'A photo only appears once its file exists, so an entry with nothing uploaded yet is skipped rather than showing a gap. '+
+        'Wide landscape shots work best — the headline sits over the left half, so keep that side uncluttered.'));
+      p.appendChild(photoList(DATA.heroPhotos,{ aspect:16/9, prefix:'hero', addLabel:'Add hero photo' }));
+      frag.appendChild(p);
+
       // Marquee
       p=panel('Marquee words'); DATA.marquee=DATA.marquee||[];
       p.appendChild(stringList(DATA.marquee,{addLabel:'Add word'})); frag.appendChild(p);
@@ -589,6 +645,7 @@
       const frag=document.createDocumentFragment();
 
       p=panel('How to join — steps'); DATA.joinSteps=DATA.joinSteps||[];
+      p.appendChild(noteEl('Shows in the <b>Join</b> section of the home page (index.html#join) and on join.html.'));
       p.appendChild(objectList(DATA.joinSteps,{
         titleKey:'title', addLabel:'Add step', newItem:()=>({step:'',title:'',text:''}),
         fields:(it,card,upd)=>{
@@ -606,10 +663,11 @@
       return frag;
     },
 
-    'Find a Club': ()=>{
+    'Clubs': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Clubs'); DATA.clubs=DATA.clubs||[];
-      p.appendChild(noteEl('Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.'));
+      p.appendChild(noteEl('Shows on the home page under <b>Find a Club</b> (index.html#clubs) — on the map and in the cards below it. '+
+        'Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.'));
       p.appendChild(objectList(DATA.clubs,{
         titleKey:'school', imgKey:'img', imgPrefix:'club', aspect:16/10, addLabel:'Add club',
         newItem:()=>({school:'',name:'',lead:'',status:'Forming',img:''}),
@@ -635,16 +693,17 @@
     'Start a Club': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Start-a-club application'); DATA.forms=DATA.forms||{};
-      p.appendChild(noteEl('The Start a Club page is form-driven. Set the Google Form link members are sent to when they apply.'));
+      p.appendChild(noteEl('Shows on the home page under <b>Start a Club</b> (index.html#start). Set the Google Form link people are sent to when they apply.'));
       p.appendChild(fieldRowFull(fieldText('Start-a-club form link', ()=>DATA.forms.startClub, v=>DATA.forms.startClub=v, {full:true})));
       frag.appendChild(p);
       return frag;
     },
 
-    'About': ()=>{
+    'Team': ()=>{
       const frag=document.createDocumentFragment();
       let p=panel('Leadership team — positions & photos'); DATA.leadership=DATA.leadership||[];
-      p.appendChild(noteEl('Edit each person’s <b>position/role</b>, reorder isn’t needed — order here is the order shown. Upload square photos (they crop to a square on the site).'));
+      p.appendChild(noteEl('Shows on the home page under <b>Team</b> (index.html#team). '+
+        'Edit each person’s <b>position/role</b>, reorder isn’t needed — order here is the order shown. Upload square photos (they crop to a square on the site).'));
       p.appendChild(objectList(DATA.leadership,{
         titleKey:'name', imgKey:'img', imgPrefix:'team', aspect:1, addLabel:'Add team member',
         newItem:()=>({name:'',role:'',img:''}),
@@ -673,6 +732,7 @@
     'FAQs': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Frequently asked questions'); DATA.faqs=DATA.faqs||[];
+      p.appendChild(noteEl('Shows on the home page under <b>FAQs</b> (index.html#faqs), as an accordion.'));
       p.appendChild(objectList(DATA.faqs,{
         titleKey:'q', addLabel:'Add FAQ', newItem:()=>({q:'',a:''}),
         fields:(it,card,upd)=>{
@@ -705,7 +765,7 @@
   function fieldRowFull(fieldEl){ const r=document.createElement('div'); r.className='row'; r.appendChild(fieldEl); return r; }
 
   /* ---------------- tab navigation ---------------- */
-  const NAV=['Home','Join','Find a Club','Start a Club','About','FAQs','News'];
+  const NAV=['Home','Clubs','Start a Club','Team','FAQs','Join','News'];
   const tabsHost=$('#tabs'), sectionsHost=$('#sections');
   let current=NAV[0];
   function renderTabs(){
