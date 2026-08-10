@@ -21,22 +21,6 @@ window.NCBO_DATA = {
       "href": "index.html"
     },
     {
-      "label": "Find a Club",
-      "href": "clubs.html"
-    },
-    {
-      "label": "Start a Club",
-      "href": "start-a-club.html"
-    },
-    {
-      "label": "About",
-      "href": "about.html"
-    },
-    {
-      "label": "FAQs",
-      "href": "faqs.html"
-    },
-    {
       "label": "Members",
       "href": "members.html"
     },
@@ -45,6 +29,13 @@ window.NCBO_DATA = {
       "href": "join.html",
       "cta": true
     }
+  ],
+  "heroPhotos": [
+    "assets/img/voice-1.jpg",
+    "assets/img/hero-1.jpg",
+    "assets/img/hero-2.jpg",
+    "assets/img/hero-3.jpg",
+    "assets/img/hero-4.jpg"
   ],
   "marquee": [
     "Clubs",
@@ -65,41 +56,34 @@ window.NCBO_DATA = {
     "sub": "At an open show, \u201ccollegiate\u201d is just an eligibility checkbox. NCBO makes it the point \u2014 a club at your school, a season to train for, and school-vs-school competition. Find your club and start building.",
     "primary": {
       "label": "Find your club",
-      "href": "clubs.html"
+      "href": "#clubs"
     },
     "ghost": {
       "label": "How it works",
-      "href": "about.html"
+      "href": "#about"
     }
   },
   "tiles": [
     {
-      "kicker": "Join Now",
-      "title": "Become a Member",
-      "text": "Get plugged into a club at your school.",
-      "href": "join.html",
-      "img": "assets/img/tile-join.jpg"
-    },
-    {
       "kicker": "Chapters",
       "title": "Find a Club",
       "text": "See which schools already have NCBO clubs.",
-      "href": "clubs.html",
+      "href": "#clubs",
       "img": "assets/img/tile-clubs.jpg"
     },
     {
       "kicker": "Start a Club",
       "title": "Apply Today",
       "text": "Bring NCBO to your campus \u2014 we'll help you build.",
-      "href": "start-a-club.html",
+      "href": "#start",
       "img": "assets/img/tile-start.jpg"
     },
     {
-      "kicker": "How it works",
-      "title": "The Model",
-      "text": "What NCBO runs, and what stays yours.",
-      "href": "about.html",
-      "img": "assets/img/tile-news.jpg"
+      "kicker": "Join Now",
+      "title": "Become a Member",
+      "text": "Get plugged into a club at your school.",
+      "href": "join.html",
+      "img": "assets/img/tile-join.jpg"
     }
   ],
   "about": {

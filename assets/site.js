@@ -89,16 +89,16 @@
               <h4>Explore</h4>
               <ul>
                 <li><a href="join.html">Become a Member</a></li>
-                <li><a href="clubs.html">Find a Club</a></li>
-                <li><a href="start-a-club.html">Start a Club</a></li>
+                <li><a href="index.html#clubs">Find a Club</a></li>
+                <li><a href="index.html#start">Start a Club</a></li>
                 <li><a href="members.html">Member Hub</a></li>
               </ul>
             </div>
             <div class="footer-col">
               <h4>Organization</h4>
               <ul>
-                <li><a href="about.html">About</a></li>
-                <li><a href="faqs.html">FAQs</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#faqs">FAQs</a></li>
                 <li><a href="contact.html">Contact</a></li>
                 <li><a href="${ig}" target="_blank" rel="noopener">Instagram ${D.org.instagramHandle || ''}</a></li>
                 ${tt ? `<li><a href="${tt}" target="_blank" rel="noopener">TikTok ${D.org.tiktokHandle || ''}</a></li>` : ''}
@@ -264,49 +264,71 @@
     });
   }
 
-  /* ---------- hero canvas (ambient drifting nodes) ----------------------- */
-  function initHeroCanvas() {
-    const cv = $('#hero-canvas');
-    if (!cv) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const ctx = cv.getContext('2d');
-    let w, h, nodes, raf;
-    const COUNT = 46;
-    function size() {
-      w = cv.width = cv.offsetWidth * devicePixelRatio;
-      h = cv.height = cv.offsetHeight * devicePixelRatio;
-    }
-    function make() {
-      nodes = Array.from({ length: COUNT }, () => ({
-        x: Math.random() * w, y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.18 * devicePixelRatio,
-        vy: (Math.random() - 0.5) * 0.18 * devicePixelRatio,
-        r: (Math.random() * 1.6 + 0.6) * devicePixelRatio
-      }));
-    }
-    function tick() {
-      ctx.clearRect(0, 0, w, h);
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i];
-        n.x += n.vx; n.y += n.vy;
-        if (n.x < 0 || n.x > w) n.vx *= -1;
-        if (n.y < 0 || n.y > h) n.vy *= -1;
-        for (let j = i + 1; j < nodes.length; j++) {
-          const m = nodes[j], dx = n.x - m.x, dy = n.y - m.y, d = Math.hypot(dx, dy);
-          const lim = 140 * devicePixelRatio;
-          if (d < lim) {
-            ctx.strokeStyle = `rgba(91,134,196,${(1 - d / lim) * 0.16})`;
-            ctx.lineWidth = devicePixelRatio * 0.6;
-            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(m.x, m.y); ctx.stroke();
-          }
-        }
-        ctx.fillStyle = 'rgba(143,176,221,0.55)';
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+  /* ---------- alternating photo background -------------------------------
+     Cycles through NCBO_DATA.heroPhotos. Each photo is only added once it
+     has actually loaded, so missing files are skipped silently and the
+     gradient underneath is what shows if none of them exist yet.          */
+  function initPhotoBg() {
+    const host = $('.photo-bg');
+    if (!host) return;
+    const srcs = D.heroPhotos || [];
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let idx = 0, timer = null;
+
+    srcs.forEach(src => {
+      const probe = new Image();
+      probe.onload = () => add(src);
+      probe.src = src;
+    });
+
+    function add(src) {
+      const layer = document.createElement('div');
+      layer.className = 'photo-layer';
+      layer.style.backgroundImage = 'url("' + src + '")';
+      host.appendChild(layer);
+      if (host.children.length === 1) {
+        layer.classList.add('on');
+        host.classList.add('has-photo');
       }
-      raf = requestAnimationFrame(tick);
+      if (!still) start();
     }
-    size(); make(); tick();
-    window.addEventListener('resize', () => { cancelAnimationFrame(raf); size(); make(); tick(); });
+
+    function start() {
+      if (timer) return;
+      timer = setInterval(() => {
+        const layers = host.children;
+        if (layers.length < 2 || document.hidden) return;
+        layers[idx].classList.remove('on');
+        idx = (idx + 1) % layers.length;
+        layers[idx].classList.add('on');
+      }, 6500);
+    }
+  }
+
+  /* ---------- jump bar (home page section nav) ---------------------------- */
+  function initJumpBar() {
+    $$('.jump').forEach(initOneJumpBar);
+  }
+
+  function initOneJumpBar(bar) {
+    const links = $$('a', bar);
+    const targets = links
+      .map(a => ({ a, el: document.getElementById(a.getAttribute('href').slice(1)) }))
+      .filter(t => t.el);
+    if (!targets.length || !('IntersectionObserver' in window)) return;
+
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const hit = targets.find(t => t.el === e.target);
+        links.forEach(a => a.removeAttribute('aria-current'));
+        if (hit) {
+          hit.a.setAttribute('aria-current', 'true');
+          hit.a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    targets.forEach(t => io.observe(t.el));
   }
 
   /* ---------- boot -------------------------------------------------------- */
@@ -315,7 +337,8 @@
     buildFooter();
     // pages call NCBO_RENDER.* themselves; then we run shared init below
     if (window.NCBO_PAGE) window.NCBO_PAGE(R);
-    initHeroCanvas();
+    initPhotoBg();
+    initJumpBar();
     initReveal();
     initNewsletter();
   });
