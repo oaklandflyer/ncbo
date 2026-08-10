@@ -1,9 +1,13 @@
 # NCBO Website
 
-Multi-page site for the National Collegiate Bodybuilding Organization.
-Structure modeled on girlgains.co (community-first, multi-page) wrapped in NCBO's
-own brand — navy `#0A1228`, steel blue `#5B86C4`, silver `#C9CDD1`, Barlow
-Condensed headings. No shop.
+Site for the National Collegiate Bodybuilding Organization, in NCBO's brand —
+navy `#0A1228`, steel blue `#5B86C4`, silver `#C9CDD1`, Barlow Condensed
+headings. No shop.
+
+**The public site is one page.** `index.html` carries About, Find a Club, Start
+a Club, the team, FAQs, and how membership works, with a sticky jump bar to move
+between them — built that way so it reads top-to-bottom on a phone. The nav is
+just **Home** and **Members**, with **Join NCBO** in the top right.
 
 ---
 
@@ -22,19 +26,15 @@ Change the text between the quotes, save, refresh the page.
 
 | File | What it is |
 |------|------------|
-| `index.html` | Home |
-| `join.html` | Become a Member |
-| `clubs.html` | Find a Club |
-| `start-a-club.html` | Start a Club (with application form) |
-| `about.html` | Who We Are — mission, model, leadership, advisory |
-| `faqs.html` | FAQ accordion |
+| `index.html` | The whole public site: hero, about, clubs, start a club, team, FAQs, join |
+| `join.html` | Become a Member — the detail page behind the nav CTA |
 | `contact.html` | Contact info + form |
 | `news.html` | News & Updates |
-| `members.html` | Member hub — access-code gate + member app |
+| `members.html` | Member hub — access-code gate + member area |
+| `clubs.html`, `start-a-club.html`, `about.html`, `faqs.html` | Redirect stubs → the matching `index.html#` section (old links keep working) |
 | `assets/data.js` | **All site content. Edit this.** |
 | `assets/member-data.js` | **All member-hub content, including the access code.** |
-| `assets/app.js` / `app.css` | Member hub: gate, tabs, dashboard, resources, directory |
-| `assets/channels-qa.js` / `.css` | Member hub: channel rail + Q&A board |
+| `assets/app.js` / `app.css` | Member hub: gate, calendar, updates, resources, Q&A, directory |
 | `assets/usmap.js` | Reusable US club map (state outlines + campus pins) |
 | `assets/styles.css` | Design system (colors, layout). Edit only for look changes. |
 | `assets/site.js` | Builds the shared nav/footer and renders the data. Don't edit unless adding features. |
@@ -97,9 +97,10 @@ app covers what the static page does, the static page can retire.
 
 ## The member hub (`members.html`)
 
-Members enter an access code to get to the season hub: dashboard (announcements
-+ calendar), channels & Q&A board, resources library, and a club directory with
-the interactive map.
+Members enter an access code to get to the season hub. Everything after that is
+one scrolling page — calendar, updates, resources, the Q&A board (channel chips
++ expandable answers), and the club directory — with a jump bar at the top. No
+tabs and no side rails, so it works the same on a phone as on a laptop.
 
 **Editing it:** everything lives in `assets/member-data.js` — the access code,
 announcements, calendar, resource links, channels, and seeded Q&A. It's kept out
