@@ -8,13 +8,26 @@ so the layout never looks broken.
 Use `.jpg` (or change the path in `assets/data.js` if you prefer `.png`/`.webp`).
 Keep files reasonably sized (under ~400 KB each) so pages stay fast.
 
+## Hero background (home page)
+
+The hero cycles through photos, crossfading every 6.5 seconds. Drop files at
+these paths and each one joins the rotation automatically; any that don't exist
+are skipped, so you can add them one at a time.
+
+| File | Best shape |
+|------|-----------|
+| `hero-1.jpg` … `hero-4.jpg` | wide landscape, ~1920×1200, subject to the right |
+
+Stage shots and packed-gym shots work best — the copy sits over the left half,
+so keep that side uncluttered. The list lives in `heroPhotos` in
+`assets/data.js` if you want different filenames or more than four.
+
 ## Home page
 | File | Shows up as | Best shape |
 |------|-------------|-----------|
-| `tile-join.jpg`   | "Become a Member" tile background | tall / portrait |
 | `tile-clubs.jpg`  | "Find a Club" tile background     | tall / portrait |
 | `tile-start.jpg`  | "Apply Today" tile background     | tall / portrait |
-| `tile-news.jpg`   | "Latest Updates" tile background  | tall / portrait |
+| `tile-join.jpg`   | "Become a Member" tile background | tall / portrait |
 | `voice-1.jpg` … `voice-3.jpg` | Member testimonial photos | 4:3 landscape |
 
 ## Find a Club page

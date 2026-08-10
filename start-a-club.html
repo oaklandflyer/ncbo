@@ -4,102 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Start a Club — NCBO</title>
-  <meta name="description" content="Bring NCBO to your campus. Get the playbook, officer structure, recruiting templates, and support to launch a collegiate bodybuilding club fast.">
-  <meta name="keywords" content="NCBO, thencbo, the NCBO, National Collegiate Bodybuilding Organization, collegiate bodybuilding, college bodybuilding, collegiate bodybuilding organization, college bodybuilding club, collegiate bodybuilding club, bodybuilding club, collegiate bodybuilding league, campus bodybuilding, college bodybuilding team, collegiate fitness, college fitness club, bodybuilding competition college, student bodybuilding, NCBO bodybuilding, thencbo.org">
-  <meta name="author" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://thencbo.org/start-a-club.html">
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta property="og:title" content="Start a Club — NCBO">
-  <meta property="og:description" content="Bring NCBO to your campus. Get the playbook, officer structure, recruiting templates, and support to launch a collegiate bodybuilding club fast.">
-  <meta property="og:url" content="https://thencbo.org/start-a-club.html">
-  <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Start a Club — NCBO">
-  <meta name="twitter:description" content="Bring NCBO to your campus. Get the playbook, officer structure, recruiting templates, and support to launch a collegiate bodybuilding club fast.">
-  <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
-  <meta name="theme-color" content="#0A1228">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://thencbo.org/#start">
+  <meta http-equiv="refresh" content="0; url=index.html#start">
   <link rel="icon" href="assets/ncbo-logo.webp">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/styles.css">
+  <script>location.replace('index.html#start');</script>
 </head>
 <body>
-  <header id="site-nav"></header>
-
-  <section class="page-hero">
-    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
-    <div class="wrap">
-      <p class="eyebrow">Start a Club</p>
-      <h1 class="h-display">Bring NCBO<br>to your campus.</h1>
-      <p>You don't have to build it alone. We give you the operating system — officer structure, recruiting templates, a run-it playbook, and the member-club seal to get official on campus.</p>
-      <div class="hero-actions" style="margin-top:1.8rem">
-        <a class="btn btn-primary" id="apply-cta" href="#apply">Apply today</a>
-        <a class="btn btn-ghost btn-arrow" href="clubs.html">See existing clubs</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- WHAT YOU GET -->
-  <section class="section">
-    <div class="wrap">
-      <div class="reveal" style="margin-bottom:2.4rem">
-        <p class="eyebrow">What we hand you</p>
-        <h2 class="h-display" style="margin-top:1rem">A club in a box.</h2>
-      </div>
-      <div class="cards" id="pillars"></div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
-    <div class="wrap">
-      <div class="reveal" style="margin-bottom:2.4rem">
-        <p class="eyebrow">The path</p>
-        <h2 class="h-display" style="margin-top:1rem">From idea to<br>chartered club.</h2>
-      </div>
-      <div class="steps" id="start-steps"></div>
-    </div>
-  </section>
-
-  <!-- APPLY -->
-  <section class="section" id="apply">
-    <div class="wrap center">
-      <div class="reveal" style="max-width:620px; margin-inline:auto">
-        <p class="eyebrow center-line">Apply</p>
-        <h2 class="h-display" style="margin-top:1rem">Tell us about<br>your campus.</h2>
-        <p class="lead" style="margin-top:1rem">Fill out our application form and our Club Development team will reach out with next steps.</p>
-        <div class="hero-actions" style="justify-content:center; margin-top:1.6rem">
-          <a class="btn btn-primary" id="apply-form-btn" href="https://forms.gle/p1raPYK4cnLqD4Rb7" target="_blank" rel="noopener">Open the application form</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer id="site-footer"></footer>
-
-  <script src="assets/data.js"></script>
-  <script>
-    window.NCBO_PAGE = function (R) {
-      const D = window.NCBO_DATA, $ = s => document.querySelector(s);
-      R.pillars($('#pillars'));
-      // reuse generic join steps but reframe for starting a club
-      const startSteps = [
-        { step:'01', title:'Apply',          text:'Send us your campus and a bit about existing interest.' },
-        { step:'02', title:'Onboarding call', text:'We map officers, gym access, and your launch timeline together.' },
-        { step:'03', title:'Get the playbook', text:'Templates, recruiting plan, and the NCBO member-club seal.' },
-        { step:'04', title:'Charter & launch', text:'Go official on campus, recruit your first members, and join the season.' }
-      ];
-      $('#start-steps').innerHTML = startSteps.map(s =>
-        `<div class="step reveal"><div class="s-num">${s.step}</div><h3>${s.title}</h3><p>${s.text}</p></div>`).join('');
-      const link = D.forms && D.forms.startClub;
-      if (link && link !== '#') { $('#apply-cta').href = link; $('#apply-form-btn').href = link; }
-    };
-  </script>
-  <script src="assets/site.js"></script>
+  <p>Start a Club now lives on the NCBO home page. <a href="index.html#start">Continue to Start a Club</a>.</p>
 </body>
 </html>

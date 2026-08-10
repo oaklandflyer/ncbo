@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-site-verification" content="IriAHVVFyW2daqc6X4nefgXraWrzZCcaP9NP4bARssc" />
   <title>NCBO — National Collegiate Bodybuilding Organization</title>
-  <meta name="description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find your club, become a member, start building.">
+  <meta name="description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find a club, start a club, become a member.">
   <meta name="keywords" content="NCBO, thencbo, the NCBO, National Collegiate Bodybuilding Organization, collegiate bodybuilding, college bodybuilding, collegiate bodybuilding organization, college bodybuilding club, collegiate bodybuilding club, bodybuilding club, collegiate bodybuilding league, campus bodybuilding, college bodybuilding team, collegiate fitness, college fitness club, bodybuilding competition college, student bodybuilding, NCBO bodybuilding, thencbo.org">
   <meta name="author" content="NCBO — National Collegiate Bodybuilding Organization">
   <meta name="robots" content="index, follow">
@@ -14,13 +14,13 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
   <meta property="og:title" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta property="og:description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find your club, become a member, start building.">
+  <meta property="og:description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find a club, start a club, become a member.">
   <meta property="og:url" content="https://thencbo.org/">
   <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta name="twitter:description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find your club, become a member, start building.">
+  <meta name="twitter:description" content="NCBO is the governing body for collegiate bodybuilding — school-affiliated clubs, a real season, school-vs-school competition, and a year-round community. Find a club, start a club, become a member.">
   <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
   <meta name="theme-color" content="#0A1228">
   <link rel="icon" href="assets/ncbo-logo.webp">
@@ -49,11 +49,9 @@
 <body>
   <header id="site-nav"></header>
 
-  <!-- HERO -->
+  <!-- HERO — alternating photo background -->
   <section class="hero">
-    <canvas id="hero-canvas"></canvas>
-    <div class="hero-grid"></div>
-    <img class="hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="photo-bg" id="hero-photos" aria-hidden="true"></div>
     <div class="hero-inner">
       <p class="eyebrow up d1" id="hero-eyebrow"></p>
       <h1 class="up d2" id="hero-title"></h1>
@@ -63,20 +61,32 @@
     </div>
   </section>
 
+  <!-- JUMP BAR — the whole site in one scroll -->
+  <nav class="jump" id="jump" aria-label="Sections of this page">
+    <div class="jump-inner">
+      <a href="#about">About</a>
+      <a href="#clubs">Find a Club</a>
+      <a href="#start">Start a Club</a>
+      <a href="#team">Team</a>
+      <a href="#faqs">FAQs</a>
+      <a href="#join">Join</a>
+    </div>
+  </nav>
+
   <!-- VALUE MARQUEE -->
   <div class="marquee" id="marquee" aria-hidden="true"></div>
 
   <!-- CTA TILES -->
-  <section aria-label="Get started" class="section--tight" style="padding:0">
+  <section aria-label="Get started" style="padding:0">
     <div class="tiles" id="tiles"></div>
   </section>
 
-  <!-- WHAT WE ARE -->
+  <!-- ABOUT ─────────────────────────────────────────────────────────── -->
   <section class="section" id="about">
     <div class="wrap split">
       <div class="reveal">
         <p class="eyebrow" id="about-label"></p>
-        <h2 class="h-display" id="about-head" style="margin-top:1.1rem"></h2>
+        <h2 class="h-display" style="margin-top:1.1rem" id="about-head"></h2>
       </div>
       <div class="reveal">
         <div id="about-body"></div>
@@ -85,49 +95,125 @@
     </div>
   </section>
 
-  <!-- PILLARS -->
-  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
+  <section class="section band">
     <div class="wrap">
-      <div class="center reveal" style="max-width:640px; margin-inline:auto">
-        <p class="eyebrow center-line">What members get</p>
-        <h2 class="h-display" style="margin-top:1rem">Value you can't<br>build alone.</h2>
+      <div class="reveal" style="max-width:640px">
+        <p class="eyebrow">What members get</p>
+        <h2 class="h-display" style="margin-top:1rem">Value you can't build alone.</h2>
+        <p class="lead" style="margin-top:1rem">We sit above independently-run student clubs, not in place of them. The club stays yours — we run the layer no single club can build on its own.</p>
       </div>
-      <div class="cards" id="pillars" style="margin-top:2.6rem"></div>
+      <div class="cards" id="pillars" style="margin-top:2.4rem"></div>
     </div>
   </section>
 
-  <!-- FOUNDING CLUBS STRIP -->
-  <section class="section">
+  <!-- FIND A CLUB ───────────────────────────────────────────────────── -->
+  <section class="section" id="clubs">
     <div class="wrap">
-      <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; justify-content:space-between; margin-bottom:2.2rem">
-        <div class="reveal">
-          <p class="eyebrow">The network</p>
-          <h2 class="h-display" style="margin-top:1rem">Founding clubs.</h2>
+      <div class="reveal" style="margin-bottom:1.8rem">
+        <p class="eyebrow">Find a club</p>
+        <h2 class="h-display" style="margin-top:1rem">Where we are.</h2>
+        <p class="lead" style="margin-top:1rem">These campuses are building NCBO clubs right now. Find your school, meet your lead, and get in. Don't see your school? You can start it.</p>
+      </div>
+
+      <div class="map-card reveal">
+        <div class="map-stage" id="club-map"></div>
+        <div class="map-foot">
+          <p class="map-hint">Tap a campus to jump to its club.</p>
+          <div class="map-legend">
+            <span class="lg active"><i></i>Active</span>
+            <span class="lg forming"><i></i>Forming</span>
+          </div>
         </div>
-        <a class="btn btn-ghost btn-arrow reveal" href="clubs.html">See all clubs</a>
       </div>
-      <div class="clubs-grid" id="clubs-strip"></div>
+
+      <div class="clubs-grid" id="clubs-grid" style="margin-top:1.6rem"></div>
     </div>
   </section>
 
-  <!-- VOICES -->
-  <section class="section" style="background:var(--navy-deep); border-block:1px solid var(--line)">
+  <!-- START A CLUB ──────────────────────────────────────────────────── -->
+  <section class="section band" id="start">
     <div class="wrap">
-      <div class="center reveal" style="margin-bottom:2.6rem">
-        <p class="eyebrow center-line">From the floor</p>
-        <h2 class="h-display" style="margin-top:1rem">Why members<br>show up.</h2>
+      <div class="reveal" style="max-width:660px">
+        <p class="eyebrow">Start a club</p>
+        <h2 class="h-display" style="margin-top:1rem">Bring NCBO to your campus.</h2>
+        <p class="lead" style="margin-top:1rem">You don't have to build it alone. We hand you the operating system — officer structure, recruiting templates, a run-it playbook, and the member-club seal to get official on campus.</p>
+      </div>
+      <div class="steps" id="start-steps" style="margin-top:2.4rem"></div>
+      <div class="hero-actions" style="margin-top:2.2rem">
+        <a class="btn btn-primary" id="apply-btn" href="#" target="_blank" rel="noopener">Apply to start a club</a>
+        <a class="btn btn-ghost btn-arrow" href="contact.html">Talk to us first</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM ──────────────────────────────────────────────────────────── -->
+  <section class="section" id="team">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:1.8rem">
+        <p class="eyebrow">Who runs NCBO</p>
+        <h2 class="h-display" style="margin-top:1rem">The founding team.</h2>
+      </div>
+      <div class="people" id="leadership"></div>
+
+      <div class="reveal" style="margin:3rem 0 1.6rem">
+        <p class="eyebrow">Advisory board</p>
+        <h2 class="h-display" style="margin-top:1rem">Pros in our corner.</h2>
+      </div>
+      <div class="people" id="advisory"></div>
+
+      <div class="hero-actions" style="margin-top:2.2rem">
+        <a class="btn btn-ghost btn-arrow" id="board-btn" href="#">Get involved</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOICES ────────────────────────────────────────────────────────── -->
+  <section class="section band">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:2rem">
+        <p class="eyebrow">From the floor</p>
+        <h2 class="h-display" style="margin-top:1rem">Why members show up.</h2>
       </div>
       <div class="voices" id="voices"></div>
+    </div>
+  </section>
+
+  <!-- FAQS ──────────────────────────────────────────────────────────── -->
+  <section class="section" id="faqs">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:1.4rem">
+        <p class="eyebrow">Questions</p>
+        <h2 class="h-display" style="margin-top:1rem">The short answers.</h2>
+      </div>
+      <div class="faq" id="faq-list" style="margin-inline:0"></div>
+    </div>
+  </section>
+
+  <!-- JOIN ──────────────────────────────────────────────────────────── -->
+  <section class="section band" id="join">
+    <div class="wrap">
+      <div class="reveal" style="max-width:660px">
+        <p class="eyebrow">Become a member</p>
+        <h2 class="h-display" style="margin-top:1rem">Join through your club.</h2>
+        <p class="lead" style="margin-top:1rem">There's no separate NCBO fee. You pay dues to your club, and your club sets that number with the NCBO exec team — so it stays in range for students at your school.</p>
+      </div>
+      <div class="steps" id="join-steps" style="margin-top:2.4rem"></div>
+      <div class="hero-actions" style="margin-top:2.2rem">
+        <a class="btn btn-primary" href="join.html">How membership works</a>
+        <a class="btn btn-ghost btn-arrow" href="#clubs">Find your club</a>
+      </div>
     </div>
   </section>
 
   <footer id="site-footer"></footer>
 
   <script src="assets/data.js"></script>
+  <script src="assets/usmap.js"></script>
   <script>
     window.NCBO_PAGE = function (R) {
       const D = window.NCBO_DATA, $ = s => document.querySelector(s);
-      // hero
+
+      /* hero */
       $('#hero-eyebrow').textContent = D.hero.eyebrow;
       $('#hero-title').innerHTML = D.hero.title.join('<br>');
       $('#hero-chip').innerHTML = D.org.tagline.split('.').filter(Boolean)
@@ -136,19 +222,58 @@
       $('#hero-actions').innerHTML =
         `<a class="btn btn-primary" href="${D.hero.primary.href}">${D.hero.primary.label}</a>
          <a class="btn btn-ghost btn-arrow" href="${D.hero.ghost.href}">${D.hero.ghost.label}</a>`;
-      // marquee + tiles
+
       R.marquee($('#marquee'));
       R.tiles($('#tiles'));
-      // about
+
+      /* about */
       $('#about-label').textContent = D.about.label;
       $('#about-head').innerHTML = D.about.headline.join('<br>');
       $('#about-body').innerHTML = D.about.body.map(p => `<p class="lead">${p}</p>`).join('');
       $('#about-stats').innerHTML = D.about.stats.map(s =>
         `<div class="stat"><span class="stat-num">${s.num}</span><span class="stat-lab">${s.lab}</span></div>`).join('');
-      // pillars / clubs / voices
       R.pillars($('#pillars'));
-      R.clubsStrip($('#clubs-strip'), 4);
+
+      /* find a club — map + cards, wired together */
+      R.clubs($('#clubs-grid'));
+      const cards = Array.from(document.querySelectorAll('#clubs-grid .club-card'));
+      const flash = school => {
+        const card = cards.find(c => {
+          const el = c.querySelector('.club-school');
+          return el && el.textContent.trim() === school;
+        });
+        if (!card) return;
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cards.forEach(c => c.classList.remove('club-flash'));
+        card.classList.add('club-flash');
+      };
+      if (window.NCBO_USMAP) {
+        window.NCBO_USMAP.render($('#club-map'), D.clubs, { onSelect: flash });
+      }
+      const hint = $('.map-hint');
+      if (hint) hint.innerHTML = `Tap a campus to jump to its club. <b>${D.clubs.length} clubs</b> in the network.`;
+
+      /* start a club */
+      const startSteps = [
+        { step: '01', title: 'Apply',            text: 'Send us your campus and a bit about existing interest.' },
+        { step: '02', title: 'Onboarding call',  text: 'We map officers, gym access, and your launch timeline together.' },
+        { step: '03', title: 'Get the playbook', text: 'Templates, recruiting plan, and the NCBO member-club seal.' },
+        { step: '04', title: 'Charter & launch', text: 'Go official on campus, recruit members, and join the season.' }
+      ];
+      $('#start-steps').innerHTML = startSteps.map(s =>
+        `<div class="step reveal"><div class="s-num">${s.step}</div><h3>${s.title}</h3><p>${s.text}</p></div>`).join('');
+      const startLink = D.forms && D.forms.startClub;
+      if (startLink && startLink !== '#') $('#apply-btn').href = startLink;
+
+      /* team */
+      R.people($('#leadership'), D.leadership);
+      R.people($('#advisory'), D.advisory);
+      if (D.forms && D.forms.board) $('#board-btn').href = D.forms.board;
+
+      /* voices · faqs · join steps */
       R.voices($('#voices'));
+      R.faqs($('#faq-list'));
+      R.steps($('#join-steps'));
     };
   </script>
   <script src="assets/site.js"></script>

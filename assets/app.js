@@ -3,15 +3,15 @@
    Members-only area controller.
 
    - Access-code gate (codes live in assets/member-data.js)
-   - Tabbed app shell: Dashboard · Channels & Q&A · Resources · Directory
-   - Renders dashboard/resources/directory; the Q&A board is channels-qa.js
-     and the map is usmap.js
+   - One scrolling hub: Calendar · Updates · Resources · Q&A · Clubs
+     (no tabs, no side rails — everything stacks in one column on phones)
 
    The gate is a convenience lock on a static site, not authentication — see
    the note at the top of assets/member-data.js.
    ========================================================================== */
 (function () {
   const KEY = 'ncbo-member-access';
+  const DRAFTS = 'ncbo-member-drafts';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
@@ -58,6 +58,7 @@
         <p class="gate-sub">${esc(A.sub || '')}</p>
         <form class="gate-form" id="gate-form">
           <input type="text" id="gate-code" autocomplete="off" spellcheck="false"
+                 autocapitalize="characters" enterkeyhint="go"
                  aria-label="Member access code" placeholder="${esc(A.placeholder || 'Access code')}">
           <label class="gate-remember">
             <input type="checkbox" id="gate-remember">
@@ -89,7 +90,7 @@
     });
   }
 
-  /* ── app shell ────────────────────────────────────────────────────── */
+  /* ── hub shell ────────────────────────────────────────────────────── */
   let built = false;
 
   function openApp() {
@@ -117,175 +118,243 @@
     const M = window.NCBO_MEMBER || {};
     const W = M.welcome || {};
 
-    /* header */
     const bar = $('#app-bar');
     if (bar) {
+      const stats = (M.stats || []).map(s =>
+        `<div class="stat"><span class="stat-num">${esc(s.num)}</span><span class="stat-lab">${esc(s.lab)}</span></div>`).join('');
       bar.innerHTML = `
         <div class="app-bar-inner">
-          <div>
-            <p class="eyebrow">${esc(W.eyebrow || 'Season hub')}</p>
-            <h1>${esc(W.title || 'Welcome back.')}</h1>
-            <p class="app-sub">${esc(W.sub || '')}</p>
+          <div class="app-bar-head">
+            <div>
+              <p class="eyebrow">${esc(W.eyebrow || 'Season hub')}</p>
+              <h1>${esc(W.title || 'Welcome back.')}</h1>
+              <p class="app-sub">${esc(W.sub || '')}</p>
+            </div>
+            <button class="sign-out" type="button" id="sign-out">Sign out</button>
           </div>
-          <button class="sign-out" type="button" id="sign-out">Sign out</button>
+          ${stats ? `<div class="stats">${stats}</div>` : ''}
         </div>`;
       $('#sign-out').addEventListener('click', closeApp);
     }
 
-    buildDashboard();
-    if (window.NCBO_QA) window.NCBO_QA.mount($('#qa-root'));
+    buildCalendar();
+    buildUpdates();
     buildResources();
+    buildBoard();
     buildDirectory();
-    initTabs();
   }
 
-  function buildDashboard() {
+  function head(eyebrow, title, sub) {
+    return `<div class="panel-head">
+        <p class="eyebrow">${esc(eyebrow)}</p>
+        <h2>${esc(title)}</h2>
+        ${sub ? `<p>${esc(sub)}</p>` : ''}
+      </div>`;
+  }
+
+  /* ── calendar ─────────────────────────────────────────────────────── */
+  function buildCalendar() {
     const M = window.NCBO_MEMBER || {};
-    const host = $('#panel-dashboard');
+    const host = $('#calendar');
     if (!host) return;
+    const rows = (M.calendar || []).map(c => `
+      <div class="cal-row">
+        <div class="cal-date">${esc(c.date)}</div>
+        <div class="cal-main">
+          <div class="cal-title">${esc(c.title)}</div>
+          <div class="cal-where">${esc(c.where)}</div>
+        </div>
+        <span class="badge ${norm(c.status) === 'confirmed' ? 'active' : 'forming'}">${esc(c.status)}</span>
+      </div>`).join('');
+    host.innerHTML = `<div class="wrap">
+        ${head('Season', 'Calendar.', 'Every scored date on the board, in order.')}
+        <div class="cal">${rows}</div>
+      </div>`;
+  }
 
-    const stats = (M.stats || []).map(s =>
-      `<div class="stat"><span class="stat-num">${esc(s.num)}</span><span class="stat-lab">${esc(s.lab)}</span></div>`).join('');
-
+  /* ── updates ──────────────────────────────────────────────────────── */
+  function buildUpdates() {
+    const M = window.NCBO_MEMBER || {};
+    const host = $('#updates');
+    if (!host) return;
     const anns = (M.announcements || []).map(a => `
       <article class="ann">
         <div class="ann-meta"><span class="ann-tag">${esc(a.tag)}</span><span class="ann-date">${esc(a.date)}</span></div>
         <h3>${esc(a.title)}</h3>
         <p>${esc(a.text)}</p>
       </article>`).join('');
-
-    const cal = (M.calendar || []).map(c => `
-      <div class="cal-row">
-        <div class="cal-date">${esc(c.date)}</div>
-        <div>
-          <div class="cal-title">${esc(c.title)}</div>
-          <div class="cal-where">${esc(c.where)}</div>
-        </div>
-        <span class="badge ${norm(c.status) === 'confirmed' ? 'active' : 'forming'}">${esc(c.status)}</span>
-      </div>`).join('');
-
-    host.innerHTML = `
-      <div class="wrap">
-        <div class="stats" style="margin-top:0">${stats}</div>
-        <div class="app-split" style="margin-top:clamp(2rem,5vw,3.4rem)">
-          <div>
-            <div class="panel-head"><p class="eyebrow">Latest</p><h2>Announcements.</h2></div>
-            <div class="ann-list">${anns}</div>
-          </div>
-          <div>
-            <div class="panel-head"><p class="eyebrow">Season</p><h2>Calendar.</h2></div>
-            <div class="cal">${cal}</div>
-          </div>
-        </div>
+    host.innerHTML = `<div class="wrap">
+        ${head('Latest', 'Updates.', 'What changed since you were last here.')}
+        <div class="ann-list">${anns}</div>
       </div>`;
   }
 
+  /* ── resources ────────────────────────────────────────────────────── */
   function buildResources() {
     const M = window.NCBO_MEMBER || {};
-    const host = $('#panel-resources');
+    const host = $('#resources');
     if (!host) return;
 
     const groups = (M.resourceGroups || []).map(g => `
       <section class="res-group">
         <h3>${esc(g.group)}</h3>
-        <div class="res-grid">
+        <div class="res-list">
           ${(g.items || []).map(i => `
-            <a class="res" href="${esc(i.href || '#')}"${/^https?:/.test(i.href || '') ? ' target="_blank" rel="noopener"' : ''}>
-              <h4>${esc(i.title)}</h4>
-              <p>${esc(i.text)}</p>
-              <span class="res-go">Open</span>
+            <a class="res-row" href="${esc(i.href || '#')}"${/^https?:/.test(i.href || '') ? ' target="_blank" rel="noopener"' : ''}>
+              <span class="res-text">
+                <span class="res-title">${esc(i.title)}</span>
+                <span class="res-sub">${esc(i.text)}</span>
+              </span>
             </a>`).join('')}
         </div>
       </section>`).join('');
 
-    host.innerHTML = `
-      <div class="wrap">
-        <div class="panel-head"><p class="eyebrow">Library</p><h2>Resources.</h2>
-          <p>Everything the network has written down — competition rules, prep frameworks, and the playbook for running a club.</p></div>
+    host.innerHTML = `<div class="wrap">
+        ${head('Library', 'Resources.', 'Competition rules, prep frameworks, and the playbook for running a club.')}
         ${groups}
       </div>`;
   }
 
+  /* ── Q&A board ────────────────────────────────────────────────────── */
+  function drafts() {
+    try { return JSON.parse(localStorage.getItem(DRAFTS)) || []; }
+    catch (e) { return []; }
+  }
+  function saveDraft(d) {
+    const all = drafts();
+    all.unshift(d);
+    try { localStorage.setItem(DRAFTS, JSON.stringify(all)); } catch (e) { /* private mode */ }
+  }
+
+  function buildBoard() {
+    const M = window.NCBO_MEMBER || {};
+    const host = $('#board');
+    if (!host) return;
+    const channels = M.channels || [];
+    const ask = M.ask || {};
+    let current = 'all';
+
+    host.innerHTML = `<div class="wrap">
+        ${head('The board', 'Q&A.', 'Read what the panel has already answered, then add what it hasn’t.')}
+        <div class="chips" role="tablist" aria-label="Channels">
+          <button class="chip" type="button" data-ch="all" aria-pressed="true">All</button>
+          ${channels.map(c => `<button class="chip" type="button" data-ch="${esc(c.id)}" aria-pressed="false">${esc(c.name)}</button>`).join('')}
+        </div>
+        <div class="qa-list" id="qa-list"></div>
+        <div class="qa-ask">
+          <h3>${esc(ask.title || 'Ask the network')}</h3>
+          <p>${esc(ask.text || '')}</p>
+          <form id="ask-form">
+            <div class="field">
+              <label for="ask-ch">Channel</label>
+              <select id="ask-ch">
+                ${channels.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label for="ask-q">Your question</label>
+              <textarea id="ask-q" placeholder="What do you want to know?"></textarea>
+            </div>
+            <div class="qa-ask-actions">
+              <button class="btn btn-primary" type="submit">Save question</button>
+              ${ask.form && ask.form !== '#'
+                ? `<a class="btn btn-ghost btn-arrow" href="${esc(ask.form)}" target="_blank" rel="noopener">Send to the panel</a>`
+                : ''}
+            </div>
+            <p class="qa-msg" id="ask-msg" role="status" aria-live="polite"></p>
+            <p class="qa-note">${esc(ask.note || '')}</p>
+          </form>
+        </div>
+      </div>`;
+
+    const list = $('#qa-list', host);
+    const nameOf = id => (channels.find(c => c.id === id) || {}).name || id;
+
+    function itemsFor(id) {
+      const seeded = (M.questions || []).filter(q => id === 'all' || q.channel === id);
+      const mine = drafts().filter(q => id === 'all' || q.channel === id)
+        .map(q => ({ channel: q.channel, q: q.q, who: 'You', when: q.when, answers: [], pending: true }));
+      return mine.concat(seeded);
+    }
+
+    function render(id) {
+      current = id;
+      $$('.chip', host).forEach(b =>
+        b.setAttribute('aria-pressed', b.getAttribute('data-ch') === id ? 'true' : 'false'));
+
+      const items = itemsFor(id);
+      if (!items.length) {
+        list.innerHTML = `<p class="qa-empty">Nothing here yet — the ask box below is how it starts.</p>`;
+        return;
+      }
+
+      list.innerHTML = items.map(q => `
+        <div class="qa-item">
+          <button class="qa-q" type="button" aria-expanded="false">
+            <span class="qa-text">${esc(q.q)}</span>
+            <span class="qa-who">${esc(nameOf(q.channel))} · ${esc(q.who || 'Member')}${q.when ? ' · ' + esc(q.when) : ''}${q.pending ? ' · your draft' : ''}</span>
+          </button>
+          <div class="qa-a">
+            ${q.pending
+              ? `<p class="qa-pending">Saved on this device. Send it through the ask box below to get it in front of the panel.</p>`
+              : (q.answers || []).map(a => `
+                  <div class="qa-answer">
+                    <div class="qa-answer-who">${esc(a.who)}</div>
+                    <p>${esc(a.text)}</p>
+                  </div>`).join('')}
+          </div>
+        </div>`).join('');
+
+      $$('.qa-q', list).forEach(btn => btn.addEventListener('click', () => {
+        const item = btn.closest('.qa-item');
+        const ans = $('.qa-a', item);
+        const open = item.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        ans.style.maxHeight = open ? ans.scrollHeight + 'px' : '0';
+      }));
+    }
+
+    $$('.chip', host).forEach(b =>
+      b.addEventListener('click', () => render(b.getAttribute('data-ch'))));
+
+    $('#ask-form', host).addEventListener('submit', e => {
+      e.preventDefault();
+      const ta = $('#ask-q', host);
+      const text = ta.value.trim();
+      if (!text) return;
+      const ch = $('#ask-ch', host).value;
+      saveDraft({ channel: ch, q: text, when: 'just now' });
+      ta.value = '';
+      $('#ask-msg', host).textContent = 'Saved to this device. Open the form link to send it to the panel.';
+      render(current === 'all' ? 'all' : ch);
+    });
+
+    render(current);
+  }
+
+  /* ── club directory ───────────────────────────────────────────────── */
   function buildDirectory() {
     const M = window.NCBO_MEMBER || {};
     const D = window.NCBO_DATA || {};
-    const host = $('#panel-directory');
+    const host = $('#directory');
     if (!host) return;
     const dir = M.directory || {};
     const clubs = D.clubs || [];
 
-    host.innerHTML = `
-      <div class="wrap">
-        <div class="panel-head"><p class="eyebrow">${esc(dir.eyebrow || 'The network')}</p>
-          <h2>${esc(dir.title || "Who's out there.")}</h2>
-          <p>${esc(dir.sub || '')}</p></div>
-        <div class="dir-layout">
-          <div class="map-card"><div class="map-stage" id="member-map"></div>
-            <div class="map-foot">
-              <p class="map-hint">Tap a campus to pull up its club. <b>${clubs.length} clubs</b> in the network.</p>
-              <div class="map-legend">
-                <span class="lg active"><i></i>Active</span>
-                <span class="lg forming"><i></i>Forming</span>
+    host.innerHTML = `<div class="wrap">
+        ${head(dir.eyebrow || 'The network', dir.title || "Who's out there.", dir.sub || '')}
+        <div class="dir-list">
+          ${clubs.map(c => `
+            <div class="dir-item">
+              <div class="dir-school">${esc(c.school)}</div>
+              <div class="dir-club">${esc(c.name)}</div>
+              <div class="dir-meta">
+                <span class="dir-lead">Lead: <b>${esc(c.lead)}</b></span>
+                <span class="badge ${norm(c.status)}">${esc(c.status)}</span>
               </div>
-            </div>
-          </div>
-          <div class="dir-list" id="dir-list">
-            ${clubs.map(c => `
-              <button class="dir-item" type="button" data-school="${esc(c.school)}">
-                <div class="dir-school">${esc(c.school)}</div>
-                <div class="dir-club">${esc(c.name)}</div>
-                <div class="dir-meta">
-                  <span class="dir-lead">Lead: <b>${esc(c.lead)}</b></span>
-                  <span class="badge ${norm(c.status)}">${esc(c.status)}</span>
-                </div>
-              </button>`).join('')}
-          </div>
+            </div>`).join('')}
         </div>
       </div>`;
-
-    function select(school) {
-      $$('#dir-list .dir-item').forEach(b => {
-        const hit = b.getAttribute('data-school') === school;
-        b.classList.toggle('selected', hit);
-        if (hit) b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-    }
-
-    if (window.NCBO_USMAP) {
-      window.NCBO_USMAP.render($('#member-map'), clubs, { onSelect: select });
-    }
-    $$('#dir-list .dir-item').forEach(b =>
-      b.addEventListener('click', () => select(b.getAttribute('data-school'))));
-  }
-
-  /* ── tabs ─────────────────────────────────────────────────────────── */
-  function initTabs() {
-    const tabs = $$('.app-tab');
-    if (!tabs.length) return;
-
-    function show(id) {
-      tabs.forEach(t => {
-        const on = t.getAttribute('data-panel') === id;
-        t.setAttribute('aria-selected', on ? 'true' : 'false');
-        t.tabIndex = on ? 0 : -1;
-      });
-      $$('.app-panel').forEach(p => { p.hidden = p.id !== 'panel-' + id; });
-      if (history.replaceState) history.replaceState(null, '', '#' + id);
-    }
-
-    tabs.forEach((t, i) => {
-      t.addEventListener('click', () => show(t.getAttribute('data-panel')));
-      t.addEventListener('keydown', e => {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-        e.preventDefault();
-        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
-        next.focus();
-        show(next.getAttribute('data-panel'));
-      });
-    });
-
-    const want = (location.hash || '').replace('#', '');
-    show(tabs.some(t => t.getAttribute('data-panel') === want) ? want : tabs[0].getAttribute('data-panel'));
   }
 
   /* ── boot ─────────────────────────────────────────────────────────── */
