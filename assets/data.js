@@ -149,7 +149,7 @@ window.NCBO_DATA = {
     {
       "school": "University of Pittsburgh",
       "name": "Fitness and Bodybuilding Club",
-      "lead": "",
+      "lead": "Rachel Hare",
       "status": "Active",
       "img": "assets/img/club-pitt.jpg"
     },
@@ -181,6 +181,14 @@ window.NCBO_DATA = {
       "lead": "Alex Swanson",
       "status": "Active",
       "img": "assets/img/club-iowa.jpg"
+    },
+    {
+      "school": "Slippery Rock University",
+      "name": "Slippery Rock Fitness and Wellness Club",
+      "lead": "Sean Hanley",
+      "status": "Active",
+      "img": "assets/img/club-slippery-rock-university.jpg",
+      "state": "PA"
     }
   ],
   "clubsHeld": [
