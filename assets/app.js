@@ -167,8 +167,10 @@
         <span class="badge ${norm(c.status) === 'confirmed' ? 'active' : 'forming'}">${esc(c.status)}</span>
       </div>`).join('');
     host.innerHTML = `<div class="wrap">
-        ${head('Season', 'Calendar.', 'Every scored date on the board, in order.')}
-        <div class="cal">${rows}</div>
+        ${head('Season', 'Calendar.', 'Confirmed dates, in order.')}
+        ${rows
+          ? `<div class="cal">${rows}</div>`
+          : `<p class="m-empty">${esc(M.calendarEmpty || 'Nothing scheduled yet.')}</p>`}
       </div>`;
   }
 
@@ -185,7 +187,9 @@
       </article>`).join('');
     host.innerHTML = `<div class="wrap">
         ${head('Latest', 'Updates.', 'What changed since you were last here.')}
-        <div class="ann-list">${anns}</div>
+        ${anns
+          ? `<div class="ann-list">${anns}</div>`
+          : `<p class="m-empty">No updates yet. We'll post here when something actually changes.</p>`}
       </div>`;
   }
 
@@ -199,18 +203,26 @@
       <section class="res-group">
         <h3>${esc(g.group)}</h3>
         <div class="res-list">
-          ${(g.items || []).map(i => `
-            <a class="res-row" href="${esc(i.href || '#')}"${/^https?:/.test(i.href || '') ? ' target="_blank" rel="noopener"' : ''}>
+          ${(g.items || []).map(i => {
+            /* Nothing is written yet — every one of these links is a stub.
+               Render an un-clickable row flagged "In development" rather than
+               a link that looks live and goes nowhere. */
+            const live = /^https?:/.test(i.href || '');
+            const inner = `
               <span class="res-text">
                 <span class="res-title">${esc(i.title)}</span>
                 <span class="res-sub">${esc(i.text)}</span>
               </span>
-            </a>`).join('')}
+              ${live ? '' : '<span class="res-flag">In development</span>'}`;
+            return live
+              ? `<a class="res-row" href="${esc(i.href)}" target="_blank" rel="noopener">${inner}</a>`
+              : `<div class="res-row is-pending">${inner}</div>`;
+          }).join('')}
         </div>
       </section>`).join('');
 
     host.innerHTML = `<div class="wrap">
-        ${head('Library', 'Resources.', 'Competition rules, prep frameworks, and the playbook for running a club.')}
+        ${head('Library', 'Resources.', "What we're writing for members. Nothing here is finished yet.")}
         ${groups}
       </div>`;
   }
@@ -235,7 +247,7 @@
     let current = 'all';
 
     host.innerHTML = `<div class="wrap">
-        ${head('The board', 'Q&A.', 'Read what the panel has already answered, then add what it hasn’t.')}
+        ${head('The board', 'Q&A.', 'Ask the exec team. Answers get posted back here for the next person.')}
         <div class="chips" role="tablist" aria-label="Channels">
           <button class="chip" type="button" data-ch="all" aria-pressed="true">All</button>
           ${channels.map(c => `<button class="chip" type="button" data-ch="${esc(c.id)}" aria-pressed="false">${esc(c.name)}</button>`).join('')}
@@ -349,7 +361,9 @@
               <div class="dir-school">${esc(c.school)}</div>
               <div class="dir-club">${esc(c.name)}</div>
               <div class="dir-meta">
-                <span class="dir-lead">Lead: <b>${esc(c.lead)}</b></span>
+                <span class="dir-lead">${c.lead
+                  ? `Lead: <b>${esc(c.lead)}</b>`
+                  : 'Lead not yet confirmed'}</span>
                 <span class="badge ${norm(c.status)}">${esc(c.status)}</span>
               </div>
             </div>`).join('')}
