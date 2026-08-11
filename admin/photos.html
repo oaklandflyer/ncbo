@@ -526,7 +526,7 @@
 
   // generic list-of-objects editor with add/remove
   function objectList(arr, cfg){
-    // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(), fields(item, card)}
+    // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(), fields(item, card), onChange()}
     const host=document.createElement('div');
     function render(){
       host.innerHTML='';
@@ -536,7 +536,7 @@
         const t=document.createElement('div'); t.className='t';
         t.textContent=(cfg.titleKey? (item[cfg.titleKey]||'(new)') : ('#'+(idx+1)));
         const del=document.createElement('button'); del.className='small danger'; del.textContent='Remove';
-        del.addEventListener('click',()=>{ if(confirm('Remove this entry?')){ arr.splice(idx,1); markDirty(); render(); } });
+        del.addEventListener('click',()=>{ if(confirm('Remove this entry?')){ arr.splice(idx,1); markDirty(); render(); if(cfg.onChange) cfg.onChange(); } });
         head.appendChild(t); head.appendChild(del); card.appendChild(head);
 
         cfg.fields(item, card, ()=>{ if(cfg.titleKey) t.textContent=item[cfg.titleKey]||'(new)'; });
@@ -559,11 +559,13 @@
       });
       if(cfg.newItem){
         const add=document.createElement('button'); add.className='add-btn'; add.textContent='+ '+(cfg.addLabel||'Add entry');
-        add.addEventListener('click',()=>{ arr.push(cfg.newItem()); markDirty(); render(); });
+        add.addEventListener('click',()=>{ arr.push(cfg.newItem()); markDirty(); render(); if(cfg.onChange) cfg.onChange(); });
         host.appendChild(add);
       }
     }
-    render(); return host;
+    render();
+    host.rerender=render;   // callers that mutate the array outside this widget
+    return host;
   }
 
   function panel(title){ const p=document.createElement('section'); p.className='panel'; const h=document.createElement('h2'); h.textContent=title; p.appendChild(h); return p; }
@@ -698,8 +700,9 @@
         'To put the pin on the actual campus, use <b>Place on map</b> below and click the spot — that also fills in the state for you. '+
         'The five founding chapters have hand-placed pins already and ignore these fields.<br><br>'+
         '<b>Leads show up twice.</b> A name in “Lead / contact” appears on the club card and in <b>Club leads</b> under Team on the home page. '+
-        'Leave it blank and the card offers a contact link instead — never a name we can’t source. '+
-        'A lead with no photo path renders as an initials monogram; to use a photo, upload it under any club photo slot and put its path in the field.'));
+        'Leave it blank and the card offers a contact link instead — never a name we can’t source.<br><br>'+
+        '<b>Photos and extra leads live on the Team tab.</b> This field holds one name per club and can’t take a photo. '+
+        'For a lead’s headshot, or for a club with two or three leads, open <b>Team → Club leads</b> — there’s a one-click button there to pull in everyone named here.'));
 
       let redrawMap=()=>{};   /* set once the map panel below exists */
 
@@ -711,7 +714,6 @@
           g.appendChild(fieldText('School', ()=>it.school, v=>{it.school=v;upd();redrawMap();}));
           g.appendChild(fieldText('Club name', ()=>it.name, v=>it.name=v));
           g.appendChild(fieldText('Lead / contact', ()=>it.lead, v=>it.lead=v));
-          g.appendChild(fieldText('Lead photo path (optional)', ()=>it.leadImg, v=>it.leadImg=v));
 
           const sf=document.createElement('div'); sf.className='field';
           const lab=document.createElement('label'); lab.textContent='Status';
@@ -840,6 +842,68 @@
           card.appendChild(g);
         }
       })); frag.appendChild(p);
+
+      /* Club leads — the roster behind the "Club leads" block on the home page.
+         This is where a lead gets a photo, and where a club with more than one
+         lead gets its second and third; the Clubs tab only holds one name per
+         club and has no upload. */
+      p=panel('Club leads'); DATA.clubLeads=DATA.clubLeads||[];
+      p.appendChild(noteEl('Shows on the home page under <b>Team → Club leads</b>. '+
+        'Add as many people as you like — a club can have more than one, and this is the only place a lead gets a photo. '+
+        'Fill in the name first, then upload; the image path is generated from the name. Square photos work best.<br><br>'+
+        'A name typed into “Lead / contact” on the <b>Clubs</b> tab also appears in that block, so you don’t have to enter anyone twice — '+
+        'but to give that person a photo, add them here with the same spelling and they’ll merge into one entry.'));
+
+      /* One-click import so nobody has to retype the leads already on the
+         Clubs tab just to attach a photo to them. */
+      const missing=()=>{
+        const key=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+        const have=new Set((DATA.clubLeads||[]).map(p=>key(p.name)));
+        const seen=new Set();
+        return (DATA.clubs||[])
+          .filter(c=>c.lead&&String(c.lead).trim()&&!have.has(key(c.lead)))
+          .filter(c=>{ const k=key(c.lead); if(seen.has(k)) return false; seen.add(k); return true; })
+          .map(c=>({name:String(c.lead).trim(), school:c.school||'', img:''}));
+      };
+      const importRow=document.createElement('div');
+      importRow.style.cssText='display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; margin:.2rem 0 .9rem;';
+      const importBtn=document.createElement('button'); importBtn.type='button'; importBtn.className='small';
+      const importNote=document.createElement('span');
+      importNote.style.cssText='font-size:.8rem; color:var(--silver-dim);';
+      let leadsList;
+      function refreshImport(){
+        const list=missing();
+        importBtn.textContent='Add leads from the Clubs tab';
+        importBtn.disabled=list.length===0;
+        importNote.textContent=list.length
+          ? list.length+' on the Clubs tab '+(list.length===1?'isn’t':'aren’t')+' here yet: '+list.map(p=>p.name).join(', ')
+          : 'Everyone named on the Clubs tab is already here.';
+      }
+      importBtn.addEventListener('click',()=>{
+        const list=missing();
+        if(!list.length) return;
+        DATA.clubLeads.push.apply(DATA.clubLeads, list);
+        markDirty();
+        leadsList.rerender();
+        refreshImport();
+      });
+      importRow.appendChild(importBtn); importRow.appendChild(importNote);
+      p.appendChild(importRow);
+
+      leadsList=objectList(DATA.clubLeads,{
+        titleKey:'name', imgKey:'img', imgPrefix:'lead', aspect:1, addLabel:'Add club lead',
+        newItem:()=>({name:'',school:'',img:''}),
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();refreshImport();}));
+          g.appendChild(fieldText('School / club', ()=>it.school, v=>it.school=v));
+          card.appendChild(g);
+        },
+        onChange:refreshImport
+      });
+      p.appendChild(leadsList);
+      refreshImport();
+      frag.appendChild(p);
 
       p=panel('Advisory board'); DATA.advisory=DATA.advisory||[];
       p.appendChild(objectList(DATA.advisory,{

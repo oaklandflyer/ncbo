@@ -167,8 +167,15 @@ entry:
 3. **Club leads**, a block in the Team section of the home page. Whatever you
    type in "Lead / contact" appears there with the school underneath. Leave it
    blank and nobody is listed — the club card offers a contact link instead, so
-   we never publish a name we can't source. A lead with no photo path renders
-   as an initials monogram.
+   we never publish a name we can't source.
+
+**Lead photos and extra leads live on the Team tab**, under *Club leads*. The
+Clubs tab holds one name per club and has no upload; the Team panel is a full
+roster — add as many people per club as you like, each with its own photo
+upload, same as Leadership and Advisory. A button there pulls in everyone
+already named on the Clubs tab so you don't retype them, and the two lists are
+merged by name, so a person in both appears once. A lead with no photo renders
+as an initials monogram.
 
 ---
 
