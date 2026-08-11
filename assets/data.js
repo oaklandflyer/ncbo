@@ -2,13 +2,30 @@
    NCBO_DATA — single source of truth for site content.
    Generated/edited via the admin content manager (admin/photos.html).
    You can still hand-edit this file; the admin overwrites the whole object.
+
+   ── ACCURACY NOTE (Aug 2026) ───────────────────────────────────────────────
+   This file was audited against internal records. Two rules apply to edits:
+
+     1. Do not publish a name, school, number, date or title that isn't
+        confirmed in writing. If it can't be sourced, cut it or ask.
+     2. Anything not yet running (season, competitions, dues model, app)
+        is described in forward-looking language, never as existing.
+
+   `clubsHeld` and `advisoryHeld` below are entries deliberately NOT published
+   pending confirmation. They are kept here so restoring one is a one-line
+   move back into `clubs` / `advisory` — do not render them.
    ========================================================================== */
 window.NCBO_DATA = {
   "org": {
     "name": "NCBO",
     "full": "National Collegiate Bodybuilding Organization",
     "tagline": "Clubs. Competition. Community.",
-    "established": "Est. 2024",
+    /* Legal status — NCBO is not yet incorporated and is not a 501(c)(3). */
+    "status": "A Pennsylvania nonprofit corporation in formation.",
+    "statusLong": "NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status; that status has not been granted, and contributions are not tax-deductible.",
+    /* QUESTION OPEN: is this inbox live and owned? The chapter playbook still
+       publishes info@ncbo.org, which does not exist. Do not add a response-time
+       promise to any address until someone owns the inbox. */
     "email": "thencbo@gmail.com",
     "instagram": "https://instagram.com/ncboofficial",
     "instagramHandle": "@ncboofficial",
@@ -42,17 +59,16 @@ window.NCBO_DATA = {
     "Community",
     "Strength",
     "Discipline",
-    "A Real Season",
     "Pathway"
   ],
   "hero": {
-    "eyebrow": "Est. 2024 · The collegiate governing body",
+    "eyebrow": "Building the collegiate bodybuilding network",
     "title": [
       "Collegiate",
       "bodybuilding,",
-      "<span class='accent'>run like a real sport.</span>"
+      "<span class='accent'>built like a real sport.</span>"
     ],
-    "sub": "At an open show, “collegiate” is just an eligibility checkbox. NCBO makes it the point — a club at your school, a season to train for, and school-vs-school competition. Find your club and start building.",
+    "sub": "At an open show, “collegiate” is just an eligibility checkbox. We're building the part that's missing — a club at your school, a season to train for, and school-vs-school competition. Find your chapter and help build it.",
     "primary": {
       "label": "Find your club",
       "href": "#clubs"
@@ -66,7 +82,7 @@ window.NCBO_DATA = {
     {
       "kicker": "Chapters",
       "title": "Find a Club",
-      "text": "See which schools already have NCBO clubs.",
+      "text": "See the schools with an NCBO founding chapter.",
       "href": "#clubs",
       "img": "assets/img/tile-clubs.jpg"
     },
@@ -92,32 +108,29 @@ window.NCBO_DATA = {
       "A real <span class='accent'>collegiate sport.</span>"
     ],
     "body": [
-      "NCBO sits above independently-run student clubs and gives them the things a single club can't build alone: a season, school-vs-school competition, coaching access, and a national network.",
-      "At a traditional open show, \"collegiate\" is just an eligibility checkbox. NCBO adds the part that's been missing — a club at your school, a season to train for, and a community that shows up year-round."
+      "NCBO is being built to sit alongside independently-run student clubs and give them what a single club can't build alone: a season, school-vs-school competition, coaching access, and a national network.",
+      "At a traditional open show, \"collegiate\" is just an eligibility checkbox. We're adding the part that's been missing — a club at your school, a season to train for, and a community that shows up year-round.",
+      "We're early, and we'd rather say so. NCBO is a Pennsylvania nonprofit corporation in formation. Our founding chapters are live; the season, the competition calendar and the dues model are still being built."
     ],
     "stats": [
       {
-        "num": "6",
-        "lab": "Founding clubs"
+        "num": "5",
+        "lab": "Founding chapters"
       },
       {
-        "num": "6",
-        "lab": "Campuses"
-      },
-      {
-        "num": "3",
+        "num": "4",
         "lab": "States"
       },
       {
-        "num": "2024",
-        "lab": "Founded"
+        "num": "In formation",
+        "lab": "Org status"
       }
     ]
   },
   "pillars": [
     {
       "title": "Coach & pro access",
-      "text": "Posing and prep guidance from IFBB and OCB pros who work with our clubs."
+      "text": "Posing and prep guidance we're lining up for our chapters, so members aren't figuring out stage craft alone."
     },
     {
       "title": "A club operating system",
@@ -125,14 +138,154 @@ window.NCBO_DATA = {
     },
     {
       "title": "Legitimacy on campus",
-      "text": "The NCBO member-club seal — leverage for official org status and student-government funding."
+      "text": "Shared structure and standards you can take to your student activities office when you apply for recognition."
     },
     {
       "title": "A national network",
       "text": "Cross-campus connection, shared events, and a path to school-vs-school competition."
     }
   ],
-  "voices": [
+  "clubs": [
+    {
+      "school": "University of Pittsburgh",
+      "name": "Fitness and Bodybuilding Club",
+      "lead": "",
+      "status": "Active",
+      "img": "assets/img/club-pitt.jpg"
+    },
+    {
+      "school": "Penn State University",
+      "name": "Bodybuilding & Fitness Club",
+      "note": "University Park",
+      "lead": "",
+      "status": "Active",
+      "img": "assets/img/club-pennstate.jpg"
+    },
+    {
+      "school": "Purdue University",
+      "name": "Purdue Bodybuilding Club",
+      "lead": "",
+      "status": "Active",
+      "img": "assets/img/club-purdue.jpg"
+    },
+    {
+      "school": "Florida State University",
+      "name": "Bodybuilding and Fitness Club at FSU",
+      "lead": "",
+      "status": "Active",
+      "img": "assets/img/club-fsu.jpg"
+    },
+    {
+      "school": "University of Iowa",
+      "name": "Bodybuilding Club at UIowa",
+      "lead": "Alex Swanson",
+      "status": "Active",
+      "img": "assets/img/club-iowa.jpg"
+    }
+  ],
+  /* NOT PUBLISHED — pending confirmation. Do not render.
+     Slippery Rock appears in the founding-club list but has no named lead,
+     so it cannot be listed as an active chapter. Awaiting a decision on
+     whether to include it (and how to label it) or drop it. */
+  "clubsHeld": [
+    {
+      "school": "Slippery Rock University",
+      "name": "Bodybuilding & Fitness Club",
+      "lead": "",
+      "status": "No lead",
+      "img": "assets/img/club-slipperyrock.jpg",
+      "heldReason": "No named, contactable lead as of Aug 2026."
+    }
+  ],
+  "joinSteps": [
+    {
+      "step": "01",
+      "title": "Find your chapter",
+      "text": "Check the Find a Club section. If your school is listed, you're one message away."
+    },
+    {
+      "step": "02",
+      "title": "No club yet?",
+      "text": "Start one. We give you the playbook, templates, and support to launch."
+    },
+    {
+      "step": "03",
+      "title": "Join through your club",
+      "text": "Membership runs through your campus club. Dues aren't finalized yet — we'll publish the model before anyone is asked to pay anything."
+    },
+    {
+      "step": "04",
+      "title": "Train with your club",
+      "text": "Show up and train. When the first season runs, you'll have the option to represent your school."
+    }
+  ],
+  "leadership": [
+    {
+      "name": "Andrew Coutinho",
+      "role": "President & Founder",
+      "img": "assets/img/team-andrew.jpg"
+    },
+    {
+      "name": "Neha Kotha",
+      "role": "Vice President of Operations",
+      "img": "assets/img/team-neha.jpg"
+    },
+    {
+      "name": "Luke Rudolph",
+      "role": "Director of Finance",
+      "img": "assets/img/team-luke.jpg"
+    },
+    {
+      "name": "Olivia Durbin",
+      "role": "Director of Marketing",
+      "img": "assets/img/team-olivia.jpg"
+    },
+    {
+      "name": "Alex Swanson",
+      "role": "Director of Events",
+      "img": "assets/img/team-alex.jpg"
+    },
+    {
+      /* Title intentionally blank: four conflicting titles on record.
+         Do not publish one until it is resolved. */
+      "name": "Vincent Panzica",
+      "role": "",
+      "img": "assets/img/team-vincent.jpg"
+    },
+    {
+      "name": "Matt Deemer",
+      "role": "Co-Founder",
+      "img": "assets/img/team-matt.jpg"
+    },
+    {
+      "name": "Will Gordinier",
+      "role": "Co-Founder",
+      "img": "assets/img/team-will.jpg"
+    }
+  ],
+  "advisory": [],
+  /* NOT PUBLISHED — pending confirmation. Do not render.
+     Listed internally as advisors but never formally confirmed, and the
+     IFBB/OCB pro designations are not sourced. */
+  "advisoryHeld": [
+    {
+      "name": "Jasmine Amato",
+      "role": "",
+      "img": "assets/img/advisor-jasmine.jpg",
+      "heldReason": "Advisory appointment never formally confirmed."
+    },
+    {
+      "name": "Megan Chaney",
+      "role": "",
+      "img": "assets/img/advisor-megan.jpg",
+      "heldReason": "Advisory appointment never formally confirmed."
+    }
+  ],
+  /* NOT PUBLISHED — pending confirmation. Do not render.
+     Three testimonials that ran on the home page. None is attributed to a
+     named, reachable person and none can be sourced, so they read as
+     invented. Restore only if they can be tied to real members who agreed. */
+  "voicesHeld": [
     {
       "quote": "NCBO turned lifting alone into showing up with a team. Having a club at my school changed how I train and who I train with.",
       "name": "NCBO member",
@@ -152,154 +305,34 @@ window.NCBO_DATA = {
       "img": "assets/img/voice-3.jpg"
     }
   ],
-  "clubs": [
-    {
-      "school": "University of Pittsburgh",
-      "name": "Fitness & Bodybuilding Club",
-      "lead": "Luke Rudolph",
-      "status": "Active",
-      "img": "assets/img/club-pitt.jpg"
-    },
-    {
-      "school": "Penn State University",
-      "name": "Bodybuilding & Fitness Club",
-      "lead": "Isabel Ward",
-      "status": "Active",
-      "img": "assets/img/club-pennstate.jpg"
-    },
-    {
-      "school": "Purdue University",
-      "name": "Bodybuilding Club",
-      "lead": "Vincent Panzica",
-      "status": "Active",
-      "img": "assets/img/club-purdue.jpg"
-    },
-    {
-      "school": "Slippery Rock University",
-      "name": "Bodybuilding & Fitness Club",
-      "lead": "TBD",
-      "status": "Forming",
-      "img": "assets/img/club-slipperyrock.jpg"
-    },
-    {
-      "school": "Florida State University",
-      "name": "Bodybuilding Club",
-      "lead": "Eli Korta",
-      "status": "Forming",
-      "img": "assets/img/club-fsu.jpg"
-    },
-    {
-      "school": "University of Iowa",
-      "name": "Bodybuilding Club",
-      "lead": "Alex Swanson",
-      "status": "Forming",
-      "img": "assets/img/club-iowa.jpg"
-    }
-  ],
-  "joinSteps": [
-    {
-      "step": "01",
-      "title": "Find your club",
-      "text": "Check the Find a Club page. If your school is listed, you're one form away."
-    },
-    {
-      "step": "02",
-      "title": "No club yet?",
-      "text": "Start one. We give you the playbook, templates, and support to launch fast."
-    },
-    {
-      "step": "03",
-      "title": "Become a member",
-      "text": "Join through your club. You pay dues to them — set by your club lead with the NCBO exec team — not a separate fee to us."
-    },
-    {
-      "step": "04",
-      "title": "Train the season",
-      "text": "Show up, get coached, and represent your school when the season runs."
-    }
-  ],
-  "leadership": [
-    {
-      "name": "Andrew Coutinho",
-      "role": "CEO & Founder",
-      "img": "assets/img/team-andrew.jpg"
-    },
-    {
-      "name": "Luke Rudolph",
-      "role": "Director of Finance",
-      "img": "assets/img/team-luke.jpg"
-    },
-    {
-      "name": "Vincent Panzica",
-      "role": "Director of Club Development",
-      "img": "assets/img/team-vincent.jpg"
-    },
-    {
-      "name": "Alex Swanson",
-      "role": "Director of Events",
-      "img": "assets/img/team-alex.jpg"
-    },
-    {
-      "name": "Olivia Durbin",
-      "role": "Director of Marketing",
-      "img": "assets/img/team-olivia.jpg"
-    },
-    {
-      "name": "Lauren Rowe",
-      "role": "Marketing Team Member",
-      "img": "assets/img/team-lauren-rowe.jpg"
-    }
-  ],
-  "advisory": [
-    {
-      "name": "Jasmine Amato",
-      "role": "IFBB Pro · Advisory",
-      "img": "assets/img/advisor-jasmine.jpg"
-    },
-    {
-      "name": "Megan Chaney",
-      "role": "OCB Wellness Pro · Advisory",
-      "img": "assets/img/advisor-megan.jpg"
-    },
-    {
-      "name": "Gab Martin",
-      "role": "Advisory",
-      "img": "assets/img/advisor-gab.jpg"
-    },
-    {
-      "name": "Neha Kotha",
-      "role": "Advisor",
-      "img": ""
-    }
-  ],
   "faqs": [
     {
       "q": "What is NCBO?",
-      "a": "NCBO is a national governing body for collegiate bodybuilding. We sit above independently-run student clubs and provide the season, competition structure, coaching access, and network that an individual club can't build on its own."
+      "a": "NCBO is a national organization being built for collegiate bodybuilding. The idea is to sit alongside independently-run student clubs and provide the season, competition structure, coaching access, and network that an individual club can't build on its own. Our founding chapters are live; most of the rest is in development."
     },
     {
-      "q": "How is this different from competing at an open show?",
-      "a": "At an open show, \"collegiate\" is just an eligibility line. NCBO adds a club at your school, a structured season, school-vs-school competition, and a year-round community."
+      "q": "Is NCBO a registered nonprofit?",
+      "a": "Not yet. NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status, but that status has not been granted and contributions are not tax-deductible."
     },
     {
-      "q": "What does it cost?",
-      "a": "There's no separate NCBO membership fee. You pay dues to your club, and your club sets that amount together with the NCBO executive team — so it stays in range for students at your school. A percentage of those dues goes to NCBO to run the season, the competitions, and the coaching access; the rest stays with your club."
+      "q": "How will this be different from competing at an open show?",
+      "a": "At an open show, \"collegiate\" is just an eligibility line. NCBO adds a club at your school and a year-round community — and, once it's built, a structured season and school-vs-school competition."
+    },
+    {
+      "q": "What will it cost?",
+      "a": "We haven't finalized dues. Two models are still being worked through with our chapters, and neither has been approved. We'll publish the model here before anyone is asked to pay anything."
     },
     {
       "q": "My school doesn't have a club. Can I start one?",
-      "a": "Yes — that's how most clubs begin. Head to Start a Club and we'll give you the playbook, templates, and support to launch."
+      "a": "Yes — that's how our chapters began. Head to Start a Club and we'll give you the playbook, templates, and support to launch."
     },
     {
       "q": "Do I need to compete to be a member?",
-      "a": "No. Plenty of members join for the community, the training, and the events. Competition is there when you're ready for it."
+      "a": "No. Plenty of members join for the community and the training. Competition will be there when you're ready for it."
     },
     {
       "q": "Who runs NCBO?",
-      "a": "A founding executive team of students and recent grads, backed by an advisory board that includes IFBB and OCB pros. Meet them on the About page."
-    },
-    {
-      "q": "Where do my dues actually go?",
-      "a": "Your club keeps the majority — that's what pays for their events, gear, and travel. The percentage that comes to NCBO funds the things no single club can run alone: sanctioned competition, the season calendar, coaching and pro access, and the club playbook. Club leads set dues with us, so nobody is guessing."
+      "a": "A founding team of students and recent grads. You can see them in the Leadership section above."
     }
   ],
   "news": [
@@ -307,21 +340,21 @@ window.NCBO_DATA = {
       "date": "Coming soon",
       "tag": "Season",
       "title": "Founding season details",
-      "text": "We're locking the first sanctioned event. Dates and format will be posted here.",
+      "text": "We're working toward a first event. Nothing is scheduled yet — dates and format will be posted here once they are.",
       "img": "assets/img/news-1.jpg"
     },
     {
       "date": "Coming soon",
-      "tag": "Clubs",
-      "title": "New clubs joining the network",
-      "text": "Campuses are forming clubs now. Watch this space as the map fills in.",
+      "tag": "Chapters",
+      "title": "New chapters joining the network",
+      "text": "More campuses are in conversation with us. Watch this space as the map fills in.",
       "img": "assets/img/news-2.jpg"
     },
     {
       "date": "Coming soon",
       "tag": "Coaching",
       "title": "Pro posing workshops",
-      "text": "Workshop schedule with our advisory pros is being finalized.",
+      "text": "We're working on a workshop schedule with coaches we're bringing in. Nothing is booked yet.",
       "img": "assets/img/news-3.jpg"
     }
   ],

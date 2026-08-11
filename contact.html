@@ -21,7 +21,7 @@
   <meta name="twitter:title" content="Contact — NCBO">
   <meta name="twitter:description" content="Get in touch with NCBO — questions, partnerships, club affiliation, or just to say hi.">
   <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
-  <meta name="theme-color" content="#0A1228">
+  <meta name="theme-color" content="#F4F8FD">
   <link rel="icon" href="assets/ncbo-logo.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +36,7 @@
     <div class="wrap">
       <p class="eyebrow">Contact</p>
       <h1 class="h-display">Get in touch.</h1>
-      <p>Questions about joining, affiliating a club, partnerships, or anything else — we read everything.</p>
+      <p>Questions about joining, affiliating a club, partnerships, or anything else. We're a small volunteer team, so give us a little time to come back to you.</p>
     </div>
   </section>
 
@@ -84,7 +84,9 @@
             <label for="cmsg">Message</label>
             <textarea id="cmsg" name="message" required></textarea>
           </div>
-          <button class="btn btn-primary" type="submit">Send message</button>
+          <button class="btn btn-primary" type="submit">Compose message</button>
+          <p class="form-note">This site has no server behind it, so this form opens the
+            message in your own email app for you to send.</p>
           <p class="nl-msg" aria-live="polite"></p>
         </form>
       </div>
@@ -99,11 +101,20 @@
       const D = window.NCBO_DATA, $ = s => document.querySelector(s);
       const em = $('#contact-email'); em.textContent = D.org.email; em.href = 'mailto:' + D.org.email;
       const ig = $('#contact-ig'); ig.textContent = D.org.instagramHandle || 'Instagram'; ig.href = D.org.instagram || '#';
+      /* There is no backend here. The old handler printed "Message sent" and
+         dropped the message on the floor. Hand it to the visitor's mail client
+         instead, so submitting actually does something. */
       const form = $('form[data-contact]');
       form.addEventListener('submit', e => {
         e.preventDefault();
-        form.querySelector('.nl-msg').textContent = "Message sent — we'll get back to you soon.";
-        form.reset();
+        const get = n => (form.querySelector('[name="' + n + '"]') || {}).value || '';
+        const subject = `[NCBO] ${get('topic') || 'Website enquiry'}`;
+        const body = `${get('message')}\n\n—\n${get('name')}\n${get('email')}`;
+        window.location.href = 'mailto:' + D.org.email +
+          '?subject=' + encodeURIComponent(subject) +
+          '&body=' + encodeURIComponent(body);
+        form.querySelector('.nl-msg').textContent =
+          "Opening your email app. If nothing happens, email us directly at " + D.org.email + ".";
       });
     };
   </script>
