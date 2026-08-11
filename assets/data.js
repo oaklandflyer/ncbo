@@ -164,14 +164,14 @@ window.NCBO_DATA = {
     {
       "school": "Purdue University",
       "name": "Purdue Bodybuilding Club",
-      "lead": "",
+      "lead": "Vincent Panzica",
       "status": "Active",
       "img": "assets/img/club-purdue.jpg"
     },
     {
       "school": "Florida State University",
       "name": "Bodybuilding and Fitness Club at FSU",
-      "lead": "Vincent Panzica",
+      "lead": "Eli Korta",
       "status": "Active",
       "img": "assets/img/club-fsu.jpg"
     },
