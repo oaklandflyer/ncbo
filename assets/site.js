@@ -28,6 +28,26 @@
   }
   window.ncboPhotoSlot = photoSlot;
 
+  /* ---------- initials monogram -------------------------------------------
+     Used for people who don't have a headshot on file yet. A named monogram
+     reads as deliberate; the generic "Add photo" placeholder reads as broken. */
+  function initials(name) {
+    return String(name || '').trim().split(/\s+/).slice(0, 2)
+      .map(w => w[0] || '').join('').toUpperCase();
+  }
+
+  /* Photo slot that falls back to an initials monogram instead of the
+     "drop a file here" placeholder. */
+  function personPhoto(src, name) {
+    const mono = `<div class="mono" aria-hidden="true">${initials(name)}</div>`;
+    if (!src) return `<div class="photo-slot person-photo" data-empty="true">${mono}</div>`;
+    return `<div class="photo-slot person-photo" data-empty="true">
+        <img alt="${String(name).replace(/"/g, '&quot;')}" src="${src}"
+             onload="this.closest('.photo-slot').setAttribute('data-empty','false')">
+        ${mono}
+      </div>`;
+  }
+
   /* ---------- NAV --------------------------------------------------------- */
   function buildNav() {
     const host = $('#site-nav');
@@ -82,7 +102,7 @@
             <div class="footer-brand">
               <img src="assets/ncbo-logo.webp" alt="NCBO crest">
               <span class="brand-word">${D.org.name}</span>
-              <p>${D.org.full} — the governing body for collegiate bodybuilding. Clubs at your school, a real season, and a community that shows up year-round.</p>
+              <p>${D.org.full} — building collegiate bodybuilding into a real sport. Clubs at your school, and a community that shows up year-round.</p>
               <p class="tagline">${D.org.tagline}</p>
             </div>
             <div class="footer-col">
@@ -105,6 +125,7 @@
               </ul>
             </div>
           </div>
+          ${D.org.statusLong ? `<p class="footer-legal">${D.org.statusLong}</p>` : ''}
           <div class="footer-bottom">
             <p>© ${new Date().getFullYear()} ${D.org.full}. All rights reserved.</p>
             <div class="socials">
@@ -152,7 +173,7 @@
         </div>`).join('');
     },
     voices(el) {
-      if (!el) return;
+      if (!el || !D.voices || !D.voices.length) return 0;
       el.innerHTML = D.voices.map(v => `
         <figure class="voice reveal">
           <div class="voice-photo">${photoSlot(v.img, 'Member photo')}</div>
@@ -164,21 +185,9 @@
           </figcaption>
         </figure>`).join('');
     },
-    clubs(el) {
-      if (!el) return;
-      el.innerHTML = D.clubs.map(c => `
-        <div class="club-card reveal">
-          <div class="club-photo">${photoSlot(c.img, c.school + ' photo')}</div>
-          <div class="club-body">
-            <div class="club-school">${c.school}</div>
-            <div class="club-name">${c.name}</div>
-            <div class="club-meta">
-              <span class="club-lead">Lead: <b>${c.lead}</b></span>
-              <span class="badge ${c.status.toLowerCase()}">${c.status}</span>
-            </div>
-          </div>
-        </div>`).join('');
-    },
+    clubs(el) { return R.clubsStrip(el, D.clubs.length); },
+    /* A club with no confirmed lead shows a contact prompt, never a name we
+       can't source and never an empty "Lead:" label. */
     clubsStrip(el, n) {
       if (!el) return;
       el.innerHTML = D.clubs.slice(0, n || 4).map(c => `
@@ -186,10 +195,12 @@
           <div class="club-photo">${photoSlot(c.img, c.school + ' photo')}</div>
           <div class="club-body">
             <div class="club-school">${c.school}</div>
-            <div class="club-name">${c.name}</div>
+            <div class="club-name">${c.name}${c.note ? ` <span class="club-note">· ${c.note}</span>` : ''}</div>
             <div class="club-meta">
-              <span class="club-lead">Lead: <b>${c.lead}</b></span>
-              <span class="badge ${c.status.toLowerCase()}">${c.status}</span>
+              <span class="club-lead">${c.lead
+                ? `Lead: <b>${c.lead}</b>`
+                : `<a href="contact.html">Contact us for this chapter</a>`}</span>
+              <span class="badge ${c.status.toLowerCase().replace(/\s+/g, '-')}">${c.status}</span>
             </div>
           </div>
         </div>`).join('');
@@ -203,14 +214,22 @@
           <p>${s.text}</p>
         </div>`).join('');
     },
+    /* Renders a people grid. Returns the number rendered so a page can hide
+       the whole block (heading included) when a list is empty — an empty
+       "Advisory board" heading is worse than no heading. A person with no
+       confirmed title renders with the name alone; we never fill the gap. */
     people(el, list) {
-      if (!el) return;
-      el.innerHTML = (list || []).map(p => `
+      if (!el) return 0;
+      const people = list || [];
+      el.innerHTML = people.map(p => `
         <div class="person reveal">
-          ${photoSlot(p.img, p.name + ' photo')}
-          <div class="person-name">${p.name}</div>
-          <div class="person-role">${p.role}</div>
+          ${personPhoto(p.img, p.name)}
+          <div class="person-body">
+            <div class="person-name">${p.name}</div>
+            ${p.role ? `<div class="person-role">${p.role}</div>` : ''}
+          </div>
         </div>`).join('');
+      return people.length;
     },
     news(el) {
       if (!el) return;
@@ -252,14 +271,17 @@
     els.forEach(e => io.observe(e));
   }
 
-  /* ---------- newsletter (front-end only; wire to a provider later) ------- */
+  /* ---------- newsletter --------------------------------------------------
+     There is no provider wired up behind this form, so it must not claim a
+     signup succeeded. Say what's actually true and point at a channel that
+     works. Replace this handler when a list provider exists.               */
   function initNewsletter() {
     $$('.nl-form, form[data-newsletter]').forEach(form => {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         const msg = form.parentElement.querySelector('.nl-msg') || form.querySelector('.nl-msg');
-        if (msg) msg.textContent = "You're on the list — welcome to NCBO.";
-        form.reset();
+        if (msg) msg.textContent = "Our mailing list isn't running yet — follow " +
+          (D.org.instagramHandle || 'us on Instagram') + " for updates in the meantime.";
       });
     });
   }

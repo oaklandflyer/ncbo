@@ -60,15 +60,28 @@
   "WY": "M270.4 138.0L320.1 138.0L349.3 138.1L349.4 177.3L349.4 216.5L323.1 216.6L288.6 216.5L270.9 216.6L239.4 216.6L239.4 196.9L239.4 148.4L239.3 138.0L270.4 138.0Z"
   };
 
-  /* Campus pin coordinates in the 960x600 viewBox, keyed by school name.
-     Add a school here when a new club joins the network.                    */
+  /* Campus pins in the 960x600 viewBox, keyed by school name.
+       x, y      pin position
+       label     short campus name drawn beside the pin
+       dx, dy    label offset from the pin
+       anchor    'start' (label runs right) or 'end' (label runs left)
+       state     host state, used to tint the state shape
+     Offsets are hand-placed so labels don't collide. After adding a school,
+     look at the map — don't just copy a neighbour's offsets.               */
   const PINS = {
-    "University of Pittsburgh":   [728.3, 227.5],
-    "Penn State University":      [761.3, 220.5],
-    "Slippery Rock University":   [726.8, 215.3],
-    "Purdue University":          [619.0, 227.9],
-    "University of Iowa":         [546.4, 203.6],
-    "Florida State University":   [660.1, 423.8]
+    /* Pittsburgh and Penn State sit ~33px apart, and Purdue is directly west
+       of Pittsburgh — hence Pittsburgh drops below its pin while its two
+       neighbours run sideways. Changing one of these three means re-checking
+       all three. */
+    "University of Pittsburgh": { x: 728.3, y: 227.5, label: 'Pittsburgh',    dx: 0,   dy: 25,  anchor: 'middle', state: 'PA' },
+    "Penn State University":    { x: 761.3, y: 220.5, label: 'Penn State',    dx: 13,  dy: -9,  anchor: 'start',  state: 'PA' },
+    "Purdue University":        { x: 619.0, y: 227.9, label: 'Purdue',        dx: -14, dy: 5,   anchor: 'end',    state: 'IN' },
+    "University of Iowa":       { x: 546.4, y: 203.6, label: 'Iowa',          dx: -14, dy: 5,   anchor: 'end',    state: 'IA' },
+    "Florida State University": { x: 660.1, y: 423.8, label: 'Florida State', dx: 14,  dy: 5,   anchor: 'start',  state: 'FL' },
+    /* Held — not in the published club list. Kept so the pin is ready if
+       Slippery Rock is confirmed. Note it sits almost on top of Pittsburgh;
+       both labels will need re-placing if it goes live. */
+    "Slippery Rock University": { x: 726.8, y: 215.3, label: 'Slippery Rock', dx: -14, dy: -10, anchor: 'end',    state: 'PA' }
   };
 
   function esc(s) {
@@ -81,22 +94,29 @@
     const o = opts || {};
     const list = (clubs || []).filter(c => PINS[c.school] || (c.x != null && c.y != null));
 
-    const statePaths = Object.keys(STATES)
-      .map(k => `<path d="${STATES[k]}" data-state="${k}"/>`).join('');
+    /* states hosting a chapter get tinted so the footprint reads at a glance */
+    const hosted = new Set(list.map(c => (PINS[c.school] || {}).state).filter(Boolean));
+    const statePaths = Object.keys(STATES).map(k =>
+      `<path d="${STATES[k]}" data-state="${k}"${hosted.has(k) ? ' class="has-club"' : ''}/>`).join('');
 
     const dots = list.map(c => {
-      const p = PINS[c.school] || [c.x, c.y];
+      const p = PINS[c.school] || { x: c.x, y: c.y, label: c.school, dx: 12, dy: 4, anchor: 'start' };
       const cls = String(c.status || '').toLowerCase() === 'active' ? 'active' : 'forming';
-      return `<a class="club-dot ${cls}" href="#" data-school="${esc(c.school)}">
-          <circle class="dot-halo" cx="${p[0]}" cy="${p[1]}" r="14"/>
-          <circle class="dot-core" cx="${p[0]}" cy="${p[1]}" r="5"/>
+      const label = p.label || c.school;
+      return `<a class="club-dot ${cls}" href="#" data-school="${esc(c.school)}"
+                 role="button" tabindex="0" aria-label="${esc(c.school)}">
+          <circle class="dot-halo" cx="${p.x}" cy="${p.y}" r="17"/>
+          <circle class="dot-core" cx="${p.x}" cy="${p.y}" r="7"/>
+          <text class="dot-label" x="${p.x + (p.dx || 0)}" y="${p.y + (p.dy || 0)}"
+                text-anchor="${p.anchor || 'start'}">${esc(label)}</text>
           <title>${esc(c.school)}</title>
         </a>`;
     }).join('');
 
+    const count = list.length;
     el.innerHTML = `
       <svg class="us-map" viewBox="0 0 960 600" role="img"
-           aria-label="Map of NCBO club locations across the United States"
+           aria-label="Map of the United States showing NCBO founding chapters at ${count} ${count === 1 ? 'campus' : 'campuses'}"
            preserveAspectRatio="xMidYMid meet">
         <g class="us-states">${statePaths}</g>
         <g class="club-dots">${dots}</g>
@@ -104,9 +124,13 @@
 
     if (typeof o.onSelect === 'function') {
       Array.from(el.querySelectorAll('.club-dot')).forEach(dot => {
-        dot.addEventListener('click', e => {
+        const pick = e => {
           e.preventDefault();
           o.onSelect(dot.getAttribute('data-school'), dot);
+        };
+        dot.addEventListener('click', pick);
+        dot.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') pick(e);
         });
       });
     }

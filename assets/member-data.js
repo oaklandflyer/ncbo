@@ -22,55 +22,40 @@ window.NCBO_MEMBER = {
     "codes": ["NCBO2026"],
     "eyebrow": "Members only",
     "title": ["The member", "locker room."],
-    "sub": "Enter your member access code to get into the season hub — meet schedules, posing and prep resources, club channels, and the Q&A board.",
+    "sub": "Enter your member access code to get into the member hub — the chapter directory, and resources as they come online.",
     "placeholder": "Access code",
-    "help": "Your club lead sends the code out at the start of each season. Lost it? Ask your lead or email us and we'll get you back in.",
-    "error": "That code isn't right. Check with your club lead — codes rotate each season.",
+    "help": "Your club lead has the code. Lost it? Ask your lead or email us and we'll get you back in.",
+    "error": "That code isn't right. Check with your club lead.",
     "remember": "Keep me signed in on this device"
   },
 
   /* ── Dashboard ──────────────────────────────────────────────────────── */
   "welcome": {
-    "eyebrow": "Season hub",
+    "eyebrow": "Member hub",
     "title": "Welcome back.",
-    "sub": "Everything the network is running right now — dates, resources, and the people to ask."
+    "sub": "We're early — this hub fills in as the network builds. Right now it's the chapter directory and the people to ask."
   },
 
+  /* Only numbers we can evidence. No season is scheduled, so there is no
+     meet count and no countdown. */
   "stats": [
-    { "num": "6", "lab": "Clubs in network" },
-    { "num": "4", "lab": "Meets this season" },
-    { "num": "12", "lab": "Weeks to nationals" },
-    { "num": "24/7", "lab": "Q&A board" }
+    { "num": "5", "lab": "Founding chapters" },
+    { "num": "4", "lab": "States" }
   ],
 
-  "announcements": [
-    {
-      "tag": "Season",
-      "date": "Aug 18",
-      "title": "Fall season registration is open",
-      "text": "Club leads: submit your roster and school affiliation form before the first meet. Members compete under their club, so you need to be on the roster to be scored."
-    },
-    {
-      "tag": "Meets",
-      "date": "Aug 04",
-      "title": "Regional meet schedule posted",
-      "text": "Four scored meets plus nationals. Check the calendar for host schools, weigh-in windows, and division cutoffs."
-    },
-    {
-      "tag": "Resources",
-      "date": "Jul 28",
-      "title": "New posing library up",
-      "text": "Mandatory pose breakdowns for men's classic physique and women's wellness are in Resources, with a stage-walk checklist you can print."
-    }
-  ],
+  /* Announcements cleared (Aug 2026 accuracy pass).
+     The three entries here announced a registration window, a posted meet
+     schedule and a published posing library — none of which exist. Post
+     only things that have actually happened. */
+  "announcements": [],
 
-  /* ── Season calendar ────────────────────────────────────────────────── */
-  "calendar": [
-    { "date": "Sep 13", "title": "Season opener — Pittsburgh", "where": "University of Pittsburgh", "status": "Confirmed" },
-    { "date": "Oct 11", "title": "Midwest dual meet", "where": "Purdue University", "status": "Confirmed" },
-    { "date": "Nov 08", "title": "East regional", "where": "Penn State University", "status": "Confirmed" },
-    { "date": "Dec 06", "title": "NCBO Nationals", "where": "Host TBA", "status": "Tentative" }
-  ],
+  /* ── Season calendar ────────────────────────────────────────────────
+     Cleared. The four dated meets previously listed here (a Sep 13 opener
+     at Pitt, an Oct 11 dual at Purdue, a Nov 8 regional at Penn State and
+     "NCBO Nationals" in December, three of them marked Confirmed) were not
+     scheduled with any of those schools. No season is on the calendar. */
+  "calendar": [],
+  "calendarEmpty": "No season is scheduled yet. When the first event is confirmed with a host school, it will appear here.",
 
   /* ── Resources ──────────────────────────────────────────────────────── */
   "resourceGroups": [
@@ -110,75 +95,20 @@ window.NCBO_MEMBER = {
     { "id": "meets",       "name": "Meets",          "desc": "Travel, logistics, and meet-day questions." }
   ],
 
-  "questions": [
-    {
-      "channel": "general",
-      "q": "Do I have to compete to be a member?",
-      "who": "Member · Florida State",
-      "when": "2d ago",
-      "answers": [
-        { "who": "NCBO staff", "text": "No. Plenty of members train with their club and never step on stage — the club is the point, competing is an option inside it. Membership gets you the resources, the board, and the network whether or not you ever register for a meet." }
-      ]
-    },
-    {
-      "channel": "general",
-      "q": "Can I be a member if my school doesn't have a club yet?",
-      "who": "Member · Ohio State",
-      "when": "6d ago",
-      "answers": [
-        { "who": "NCBO staff", "text": "Yes — you join as an unaffiliated member and get everything here. If you want to compete for a school you need a recognized club, and most of them started with exactly one person in your position. The club lead playbook in Resources is the whole process start to finish." }
-      ]
-    },
-    {
-      "channel": "prep",
-      "q": "How early should a first-time competitor start prep?",
-      "who": "Member · Pitt",
-      "when": "3d ago",
-      "answers": [
-        { "who": "Coach panel", "text": "For a first show, 16–20 weeks is the honest range. Starting earlier lets you lose slower, hold more muscle, and still have room if school gets heavy. Anything under 12 weeks usually means an aggressive deficit on top of a full course load — it works for some people and wrecks others." }
-      ]
-    },
-    {
-      "channel": "posing",
-      "q": "Do I need a coach for posing, or can I learn the mandatories myself?",
-      "who": "Member · Purdue",
-      "when": "5d ago",
-      "answers": [
-        { "who": "Coach panel", "text": "Start with the posing library in Resources and film yourself weekly — most first-timers fix half their issues just by watching the footage. Bring the video to a club posing night before you pay anyone; club leads run these and they're free." }
-      ]
-    },
-    {
-      "channel": "meets",
-      "q": "Who covers travel to away meets?",
-      "who": "Club lead · Slippery Rock",
-      "when": "1w ago",
-      "answers": [
-        { "who": "NCBO staff", "text": "It varies by school. Most clubs split gas and rooms across the traveling group; a few have pulled student-government funding once they were officially recognized. The travel & fundraising doc in Resources has the funding request template that worked at Pitt and Penn State." }
-      ]
-    },
-    {
-      "channel": "club-leads",
-      "q": "What does my school need from me to recognize the club?",
-      "who": "Club lead · Iowa",
-      "when": "1w ago",
-      "answers": [
-        { "who": "NCBO staff", "text": "Usually a constitution, an advisor, and a roster minimum — the club lead playbook has an NCBO-ready constitution you can drop your school's name into. Email us once you've submitted and we'll follow up with your student activities office if they have questions about the org." }
-      ]
-    },
-    {
-      "channel": "nutrition",
-      "q": "Any way to hit protein on a meal plan?",
-      "who": "Member · Penn State",
-      "when": "2w ago",
-      "answers": [
-        { "who": "Coach panel", "text": "Anchor every dining-hall trip to a lean protein first and build the plate around it, then cover the gap with shakes you keep in your room. The nutrition doc has a swap list for the ten most common dining-hall setups." }
-      ]
-    }
-  ],
+  /* Q&A board cleared (Aug 2026 accuracy pass).
+     The seven entries here were invented: questions attributed to unnamed
+     members and club leads at Pitt, Purdue, Penn State, Iowa, Florida State
+     and Ohio State (which has no chapter), answered by an "NCBO staff" and a
+     "Coach panel" that don't exist as standing bodies. One answer claimed a
+     funding template "worked at Pitt and Penn State"; another promised NCBO
+     would follow up with a student activities office. Seed this board with
+     real questions only. */
+  "questions": [],
+  "questionsEmpty": "No questions on the board yet. Be the first — ask below and we'll post the answer here.",
 
   "ask": {
     "title": "Ask the network",
-    "text": "Questions go to the coach panel and NCBO staff. Answered questions get posted back to the board so the next person doesn't have to ask.",
+    "text": "Questions go to the NCBO exec team. Answered questions get posted back to the board so the next person doesn't have to ask.",
     "note": "Drafts you write here stay in this browser until you send them — this site has no server behind it.",
     "form": "#"
   },
@@ -187,6 +117,6 @@ window.NCBO_MEMBER = {
   "directory": {
     "eyebrow": "The network",
     "title": "Who's out there.",
-    "sub": "Tap a campus to pull up the club and its lead. Reach out — cross-club training sessions and carpools start here."
+    "sub": "Our founding chapters. Where a lead is confirmed, reach out — cross-club training sessions and carpools start here."
   }
 };

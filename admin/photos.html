@@ -788,6 +788,22 @@
       '   NCBO_DATA — single source of truth for site content.\n'+
       '   Generated/edited via the admin content manager (admin/photos.html).\n'+
       '   You can still hand-edit this file; the admin overwrites the whole object.\n'+
+      '\n'+
+      '   ── ACCURACY RULES ─────────────────────────────────────────────────────────\n'+
+      '   Saving from the admin rewrites this file and drops any comments you added\n'+
+      '   by hand, so the rules live here in the generator instead:\n'+
+      '\n'+
+      '     1. Do not publish a name, school, number, date or title that is not\n'+
+      '        confirmed in writing. If it cannot be sourced, cut it or ask.\n'+
+      '     2. Anything not yet running (the season, competitions, the dues model,\n'+
+      '        the app) is described in forward-looking language, never as existing.\n'+
+      '     3. NCBO is a Pennsylvania nonprofit corporation IN FORMATION. It is not\n'+
+      '        a 501(c)(3). Nothing may imply donations are tax-deductible.\n'+
+      '     4. Do not publish an email address that nobody monitors.\n'+
+      '\n'+
+      '   The `clubsHeld`, `advisoryHeld` and `voicesHeld` arrays are entries that\n'+
+      '   are deliberately NOT published pending confirmation. Nothing renders them.\n'+
+      '   Move an entry into `clubs` / `advisory` / `voices` only once confirmed.\n'+
       '   ========================================================================== */\n';
     return header+'window.NCBO_DATA = '+JSON.stringify(DATA, null, 2)+';\n';
   }
