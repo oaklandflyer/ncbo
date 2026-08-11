@@ -2,16 +2,16 @@
    NCBO — app.js
    Members-only area controller.
 
-   - Access-code gate (codes live in assets/member-data.js)
+   - Username + password sign-in, checked in the browser by assets/js/auth.js
+     against the hashes in data/members.json
    - One scrolling hub: Calendar · Updates · Resources · Q&A · Clubs
      (no tabs, no side rails — everything stacks in one column on phones)
 
-   The gate is a convenience lock on a static site, not authentication — see
-   the note at the top of assets/member-data.js.
+   What the sign-in does and doesn't protect: SECURITY-NOTES.md.
    ========================================================================== */
 (function () {
-  const KEY = 'ncbo-member-access';
   const DRAFTS = 'ncbo-member-drafts';
+  const Auth = window.NCBOAuth;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
@@ -20,35 +20,49 @@
 
   const norm = s => String(s || '').trim().toLowerCase();
 
-  function codes() {
-    const M = window.NCBO_MEMBER || {};
-    return ((M.access && M.access.codes) || []).map(norm);
-  }
-  function isValid(input) { return codes().indexOf(norm(input)) !== -1; }
+  /* Gate copy lives here rather than in member-data.js, because member-data.js
+     is member-only content and isn't fetched until someone is actually in. */
+  const GATE = {
+    eyebrow: 'Members only',
+    title: ['The member', 'locker room.'],
+    sub: 'Sign in with your NCBO username and password to get into the member hub — the chapter directory, and resources as they come online.',
+    help: "No account yet? Your club lead can request one for you, or email us and we'll set it up: ",
+    remember: 'Keep me signed in on this device'
+  };
 
-  /* remembered unlock — sessionStorage by default, localStorage if the member
-     ticked "keep me signed in". Stores the code so a rotation locks it again. */
-  function remembered() {
-    try { return localStorage.getItem(KEY) || sessionStorage.getItem(KEY); }
-    catch (e) { return null; }
-  }
-  function remember(code, persist) {
-    try {
-      (persist ? localStorage : sessionStorage).setItem(KEY, norm(code));
-      if (!persist) localStorage.removeItem(KEY);
-    } catch (e) { /* private mode — they'll just re-enter the code */ }
-  }
-  function forget() {
-    try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); } catch (e) {}
+  /* member-data.js is loaded on demand, after sign-in — nothing member-only
+     is fetched by a browser sitting on the sign-in screen. */
+  let memberDataPromise = null;
+  function loadMemberData() {
+    if (!memberDataPromise) {
+      memberDataPromise = window.NCBO_MEMBER
+        ? Promise.resolve()
+        : new Promise(resolve => {
+            const s = document.createElement('script');
+            s.src = 'assets/member-data.js';
+            s.onload = () => resolve();
+            s.onerror = () => resolve();      // hub renders its empty states
+            document.head.appendChild(s);
+          });
+    }
+    return memberDataPromise;
   }
 
-  /* ── gate ─────────────────────────────────────────────────────────── */
+  /* Where the admin gate sends people to sign in: members.html?next=admin.
+     Honour it so an admin lands back where they were headed. */
+  function wantsAdmin() {
+    try { return new URLSearchParams(location.search).get('next') === 'admin'; }
+    catch (e) { return /[?&]next=admin\b/.test(location.search); }
+  }
+
+  /* ── sign-in ──────────────────────────────────────────────────────── */
   function buildGate() {
-    const M = window.NCBO_MEMBER || {};
-    const A = M.access || {};
+    const A = GATE;
     const D = window.NCBO_DATA || {};
     const host = $('#gate');
     if (!host) return;
+
+    const canSignIn = !!(Auth && Auth.available);
 
     host.innerHTML = `
       <div class="gate-card">
@@ -56,62 +70,102 @@
         <p class="eyebrow">${esc(A.eyebrow || 'Members only')}</p>
         <h1>${(A.title || ['Member access']).map(esc).join('<br>')}</h1>
         <p class="gate-sub">${esc(A.sub || '')}</p>
+        ${canSignIn ? '' : `<p class="gate-warn">This page has to be served over <b>https</b> (or opened at
+             <b>localhost</b>) before a password can be checked — your browser won't
+             do the maths otherwise. Try the https address for this site.</p>`}
         <form class="gate-form" id="gate-form">
-          <input type="text" id="gate-code" autocomplete="off" spellcheck="false"
-                 autocapitalize="characters" enterkeyhint="go"
-                 aria-label="Member access code" placeholder="${esc(A.placeholder || 'Access code')}">
+          <div class="gate-field">
+            <label for="gate-user">Username</label>
+            <input type="text" id="gate-user" name="username" autocomplete="username"
+                   spellcheck="false" autocapitalize="none" enterkeyhint="next"
+                   ${canSignIn ? '' : 'disabled'}>
+          </div>
+          <div class="gate-field">
+            <label for="gate-pass">Password</label>
+            <input type="password" id="gate-pass" name="password" autocomplete="current-password"
+                   enterkeyhint="go" ${canSignIn ? '' : 'disabled'}>
+          </div>
           <label class="gate-remember">
-            <input type="checkbox" id="gate-remember">
+            <input type="checkbox" id="gate-remember" ${canSignIn ? '' : 'disabled'}>
             <span>${esc(A.remember || 'Keep me signed in on this device')}</span>
           </label>
-          <button class="btn btn-primary" type="submit">Enter</button>
-          <p class="gate-msg" id="gate-msg" role="status" aria-live="polite"></p>
+          <button class="btn btn-primary" type="submit" id="gate-submit"
+                  ${canSignIn ? '' : 'disabled'}>Sign in</button>
+          <p class="gate-msg" id="gate-msg" role="alert" aria-live="assertive"></p>
         </form>
         <p class="gate-help">${esc(A.help || '')}
           ${D.org && D.org.email ? `<a href="mailto:${esc(D.org.email)}">${esc(D.org.email)}</a>` : ''}</p>
       </div>`;
 
-    $('#gate-form').addEventListener('submit', e => {
+    if (!canSignIn) return;
+
+    const form = $('#gate-form');
+    const btn = $('#gate-submit');
+    const msg = $('#gate-msg');
+    const pass = $('#gate-pass');
+
+    function fail(text) {
+      msg.textContent = text;
+      const card = $('.gate-card', host);
+      card.classList.remove('shake');
+      void card.offsetWidth;            // restart the animation
+      card.classList.add('shake');
+      pass.value = '';
+      pass.focus();
+    }
+
+    form.addEventListener('submit', e => {
       e.preventDefault();
-      const val = $('#gate-code').value;
-      const msg = $('#gate-msg');
-      if (isValid(val)) {
-        remember(val, $('#gate-remember').checked);
-        msg.textContent = '';
-        openApp();
-      } else {
-        msg.textContent = A.error || "That code isn't right.";
-        const card = $('.gate-card', host);
-        card.classList.remove('shake');
-        void card.offsetWidth;          // restart the animation
-        card.classList.add('shake');
-        $('#gate-code').select();
-      }
+      const user = $('#gate-user').value;
+      const remember = $('#gate-remember').checked;
+      const label = btn.textContent;
+
+      msg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      /* Whatever happens — match, no match, or a thrown error — the button
+         comes back. A failed sign-in must never leave it stuck. */
+      const done = () => { btn.disabled = false; btn.textContent = label; };
+
+      Auth.verify(user, pass.value)
+        .then(member => {
+          if (!member) { done(); fail("That username and password didn't match."); return; }
+          Auth.signIn(member, remember);
+          done();
+          if (Auth.isAdmin(member)) { location.href = Auth.adminIndex; return; }
+          openApp(member);
+        })
+        .catch(err => {
+          done();
+          fail(err && err.message ? err.message : 'Sign-in is unavailable in this browser.');
+        });
     });
   }
 
   /* ── hub shell ────────────────────────────────────────────────────── */
   let built = false;
+  let who = null;
 
-  function openApp() {
+  function openApp(member) {
     const gate = $('#gate'), app = $('#app');
     if (!app) return;
+    who = member || who;
     gate.hidden = true;
     app.hidden = false;
     document.body.classList.add('member-in');
-    if (!built) { buildApp(); built = true; }
+    if (!built) {
+      built = true;
+      loadMemberData().then(buildApp);
+    }
     window.scrollTo(0, 0);
   }
 
-  function closeApp() {
-    forget();
-    const gate = $('#gate'), app = $('#app');
-    app.hidden = true;
-    gate.hidden = false;
-    document.body.classList.remove('member-in');
-    const input = $('#gate-code');
-    if (input) { input.value = ''; input.focus(); }
-    window.scrollTo(0, 0);
+  /* Signing out clears both stores (and the key the old shared-passcode gate
+     used) and reloads, so nothing built from member data stays on screen. */
+  function signOut() {
+    if (Auth) Auth.signOut();
+    location.replace(location.pathname);
   }
 
   function buildApp() {
@@ -122,19 +176,31 @@
     if (bar) {
       const stats = (M.stats || []).map(s =>
         `<div class="stat"><span class="stat-num">${esc(s.num)}</span><span class="stat-lab">${esc(s.lab)}</span></div>`).join('');
+      /* Greet by name when we have one, and give an admin a visible way
+         through to the admin pages rather than a URL they have to remember. */
+      const hello = who && who.name
+        ? `Welcome back, ${esc(String(who.name).split(/\s+/)[0])}.`
+        : esc(W.title || 'Welcome back.');
+      const adminLink = (Auth && Auth.isAdmin(who))
+        ? `<a class="admin-link" href="${esc(Auth.adminIndex)}">Admin pages</a>`
+        : '';
+
       bar.innerHTML = `
         <div class="app-bar-inner">
           <div class="app-bar-head">
             <div>
-              <p class="eyebrow">${esc(W.eyebrow || 'Season hub')}</p>
-              <h1>${esc(W.title || 'Welcome back.')}</h1>
+              <p class="eyebrow">${esc(W.eyebrow || 'Season hub')}${who && who.role ? ' · ' + esc(who.role) : ''}</p>
+              <h1>${hello}</h1>
               <p class="app-sub">${esc(W.sub || '')}</p>
             </div>
-            <button class="sign-out" type="button" id="sign-out">Sign out</button>
+            <div class="app-bar-actions">
+              ${adminLink}
+              <button class="sign-out" type="button" id="sign-out">Sign out</button>
+            </div>
           </div>
           ${stats ? `<div class="stats">${stats}</div>` : ''}
         </div>`;
-      $('#sign-out').addEventListener('click', closeApp);
+      $('#sign-out').addEventListener('click', signOut);
     }
 
     buildCalendar();
@@ -374,7 +440,16 @@
   /* ── boot ─────────────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
     buildGate();
-    if (isValid(remembered())) openApp();
-    else { const i = $('#gate-code'); if (i) i.focus(); }
+
+    const s = Auth && Auth.session();
+    if (s) {
+      /* An admin who arrived here from the admin gate goes straight through. */
+      if (wantsAdmin() && Auth.isAdmin(s)) { location.replace(Auth.adminIndex); return; }
+      openApp(s);
+      return;
+    }
+
+    const u = $('#gate-user');
+    if (u && !u.disabled) u.focus();
   });
 })();

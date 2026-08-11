@@ -32,18 +32,25 @@
 }
 .gate-card .gate-sub { color: var(--silver); font-size: 0.98rem; margin-top: 1rem; }
 
-.gate-form { display: grid; gap: 0.8rem; margin-top: 1.8rem; }
-.gate-form input[type="text"] {
-  background: var(--navy-deep); border: 1px solid var(--line); border-radius: var(--r);
-  color: var(--white); font-family: var(--font-display); font-weight: 700;
-  letter-spacing: 0.22em; text-transform: uppercase; text-align: center;
-  font-size: 1.1rem; padding: 0.9rem 1rem;
+.gate-form { display: grid; gap: 0.8rem; margin-top: 1.8rem; text-align: left; }
+.gate-field { display: grid; gap: 0.35rem; }
+.gate-field label {
+  font-family: var(--font-display); font-weight: 600; font-size: 0.78rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
 }
-.gate-form input[type="text"]:focus { outline: none; border-color: var(--steel); }
-.gate-form .btn { justify-content: center; }
+.gate-form input[type="text"],
+.gate-form input[type="password"] {
+  background: var(--navy-deep); border: 1px solid var(--line); border-radius: var(--r);
+  color: var(--white); font-family: inherit; font-size: 1rem;
+  padding: 0.8rem 0.95rem; width: 100%;
+}
+.gate-form input[type="text"]:focus,
+.gate-form input[type="password"]:focus { outline: none; border-color: var(--steel); }
+.gate-form .btn { justify-content: center; margin-top: 0.3rem; }
+.gate-form .btn[disabled] { opacity: 0.55; cursor: progress; }
 
 .gate-remember {
-  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
   color: var(--muted); font-size: 0.86rem;
 }
 .gate-remember input { accent-color: var(--steel); width: 18px; height: 18px; }
@@ -54,6 +61,21 @@
   text-transform: uppercase;
 }
 .gate-help { color: var(--muted); font-size: 0.85rem; margin-top: 1.5rem; }
+.gate-warn {
+  margin-top: 1.2rem; padding: 0.7rem 0.9rem; border-radius: var(--r);
+  border: 1px solid var(--line); background: var(--navy-deep);
+  color: #E8A0A0; font-size: 0.85rem; text-align: left;
+}
+/* Shortcut an admin sees on the member page — same shape as .sign-out. */
+.admin-link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  border: 1px solid var(--steel); border-radius: 999px;
+  padding: 0.45rem 0.95rem; color: var(--steel-light);
+  font-family: var(--font-display); font-weight: 600; font-size: 0.8rem;
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+}
+.admin-link:hover { background: var(--steel); color: var(--navy); }
+.app-bar-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .gate-help a { color: var(--steel-light); text-decoration: underline; text-underline-offset: 3px; }
 
 .gate-card.shake { animation: gateShake .38s ease; }
