@@ -5,29 +5,20 @@
    (admin/photos.html) rewrites data.js wholesale, so member content lives here
    where it won't get clobbered.
 
-   ── Access codes ──────────────────────────────────────────────────────────
-   `access.codes` is the list of codes that unlock the member app. Codes are
-   compared case-insensitively with surrounding whitespace trimmed.
+   ── Who gets in ───────────────────────────────────────────────────────────
+   Sign-in is a username + password per person, checked in the browser against
+   the PBKDF2 hashes in data/members.json. Add and remove accounts with
+   `python3 tools/make-member.py`. The shared access code this file used to
+   carry is gone.
 
-   IMPORTANT: this is a static site with no server, so the gate is a
-   convenience lock, not real security — anyone who opens dev tools can read
-   the codes out of this file. Don't put anything genuinely sensitive behind
-   it (rosters with personal contact info, payment details, judging keys).
-   Rotate the code each season and treat the material inside as
-   "members-only" the way a printed handout is.
+   This file is only fetched after someone signs in — but that is a
+   convenience, not a wall. On static hosting anyone can request it directly.
+   Treat what you put here the way you'd treat a printed members-only handout:
+   fine for schedules, resources and Q&A; not for personal contact details,
+   payment information, or anything you'd be upset to see forwarded.
+   See SECURITY-NOTES.md.
    ========================================================================== */
 window.NCBO_MEMBER = {
-
-  "access": {
-    "codes": ["NCBO2026"],
-    "eyebrow": "Members only",
-    "title": ["The member", "locker room."],
-    "sub": "Enter your member access code to get into the member hub — the chapter directory, and resources as they come online.",
-    "placeholder": "Access code",
-    "help": "Your club lead has the code. Lost it? Ask your lead or email us and we'll get you back in.",
-    "error": "That code isn't right. Check with your club lead.",
-    "remember": "Keep me signed in on this device"
-  },
 
   /* ── Dashboard ──────────────────────────────────────────────────────── */
   "welcome": {

@@ -231,6 +231,21 @@
         </div>`).join('');
       return people.length;
     },
+    /* Club leads for the Team section. Built from the club list rather than a
+       second hand-kept roster, so a lead added in the admin appears here and
+       on the club card from the one edit. A club with no confirmed lead
+       contributes nobody — we never invent a name to fill the grid. */
+    clubLeads(el) {
+      if (!el) return 0;
+      const leads = (D.clubs || [])
+        .filter(c => c.lead && String(c.lead).trim())
+        .map(c => ({
+          name: String(c.lead).trim(),
+          role: c.school + (c.note ? ' · ' + c.note : ''),
+          img: c.leadImg || ''
+        }));
+      return R.people(el, leads);
+    },
     news(el) {
       if (!el) return;
       el.innerHTML = D.news.map(n => `

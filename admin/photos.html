@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="gate.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>NCBO — Admin (content & photos)</title>
 <script src="../assets/data.js"></script>
+<script src="../assets/usmap.js"></script>
 <style>
   :root{
     --navy-deep:#060B1A; --navy:#0A1228; --navy-1:#0E1830; --navy-2:#14213F; --line:#1E2C4F;
@@ -134,13 +136,29 @@
   .crop-controls{display:flex; align-items:center; gap:.7rem; margin:.9rem 0;}
   .crop-controls input[type=range]{flex:1;}
   .modal-actions{display:flex; justify-content:flex-end; gap:.6rem;}
+
+  /* club map preview + pin picker (usmap.js renders the same SVG the site does,
+     so it needs the same handful of rules, dark-tuned for this page) */
+  .map-admin{background:var(--navy-deep); border:1px solid var(--line); border-radius:8px; padding:.6rem;}
+  .map-admin svg{width:100%; height:auto; display:block; overflow:visible;}
+  .map-admin.picking{outline:2px solid var(--steel); cursor:crosshair;}
+  .map-admin.picking svg{cursor:crosshair;}
+  .map-admin .us-states path{fill:#16213C; stroke:#22315A; stroke-width:.8;}
+  .map-admin .us-states path.has-club{fill:#25457B; stroke:#3C5E96;}
+  .map-admin .club-dot .dot-halo{fill:var(--steel); opacity:.22;}
+  .map-admin .club-dot .dot-core{fill:var(--steel); stroke:#fff; stroke-width:1.6;}
+  .map-admin .club-dot.forming .dot-core{fill:#fff; stroke:var(--steel);}
+  .map-admin .dot-label{font-size:16px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+    fill:var(--white); paint-order:stroke; stroke:var(--navy-deep); stroke-width:4px; stroke-linejoin:round; pointer-events:none;}
 </style>
 </head>
 <body>
 
 <header class="top">
   <h1>NCBO Admin</h1>
-  <p>Internal tool — not linked from the site. Edit site content &amp; photos, then commit straight to GitHub.</p>
+  <p>Internal tool — not linked from the site. Edit site content &amp; photos, then commit straight to GitHub.
+     <span style="float:right;"><a href="index.html">Admin home</a> ·
+     <a href="#" id="adminSignOut">Sign out</a></span></p>
   <div class="tabs" id="tabs"></div>
 </header>
 
@@ -214,6 +232,14 @@
   const clone = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'item';
+
+  /* Sign-out lives up in the header; gate.js has already decided we belong here. */
+  const signOutLink = $('#adminSignOut');
+  if (signOutLink) signOutLink.addEventListener('click', e => {
+    e.preventDefault();
+    if (window.NCBOAuth) window.NCBOAuth.signOut();
+    location.href = '../members.html';
+  });
 
   const ORIG = window.NCBO_DATA || {};
   let DATA = clone(ORIG);
@@ -667,26 +693,126 @@
       const frag=document.createDocumentFragment();
       const p=panel('Clubs'); DATA.clubs=DATA.clubs||[];
       p.appendChild(noteEl('Shows on the home page under <b>Find a Club</b> (index.html#clubs) — on the map and in the cards below it. '+
-        'Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.'));
-      p.appendChild(objectList(DATA.clubs,{
+        'Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.<br><br>'+
+        '<b>The map looks after itself.</b> Pick the club’s state and it appears on the map right away, pinned at the middle of that state. '+
+        'To put the pin on the actual campus, use <b>Place on map</b> below and click the spot — that also fills in the state for you. '+
+        'The five founding chapters have hand-placed pins already and ignore these fields.<br><br>'+
+        '<b>Leads show up twice.</b> A name in “Lead / contact” appears on the club card and in <b>Club leads</b> under Team on the home page. '+
+        'Leave it blank and the card offers a contact link instead — never a name we can’t source. '+
+        'A lead with no photo path renders as an initials monogram; to use a photo, upload it under any club photo slot and put its path in the field.'));
+
+      let redrawMap=()=>{};   /* set once the map panel below exists */
+
+      const list=objectList(DATA.clubs,{
         titleKey:'school', imgKey:'img', imgPrefix:'club', aspect:16/10, addLabel:'Add club',
-        newItem:()=>({school:'',name:'',lead:'',status:'Forming',img:''}),
+        newItem:()=>({school:'',name:'',lead:'',status:'Forming',img:'',state:''}),
         fields:(it,card,upd)=>{
           const g=document.createElement('div'); g.className='grid-2';
-          g.appendChild(fieldText('School', ()=>it.school, v=>{it.school=v;upd();}));
+          g.appendChild(fieldText('School', ()=>it.school, v=>{it.school=v;upd();redrawMap();}));
           g.appendChild(fieldText('Club name', ()=>it.name, v=>it.name=v));
           g.appendChild(fieldText('Lead / contact', ()=>it.lead, v=>it.lead=v));
+          g.appendChild(fieldText('Lead photo path (optional)', ()=>it.leadImg, v=>it.leadImg=v));
+
           const sf=document.createElement('div'); sf.className='field';
           const lab=document.createElement('label'); lab.textContent='Status';
           const sel=document.createElement('select');
           ['Active','Forming','Coming soon'].forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(it.status===o)op.selected=true; sel.appendChild(op); });
           if(it.status && !['Active','Forming','Coming soon'].includes(it.status)){ const op=document.createElement('option'); op.value=it.status; op.textContent=it.status; op.selected=true; sel.appendChild(op); }
-          sel.addEventListener('change',()=>{ it.status=sel.value; markDirty(); });
+          sel.addEventListener('change',()=>{ it.status=sel.value; markDirty(); redrawMap(); });
           sf.appendChild(lab); sf.appendChild(sel);
           g.appendChild(sf);
           card.appendChild(g);
+
+          /* ── map placement ── */
+          const hand = !!(window.NCBO_USMAP && window.NCBO_USMAP.PINS[it.school]);
+          const mrow=document.createElement('div'); mrow.className='row'; mrow.style.marginTop='.6rem';
+
+          const stf=document.createElement('div'); stf.className='field';
+          const stl=document.createElement('label'); stl.textContent='State (map)';
+          const stsel=document.createElement('select');
+          const blank=document.createElement('option'); blank.value=''; blank.textContent='— not on the map —'; stsel.appendChild(blank);
+          Object.keys((window.NCBO_USMAP&&window.NCBO_USMAP.STATES)||{}).sort().forEach(code=>{
+            const op=document.createElement('option'); op.value=code; op.textContent=code;
+            if((it.state||'').toUpperCase()===code) op.selected=true; stsel.appendChild(op);
+          });
+          stsel.disabled=hand;
+          stsel.addEventListener('change',()=>{ it.state=stsel.value; if(!it.state){ delete it.x; delete it.y; } markDirty(); redrawMap(); });
+          stf.appendChild(stl); stf.appendChild(stsel); mrow.appendChild(stf);
+
+          const bf=document.createElement('div'); bf.className='field';
+          const bl=document.createElement('label'); bl.textContent='Pin';
+          const brow=document.createElement('div'); brow.style.cssText='display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;';
+          const place=document.createElement('button'); place.type='button'; place.className='small';
+          place.textContent='Place on map';
+          const state=document.createElement('span'); state.style.cssText='font-size:.78rem;color:var(--silver-dim);';
+          function pinLabel(){
+            if(hand) return 'hand-placed in usmap.js';
+            if(it.x!=null&&it.y!=null) return `placed at ${Math.round(it.x)}, ${Math.round(it.y)}`;
+            if(it.state) return 'centre of '+it.state;
+            return 'not on the map';
+          }
+          state.textContent=pinLabel();
+          place.disabled=hand;
+          place.addEventListener('click',()=>{ armPicker(it, ()=>{ state.textContent=pinLabel(); if(stsel.value!==(it.state||'')) stsel.value=it.state||''; }); });
+          const clear=document.createElement('button'); clear.type='button'; clear.className='small';
+          clear.textContent='Clear pin'; clear.disabled=hand;
+          clear.addEventListener('click',()=>{ delete it.x; delete it.y; markDirty(); redrawMap(); state.textContent=pinLabel(); });
+          brow.appendChild(place); brow.appendChild(clear); brow.appendChild(state);
+          bf.appendChild(bl); bf.appendChild(brow); mrow.appendChild(bf);
+
+          card.appendChild(mrow);
         }
-      })); frag.appendChild(p);
+      });
+      p.appendChild(list); frag.appendChild(p);
+
+      /* ── the map itself ── */
+      const mp=panel('Map preview & pin placement');
+      mp.appendChild(noteEl('This is the same map component the home page uses, drawn from the clubs above. '+
+        'Press <b>Place on map</b> on a club, then click its campus here.'));
+      const status=document.createElement('div'); status.className='status-line'; mp.appendChild(status);
+      const stage=document.createElement('div'); stage.className='map-admin'; mp.appendChild(stage);
+      frag.appendChild(mp);
+
+      let picking=null, pickDone=null;
+
+      function armPicker(item, after){
+        picking=item; pickDone=after||null;
+        setStatus(status,'Click the campus on the map for “'+(item.school||'this club')+'”. Press Esc to cancel.','busy');
+        stage.classList.add('picking');
+        stage.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+      function disarm(){ picking=null; pickDone=null; stage.classList.remove('picking'); }
+
+      document.addEventListener('keydown', e=>{
+        if(e.key==='Escape' && picking){ disarm(); setStatus(status,'Placement cancelled.',''); }
+      });
+
+      redrawMap=function(){
+        if(!window.NCBO_USMAP){ stage.innerHTML='<p class="note">Map component didn’t load.</p>'; return; }
+        window.NCBO_USMAP.render(stage, DATA.clubs, {});
+        const svg=stage.querySelector('svg');
+        if(!svg) return;
+        svg.addEventListener('click', e=>{
+          if(!picking) return;
+          e.preventDefault();
+          const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+          const loc=pt.matrixTransform(svg.getScreenCTM().inverse());
+          picking.x=Math.round(loc.x*10)/10;
+          picking.y=Math.round(loc.y*10)/10;
+          /* the state under the click tints the right state and gives the
+             record a sensible fallback if the pin is ever cleared */
+          const path=e.target.closest && e.target.closest('path[data-state]');
+          if(path) picking.state=path.getAttribute('data-state');
+          const name=picking.school||'this club';
+          markDirty();
+          const done=pickDone; disarm();
+          if(done) done();
+          redrawMap();
+          setStatus(status,'Pinned '+name+'.','ok');
+        });
+      };
+      setTimeout(redrawMap,0);
+
       return frag;
     },
 
