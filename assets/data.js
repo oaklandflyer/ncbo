@@ -157,7 +157,7 @@ window.NCBO_DATA = {
       "school": "Penn State University",
       "name": "Bodybuilding & Fitness Club",
       "note": "University Park",
-      "lead": "",
+      "lead": "Isabel Ward",
       "status": "Active",
       "img": "assets/img/club-pennstate.jpg"
     },
@@ -171,7 +171,7 @@ window.NCBO_DATA = {
     {
       "school": "Florida State University",
       "name": "Bodybuilding and Fitness Club at FSU",
-      "lead": "",
+      "lead": "Vincent Panzica",
       "status": "Active",
       "img": "assets/img/club-fsu.jpg"
     },
