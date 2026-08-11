@@ -150,6 +150,26 @@
 }
 .res-row:hover { border-color: var(--steel-deep); transform: translateX(3px); }
 .res-row::after { content: '→'; color: var(--steel-light); font-weight: 700; }
+
+/* Unwritten resources: no arrow, no hover affordance, explicitly flagged.
+   A row that looks clickable and isn't is worse than an honest label. */
+.res-row.is-pending { opacity: 0.72; cursor: default; }
+.res-row.is-pending:hover { border-color: var(--line); transform: none; }
+.res-row.is-pending::after { content: none; }
+.res-flag {
+  flex: 0 0 auto;
+  font-family: var(--font-display); font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; font-size: 0.68rem; white-space: nowrap;
+  color: var(--silver-dim); background: rgba(86,101,128,0.08);
+  border: 1px solid var(--line); border-radius: 100px; padding: 0.28rem 0.65rem;
+}
+
+/* shared empty state for the member sections */
+.m-empty {
+  color: var(--muted); background: var(--navy-1);
+  border: 1px dashed var(--line); border-radius: var(--r);
+  padding: 1.4rem 1.5rem; max-width: 70ch;
+}
 .res-title {
   display: block; font-family: var(--font-display); font-weight: 700;
   font-size: 1.15rem; text-transform: uppercase; line-height: 1.15;
