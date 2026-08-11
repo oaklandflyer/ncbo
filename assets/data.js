@@ -390,7 +390,7 @@ window.NCBO_DATA = {
     {
       "name": "Alex Swanson",
       "school": "University of Iowa",
-      "img": ""
+      "img": "assets/img/lead-alex-swanson.jpg"
     },
     {
       "name": "Sean Hanley",
