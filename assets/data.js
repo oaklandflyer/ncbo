@@ -365,5 +365,37 @@ window.NCBO_DATA = {
     "contact": "#",
     "board": "https://forms.gle/pHHXN3kaTstF2Sw79"
   },
-  "voices": []
+  "voices": [],
+  "clubLeads": [
+    {
+      "name": "Rachel Hare",
+      "school": "University of Pittsburgh",
+      "img": "assets/img/lead-rachel-hare.jpg"
+    },
+    {
+      "name": "Isabel Ward",
+      "school": "Penn State University",
+      "img": ""
+    },
+    {
+      "name": "Vincent Panzica",
+      "school": "Purdue University",
+      "img": "assets/img/lead-vincent-panzica.jpg"
+    },
+    {
+      "name": "Eli Korta",
+      "school": "Florida State University",
+      "img": "assets/img/lead-eli-korta.jpg"
+    },
+    {
+      "name": "Alex Swanson",
+      "school": "University of Iowa",
+      "img": ""
+    },
+    {
+      "name": "Sean Hanley",
+      "school": "Slippery Rock University",
+      "img": ""
+    }
+  ]
 };
