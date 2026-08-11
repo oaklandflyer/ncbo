@@ -3,29 +3,29 @@
    Generated/edited via the admin content manager (admin/photos.html).
    You can still hand-edit this file; the admin overwrites the whole object.
 
-   ── ACCURACY NOTE (Aug 2026) ───────────────────────────────────────────────
-   This file was audited against internal records. Two rules apply to edits:
+   ── ACCURACY RULES ─────────────────────────────────────────────────────────
+   Saving from the admin rewrites this file and drops any comments you added
+   by hand, so the rules live here in the generator instead:
 
-     1. Do not publish a name, school, number, date or title that isn't
-        confirmed in writing. If it can't be sourced, cut it or ask.
-     2. Anything not yet running (season, competitions, dues model, app)
-        is described in forward-looking language, never as existing.
+     1. Do not publish a name, school, number, date or title that is not
+        confirmed in writing. If it cannot be sourced, cut it or ask.
+     2. Anything not yet running (the season, competitions, the dues model,
+        the app) is described in forward-looking language, never as existing.
+     3. NCBO is a Pennsylvania nonprofit corporation IN FORMATION. It is not
+        a 501(c)(3). Nothing may imply donations are tax-deductible.
+     4. Do not publish an email address that nobody monitors.
 
-   `clubsHeld` and `advisoryHeld` below are entries deliberately NOT published
-   pending confirmation. They are kept here so restoring one is a one-line
-   move back into `clubs` / `advisory` — do not render them.
+   The `clubsHeld`, `advisoryHeld` and `voicesHeld` arrays are entries that
+   are deliberately NOT published pending confirmation. Nothing renders them.
+   Move an entry into `clubs` / `advisory` / `voices` only once confirmed.
    ========================================================================== */
 window.NCBO_DATA = {
   "org": {
     "name": "NCBO",
     "full": "National Collegiate Bodybuilding Organization",
     "tagline": "Clubs. Competition. Community.",
-    /* Legal status — NCBO is not yet incorporated and is not a 501(c)(3). */
     "status": "A Pennsylvania nonprofit corporation in formation.",
     "statusLong": "NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status; that status has not been granted, and contributions are not tax-deductible.",
-    /* QUESTION OPEN: is this inbox live and owned? The chapter playbook still
-       publishes info@ncbo.org, which does not exist. Do not add a response-time
-       promise to any address until someone owns the inbox. */
     "email": "thencbo@gmail.com",
     "instagram": "https://instagram.com/ncboofficial",
     "instagramHandle": "@ncboofficial",
@@ -183,10 +183,6 @@ window.NCBO_DATA = {
       "img": "assets/img/club-iowa.jpg"
     }
   ],
-  /* NOT PUBLISHED — pending confirmation. Do not render.
-     Slippery Rock appears in the founding-club list but has no named lead,
-     so it cannot be listed as an active chapter. Awaiting a decision on
-     whether to include it (and how to label it) or drop it. */
   "clubsHeld": [
     {
       "school": "Slippery Rock University",
@@ -222,13 +218,8 @@ window.NCBO_DATA = {
   "leadership": [
     {
       "name": "Andrew Coutinho",
-      "role": "President & Founder",
+      "role": "Chief Executive Officer",
       "img": "assets/img/team-andrew.jpg"
-    },
-    {
-      "name": "Neha Kotha",
-      "role": "Vice President of Operations",
-      "img": "assets/img/team-neha.jpg"
     },
     {
       "name": "Luke Rudolph",
@@ -246,27 +237,33 @@ window.NCBO_DATA = {
       "img": "assets/img/team-alex.jpg"
     },
     {
-      /* Title intentionally blank: four conflicting titles on record.
-         Do not publish one until it is resolved. */
       "name": "Vincent Panzica",
-      "role": "",
+      "role": "Director of Club Relations",
       "img": "assets/img/team-vincent.jpg"
     },
     {
-      "name": "Matt Deemer",
-      "role": "Co-Founder",
-      "img": "assets/img/team-matt.jpg"
-    },
-    {
-      "name": "Will Gordinier",
-      "role": "Co-Founder",
-      "img": "assets/img/team-will.jpg"
+      "name": "Lauren Rowe",
+      "role": "Marketing Team Member",
+      "img": "assets/img/team-lauren-rowe.jpg"
     }
   ],
-  "advisory": [],
-  /* NOT PUBLISHED — pending confirmation. Do not render.
-     Listed internally as advisors but never formally confirmed, and the
-     IFBB/OCB pro designations are not sourced. */
+  "advisory": [
+    {
+      "name": "Neha Kotha",
+      "role": "Advisor",
+      "img": "assets/img/advisor-neha-kotha.jpg"
+    },
+    {
+      "name": "Jasmine Amato",
+      "role": "Advisor",
+      "img": "assets/img/advisor-jasmine-amato.jpg"
+    },
+    {
+      "name": "Megan Chaney",
+      "role": "Advisor",
+      "img": "assets/img/advisor-megan-chaney.jpg"
+    }
+  ],
   "advisoryHeld": [
     {
       "name": "Jasmine Amato",
@@ -281,10 +278,6 @@ window.NCBO_DATA = {
       "heldReason": "Advisory appointment never formally confirmed."
     }
   ],
-  /* NOT PUBLISHED — pending confirmation. Do not render.
-     Three testimonials that ran on the home page. None is attributed to a
-     named, reachable person and none can be sourced, so they read as
-     invented. Restore only if they can be tied to real members who agreed. */
   "voicesHeld": [
     {
       "quote": "NCBO turned lifting alone into showing up with a team. Having a club at my school changed how I train and who I train with.",
@@ -363,5 +356,6 @@ window.NCBO_DATA = {
     "startClub": "https://forms.gle/p1raPYK4cnLqD4Rb7",
     "contact": "#",
     "board": "https://forms.gle/pHHXN3kaTstF2Sw79"
-  }
+  },
+  "voices": []
 };
