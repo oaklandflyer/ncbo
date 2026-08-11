@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Member Hub — NCBO</title>
-  <meta name="description" content="The NCBO member hub — chapter directory and member resources as they come online. Access code required.">
+  <meta name="description" content="The NCBO member hub — chapter directory and member resources as they come online. Sign-in required.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://thencbo.org/members.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
   <meta property="og:title" content="Member Hub — NCBO">
-  <meta property="og:description" content="Members-only hub for NCBO members and club leads. Access code required.">
+  <meta property="og:description" content="Members-only hub for NCBO members and club leads. Sign-in required.">
   <meta property="og:url" content="https://thencbo.org/members.html">
   <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
   <meta name="theme-color" content="#F4F8FD">
@@ -24,10 +24,10 @@
 <body>
   <header id="site-nav"></header>
 
-  <!-- ACCESS GATE -->
+  <!-- SIGN IN -->
   <main class="gate" id="gate"></main>
 
-  <!-- MEMBER HUB — one page, top to bottom (revealed once the code checks out) -->
+  <!-- MEMBER HUB — one page, top to bottom (revealed once the sign-in checks out) -->
   <div class="app" id="app" hidden>
     <header class="app-bar" id="app-bar"></header>
 
@@ -51,7 +51,8 @@
   <footer id="site-footer"></footer>
 
   <script src="assets/data.js"></script>
-  <script src="assets/member-data.js"></script>
+  <!-- member-data.js is loaded by app.js after a successful sign-in -->
+  <script src="assets/js/auth.js"></script>
   <script src="assets/app.js"></script>
   <script src="assets/site.js"></script>
 </body>

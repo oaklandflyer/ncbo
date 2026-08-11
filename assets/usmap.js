@@ -89,18 +89,62 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  /* Rough centre of a state, averaged over its outline points. Used as the
+     fallback pin for a club that has a state but no placed coordinates, so a
+     club added in the admin shows up on the map straight away instead of
+     silently missing until someone hand-places it. */
+  const centroidCache = {};
+  function centroid(code) {
+    if (centroidCache[code]) return centroidCache[code];
+    const d = STATES[code];
+    if (!d) return null;
+    const nums = d.match(/-?\d+(?:\.\d+)?/g) || [];
+    let sx = 0, sy = 0, n = 0;
+    for (let i = 0; i + 1 < nums.length; i += 2) { sx += +nums[i]; sy += +nums[i + 1]; n++; }
+    if (!n) return null;
+    return (centroidCache[code] = { x: sx / n, y: sy / n });
+  }
+
+  /* Short campus label from a school name, for clubs with no hand-written
+     one: "University of Pittsburgh" → "Pittsburgh". */
+  function autoLabel(school) {
+    return String(school || '')
+      .replace(/^(The\s+)?University of\s+/i, '')
+      .replace(/\s+University$/i, '')
+      .replace(/\s+College$/i, '')
+      .trim() || String(school || '');
+  }
+
+  /* Where does this club sit on the map? Hand-placed pin first, then explicit
+     coordinates on the record, then the centre of its state. */
+  function placement(c) {
+    if (PINS[c.school]) return PINS[c.school];
+    if (c.x != null && c.y != null) {
+      return { x: +c.x, y: +c.y, label: c.label || autoLabel(c.school),
+               dx: c.dx != null ? +c.dx : 12, dy: c.dy != null ? +c.dy : 4,
+               anchor: c.anchor || 'start', state: c.state };
+    }
+    const mid = c.state ? centroid(String(c.state).toUpperCase()) : null;
+    if (mid) {
+      return { x: mid.x, y: mid.y, label: c.label || autoLabel(c.school),
+               dx: 0, dy: 25, anchor: 'middle', state: String(c.state).toUpperCase(), approx: true };
+    }
+    return null;
+  }
+  function placed(c) { return !!placement(c); }
+
   function render(el, clubs, opts) {
     if (!el) return;
     const o = opts || {};
-    const list = (clubs || []).filter(c => PINS[c.school] || (c.x != null && c.y != null));
+    const list = (clubs || []).filter(placed);
 
     /* states hosting a chapter get tinted so the footprint reads at a glance */
-    const hosted = new Set(list.map(c => (PINS[c.school] || {}).state).filter(Boolean));
+    const hosted = new Set(list.map(c => (placement(c) || {}).state).filter(Boolean));
     const statePaths = Object.keys(STATES).map(k =>
       `<path d="${STATES[k]}" data-state="${k}"${hosted.has(k) ? ' class="has-club"' : ''}/>`).join('');
 
     const dots = list.map(c => {
-      const p = PINS[c.school] || { x: c.x, y: c.y, label: c.school, dx: 12, dy: 4, anchor: 'start' };
+      const p = placement(c);
       const cls = String(c.status || '').toLowerCase() === 'active' ? 'active' : 'forming';
       const label = p.label || c.school;
       return `<a class="club-dot ${cls}" href="#" data-school="${esc(c.school)}"
@@ -137,5 +181,5 @@
     return el;
   }
 
-  window.NCBO_USMAP = { render, STATES, PINS };
+  window.NCBO_USMAP = { render, STATES, PINS, placement, placed, centroid, autoLabel };
 })();
