@@ -231,20 +231,41 @@
         </div>`).join('');
       return people.length;
     },
-    /* Club leads for the Team section. Built from the club list rather than a
-       second hand-kept roster, so a lead added in the admin appears here and
-       on the club card from the one edit. A club with no confirmed lead
+    /* Club leads for the Team section, from two places that add up to one list:
+
+         D.clubLeads   the roster edited in the admin's Team tab — the only
+                       place a lead gets a photo, and where a club with more
+                       than one lead gets its second and third
+         D.clubs       any club whose "Lead / contact" names someone not
+                       already on that roster, so filling in the Clubs tab
+                       alone still puts them here
+
+       Matched on name, case- and space-insensitively, so the same person
+       entered in both places appears once. A club with no confirmed lead
        contributes nobody — we never invent a name to fill the grid. */
     clubLeads(el) {
       if (!el) return 0;
-      const leads = (D.clubs || [])
-        .filter(c => c.lead && String(c.lead).trim())
+      const key = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+      const roster = (D.clubLeads || [])
+        .filter(p => p.name && String(p.name).trim())
+        .map(p => ({
+          name: String(p.name).trim(),
+          role: p.school || p.role || '',
+          img: p.img || ''
+        }));
+
+      const named = new Set(roster.map(p => key(p.name)));
+
+      const fromClubs = (D.clubs || [])
+        .filter(c => c.lead && String(c.lead).trim() && !named.has(key(c.lead)))
         .map(c => ({
           name: String(c.lead).trim(),
           role: c.school + (c.note ? ' · ' + c.note : ''),
           img: c.leadImg || ''
         }));
-      return R.people(el, leads);
+
+      return R.people(el, roster.concat(fromClubs));
     },
     news(el) {
       if (!el) return;
