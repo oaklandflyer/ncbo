@@ -395,7 +395,7 @@ window.NCBO_DATA = {
     {
       "name": "Sean Hanley",
       "school": "Slippery Rock University",
-      "img": ""
+      "img": "assets/img/lead-sean-hanley.jpg"
     }
   ]
 };
