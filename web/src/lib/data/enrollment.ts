@@ -20,7 +20,7 @@ const enrollmentFileSchema = z.object({
   source: z
     .object({
       title: z.string(),
-      url: z.string().url(),
+      url: z.url(),
       accessed: z.string(),
     })
     .nullable(),

@@ -14,7 +14,7 @@ import { z } from 'zod';
 /** A verifiable external source. Every factual claim on the site carries one. */
 export const citationSchema = z.object({
   title: z.string().min(1),
-  url: z.string().url(),
+  url: z.url(),
   /** ISO date the URL was last checked. Rendered next to the link. */
   accessed: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'accessed must be YYYY-MM-DD'),
   publisher: z.string().optional(),
@@ -85,8 +85,8 @@ export const eventSchema = z.object({
     lng: z.number().min(-180).max(180).optional(),
   }),
   /** ISO 8601 with offset, e.g. 2026-10-04T18:00:00-04:00. Offset is required. */
-  start: z.string().datetime({ offset: true }),
-  end: z.string().datetime({ offset: true }),
+  start: z.iso.datetime({ offset: true }),
+  end: z.iso.datetime({ offset: true }),
   description: z.string().min(1),
   /** Multiplier on points earned at this event. 0 for non-scoring events. */
   pointsWeight: z.number().min(0).default(0),
@@ -135,7 +135,7 @@ export type EventData = z.infer<typeof eventSchema>;
 export const memberSchema = z
   .object({
     id: z.string().min(1),
-    email: z.string().email(),
+    email: z.email(),
     schoolDomain: z.string().min(1),
     clubSlug: z.string().nullable().default(null),
     role: z.enum(['member', 'officer', 'coach', 'admin']).default('member'),
