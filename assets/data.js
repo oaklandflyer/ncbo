@@ -15,9 +15,20 @@
         a 501(c)(3). Nothing may imply donations are tax-deductible.
      4. Do not publish an email address that nobody monitors.
 
-   The `clubsHeld`, `advisoryHeld` and `voicesHeld` arrays are entries that
-   are deliberately NOT published pending confirmation. Nothing renders them.
-   Move an entry into `clubs` / `advisory` / `voices` only once confirmed.
+   The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are
+   entries that are deliberately NOT published pending confirmation. Nothing
+   renders them. Move an entry into `clubs` / `board` / `advisory` / `voices`
+   only once confirmed.
+
+   ── STRUCTURE ──────────────────────────────────────────────────────────────
+   The people arrays run top-down in governance order:
+
+     board        independent directors who oversee the CEO (being recruited)
+     leadership   the CEO and the executive board that runs operations
+     teamMembers  people reporting into an executive board director
+     clubLeads    the students running each campus chapter
+     advisory     coaching advisors to the clubs, NOT governance
+
    ========================================================================== */
 window.NCBO_DATA = {
   "org": {
@@ -114,7 +125,7 @@ window.NCBO_DATA = {
     ],
     "stats": [
       {
-        "num": "5",
+        "num": "6",
         "lab": "Founding chapters"
       },
       {
@@ -223,6 +234,8 @@ window.NCBO_DATA = {
       "text": "Show up and train. When the first season runs, you'll have the option to represent your school."
     }
   ],
+  "board": [],
+  "boardHeld": [],
   "leadership": [
     {
       "name": "Andrew Coutinho",
@@ -248,27 +261,35 @@ window.NCBO_DATA = {
       "name": "Vincent Panzica",
       "role": "Director of Club Relations",
       "img": "assets/img/team-vincent.jpg"
+    }
+  ],
+  "teamMembers": [
+    {
+      "name": "Altan Sahin",
+      "role": "Finance Team",
+      "school": "Purdue University",
+      "img": "assets/img/team-altan.jpg"
     },
     {
       "name": "Lauren Rowe",
-      "role": "Marketing Team Member",
+      "role": "Marketing Team",
       "img": "assets/img/team-lauren-rowe.jpg"
     }
   ],
   "advisory": [
     {
       "name": "Neha Kotha",
-      "role": "Advisor",
+      "role": "Coaching Advisor",
       "img": "assets/img/advisor-neha-kotha.jpg"
     },
     {
       "name": "Jasmine Amato",
-      "role": "Advisor",
+      "role": "Coaching Advisor",
       "img": "assets/img/advisor-jasmine-amato.jpg"
     },
     {
       "name": "Megan Chaney",
-      "role": "Advisor",
+      "role": "Coaching Advisor",
       "img": "assets/img/advisor-megan-chaney.jpg"
     }
   ],
@@ -316,6 +337,10 @@ window.NCBO_DATA = {
       "a": "Not yet. NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status, but that status has not been granted and contributions are not tax-deductible."
     },
     {
+      "q": "Who governs NCBO?",
+      "a": "NCBO is led by a chief executive officer and an executive board that runs day to day operations. As part of our nonprofit formation we are seating an independent board of directors responsible for financial oversight, the mission, and leadership accountability. Our coaching advisors support the campus clubs and are separate from governance."
+    },
+    {
       "q": "How will this be different from competing at an open show?",
       "a": "At an open show, \"collegiate\" is just an eligibility line. NCBO adds a club at your school and a year-round community — and, once it's built, a structured season and school-vs-school competition."
     },
@@ -333,7 +358,7 @@ window.NCBO_DATA = {
     },
     {
       "q": "Who runs NCBO?",
-      "a": "A founding team of students and recent grads. You can see them in the Leadership section above."
+      "a": "A founding team of students and recent grads. You can see them in the Executive board section above."
     }
   ],
   "news": [
