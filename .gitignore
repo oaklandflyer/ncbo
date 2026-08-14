@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Local Jekyll build output (GitHub Pages builds this itself).
+_site/
+.jekyll-cache/
+.jekyll-metadata
