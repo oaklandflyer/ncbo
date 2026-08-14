@@ -17,6 +17,10 @@ export default defineConfig({
   trailingSlash: 'ignore',
   build: { format: 'directory' },
   devToolbar: { enabled: false },
+  vite: {
+    // `data/` lives at the repo root, one level above this project.
+    server: { fs: { allow: ['..'] } },
+  },
   markdown: {
     shikiConfig: { theme: 'github-light' },
   },

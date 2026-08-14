@@ -11,8 +11,10 @@
  * ranked, and the standings page says so in as many words.
  */
 
-import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+// Static import so the committed data is bundled at build time. The build never
+// touches the network, and never depends on a runtime file path.
+import enrollmentJson from '../../../../data/enrollment.json';
 
 const enrollmentFileSchema = z.object({
   source: z
@@ -41,8 +43,7 @@ let cached: EnrollmentFile | null = null;
 
 export function loadEnrollment(): EnrollmentFile {
   if (cached) return cached;
-  const path = new URL('../../../../data/enrollment.json', import.meta.url);
-  const parsed = enrollmentFileSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
+  const parsed = enrollmentFileSchema.parse(enrollmentJson);
   cached = parsed;
   return parsed;
 }
