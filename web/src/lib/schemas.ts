@@ -121,3 +121,30 @@ export const resourceSchema = z.object({
 export type Citation = z.infer<typeof citationSchema>;
 export type Club = z.infer<typeof clubSchema>;
 export type EventData = z.infer<typeof eventSchema>;
+
+/**
+ * Member profile.
+ *
+ * `.strict()` is deliberate: an unknown key is an error rather than something
+ * silently dropped, so a future UI cannot introduce `emailVisibility: 'public'`
+ * and have it quietly ignored while the author believes it took effect.
+ *
+ * There is no field that can make `email` or a precise location public. That is
+ * not an oversight to be filled in later — it is the design. See docs/PRIVACY.md.
+ */
+export const memberSchema = z
+  .object({
+    id: z.string().min(1),
+    email: z.string().email(),
+    schoolDomain: z.string().min(1),
+    clubSlug: z.string().nullable().default(null),
+    role: z.enum(['member', 'officer', 'coach', 'admin']).default('member'),
+    displayName: z.string().nullable().default(null),
+    /** Private unless the member actively chooses otherwise. Opt in, never opt out. */
+    visibility: z.enum(['private', 'club', 'public']).default('private'),
+    verified: z.boolean().default(false),
+    createdAt: z.string(),
+  })
+  .strict();
+
+export type Member = z.infer<typeof memberSchema>;
