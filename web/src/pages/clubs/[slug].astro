@@ -13,7 +13,7 @@ export const getStaticPaths = (async () => {
 interface Props {
   club: CollectionEntry<'clubs'>;
 }
-const { club } = Astro.props;
+const { club }: Props = Astro.props;
 const data = club.data;
 
 const STATUS_LABEL = { active: 'Active', forming: 'Forming', inactive: 'Inactive' } as const;

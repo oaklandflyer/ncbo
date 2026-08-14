@@ -1,4 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "../scripts/**/*.ts"]
+  // Astro's generated types declare the virtual modules (astro:content,
+  // astro:middleware) and must be included or a bare tsc run cannot resolve them.
+  "include": [".astro/types.d.ts", "src/**/*.ts", "scripts/**/*.ts", "../scripts/**/*.ts"]
 }

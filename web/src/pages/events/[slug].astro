@@ -15,7 +15,7 @@ export const getStaticPaths = (async () => {
 interface Props {
   event: EventData;
 }
-const { event } = Astro.props;
+const { event }: Props = Astro.props;
 const sample = isDemo();
 
 const TYPE_LABEL = {
