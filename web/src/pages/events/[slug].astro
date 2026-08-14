@@ -1,0 +1,141 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Badge from '../../components/Badge.astro';
+import SampleDataBanner from '../../components/SampleDataBanner.astro';
+import SourceList from '../../components/SourceList.astro';
+import { getEvents, type EventData } from '../../lib/data/events.js';
+import { isDemo } from '../../lib/data/demo.js';
+
+export const getStaticPaths = (async () => {
+  const events = await getEvents();
+  return events.map((event) => ({ params: { slug: event.slug }, props: { event } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  event: EventData;
+}
+const { event } = Astro.props;
+const sample = isDemo();
+
+const TYPE_LABEL = {
+  sanctioned: 'Sanctioned event',
+  'club-meeting': 'Club meeting',
+  recruiting: 'Recruiting',
+} as const;
+
+const start = new Date(event.start);
+const end = new Date(event.end);
+const dateFormat = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
+---
+
+<BaseLayout title={event.title} description={event.description} ogType="event">
+  {sample && <SampleDataBanner />}
+  <div class="wrap page">
+    <p class="back"><a href="/events">← All events</a></p>
+    <div class="badges">
+      <span class="type">{TYPE_LABEL[event.type]}</span>
+      {event.sanctioned && <Badge kind="sanctioned" />}
+    </div>
+    <h1>{event.title}</h1>
+
+    <dl class="meta">
+      <div>
+        <dt>When</dt>
+        <dd>
+          <time datetime={event.start}>{dateFormat.format(start)}</time> —
+          <time datetime={event.end}>{dateFormat.format(end)}</time>
+        </dd>
+      </div>
+      <div>
+        <dt>Where</dt>
+        <dd>
+          {event.venue.name}
+          {event.venue.address && <span class="addr">{event.venue.address}</span>}
+        </dd>
+      </div>
+      <div>
+        <dt>Host</dt>
+        <dd>{event.host}</dd>
+      </div>
+      <div>
+        <dt>Points weight</dt>
+        <dd>
+          {event.pointsWeight > 0 ? event.pointsWeight : 'Non-scoring'}
+        </dd>
+      </div>
+    </dl>
+
+    <p class="desc">{event.description}</p>
+
+    <p><a class="dl" href={`/events/${event.slug}.ics`} download>Add to calendar (.ics)</a></p>
+
+    <SourceList sources={event.sources} />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2rem 3rem;
+  }
+  .back {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1.5rem;
+  }
+  .badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .type {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  dt {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  dd {
+    margin-top: 0.25rem;
+  }
+  .addr {
+    display: block;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+  }
+  .desc {
+    margin-top: 1.5rem;
+  }
+  .dl {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>

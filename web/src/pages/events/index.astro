@@ -1,0 +1,211 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EventCard from '../../components/EventCard.astro';
+import SampleDataBanner from '../../components/SampleDataBanner.astro';
+import { getEvents, splitByDate } from '../../lib/data/events.js';
+import { isDemo } from '../../lib/data/demo.js';
+
+const events = await getEvents();
+const { upcoming, past } = splitByDate(events, new Date());
+const sample = isDemo();
+
+const TYPES = [
+  { value: 'all', label: 'All' },
+  { value: 'sanctioned', label: 'Sanctioned' },
+  { value: 'club-meeting', label: 'Club meetings' },
+  { value: 'recruiting', label: 'Recruiting' },
+] as const;
+---
+
+<BaseLayout
+  title="Events"
+  description="NCBO events: sanctioned competition, club meetings and recruiting dates, with calendar downloads."
+>
+  {sample && <SampleDataBanner />}
+  <div class="wrap page">
+    <h1>Events</h1>
+
+    {
+      events.length === 0 ? (
+        <section class="empty">
+          <h2>Nothing is scheduled yet.</h2>
+          <p>
+            NCBO has not scheduled an event. Rather than fill this page with placeholder dates, it
+            stays empty until there is something real to put on it — when a date is set, it appears
+            here and in the calendar feed below.
+          </p>
+          <p>
+            Club meetings and recruiting dates are run by each chapter. Ask your club lead, or find
+            your chapter in the <a href="/clubs">club directory</a>.
+          </p>
+        </section>
+      ) : (
+        <>
+          <div class="filters">
+            <span class="filters__label" id="filter-label">Filter by type</span>
+            <div class="filters__row" role="group" aria-labelledby="filter-label">
+              {TYPES.map((type) => (
+                <button class="chip" type="button" data-filter={type.value} aria-pressed={type.value === 'all'}>
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <section aria-labelledby="upcoming-heading">
+            <h2 id="upcoming-heading">Upcoming</h2>
+            {upcoming.length === 0 ? (
+              <p class="none">No upcoming events.</p>
+            ) : (
+              <ul class="grid">
+                {upcoming.map((event) => (
+                  <li data-type={event.type}>
+                    <EventCard
+                      slug={event.slug}
+                      title={event.title}
+                      type={event.type}
+                      sanctioned={event.sanctioned}
+                      start={event.start}
+                      venue={event.venue.name}
+                      host={event.host}
+                      pointsWeight={event.pointsWeight}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section aria-labelledby="past-heading">
+            <h2 id="past-heading">Past</h2>
+            {past.length === 0 ? (
+              <p class="none">No past events.</p>
+            ) : (
+              <ul class="grid">
+                {past.map((event) => (
+                  <li data-type={event.type}>
+                    <EventCard
+                      slug={event.slug}
+                      title={event.title}
+                      type={event.type}
+                      sanctioned={event.sanctioned}
+                      start={event.start}
+                      venue={event.venue.name}
+                      host={event.host}
+                      pointsWeight={event.pointsWeight}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )
+    }
+
+    <section class="feed">
+      <h2>Calendar</h2>
+      <p>
+        <a class="dl" href="/events/ncbo-events.ics" download>Download all events (.ics)</a>
+      </p>
+      <p class="feed__note">
+        A plain iCalendar file generated at build time — it opens in Apple Calendar, Google Calendar,
+        Outlook and anything else that reads .ics. No third-party service is involved, so subscribing
+        tells nobody what you are interested in.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  /* Progressive enhancement: the list is complete and readable without this. */
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const items = document.querySelectorAll<HTMLLIElement>('li[data-type]');
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.filter;
+      buttons.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
+      items.forEach((item) => {
+        const show = filter === 'all' || item.dataset.type === filter;
+        item.hidden = !show;
+      });
+    });
+  });
+</script>
+
+<style>
+  .page {
+    padding-block: 2.5rem 3rem;
+  }
+  h2 {
+    margin-top: 2.5rem;
+  }
+  .empty {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--steel);
+    border-radius: var(--r);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .empty h2 {
+    margin-top: 0;
+  }
+  .empty p {
+    margin-top: 0.75rem;
+  }
+  .filters {
+    margin-top: 1.5rem;
+  }
+  .filters__label {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .filters__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .chip {
+    font: inherit;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--steel-deep);
+    border-color: var(--steel-deep);
+    color: var(--on-dark);
+  }
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .none {
+    color: var(--text-soft);
+    margin-top: 0.75rem;
+  }
+  .dl {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .feed__note {
+    color: var(--text-soft);
+    font-size: 0.92rem;
+    margin-top: 0.5rem;
+  }
+</style>
