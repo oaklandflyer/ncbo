@@ -265,12 +265,6 @@ window.NCBO_DATA = {
   ],
   "teamMembers": [
     {
-      "name": "Altan Sahin",
-      "role": "Finance Team",
-      "school": "Purdue University",
-      "img": "assets/img/team-altan.jpg"
-    },
-    {
       "name": "Lauren Rowe",
       "role": "Marketing Team",
       "img": "assets/img/team-lauren-rowe.jpg"
