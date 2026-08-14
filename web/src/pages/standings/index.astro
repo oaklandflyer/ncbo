@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RankHero from '../../components/RankHero.astro';
+import SampleDataBanner from '../../components/SampleDataBanner.astro';
+import StandingsTable from '../../components/StandingsTable.astro';
+import PreseasonNotice from '../../components/PreseasonNotice.astro';
+import { getStandingsView } from '../../lib/data/standings.js';
+
+const view = await getStandingsView();
+const conferences = await getCollection('conferences');
+---
+
+<BaseLayout
+  title="National Standings"
+  description="NCBO national club standings. The first season has not started — this page explains how standing will be scored when it does."
+>
+  {view.isSample && <SampleDataBanner />}
+  <RankHero
+    eyebrow="National"
+    title="Club Standings"
+    subtitle="Points per 1,000 undergraduates, shrunk toward the league mean."
+  />
+
+  <div class="wrap page">
+    {view.table.isEmpty && !view.isSample ? (
+      <PreseasonNotice reasons={view.emptyReasons} />
+    ) : (
+      <StandingsTable table={view.table} movement={[]} />
+    )}
+
+    {
+      view.table.isEmpty && !view.isSample && view.table.unranked.length > 0 && (
+        <section class="clubs-listed">
+          <h2>Clubs on file</h2>
+          <p class="clubs-listed__note">
+            Every chapter is listed. None is ranked, for the reasons above.
+          </p>
+          <StandingsTable table={view.table} movement={[]} />
+        </section>
+      )
+    }
+
+    <section class="conf">
+      <h2>Conferences</h2>
+      {
+        conferences.length === 0 ? (
+          <p class="conf__empty">
+            NCBO has not defined a conference structure yet. Rather than group the founding chapters
+            into regions nobody has agreed to, this stays empty until there is a real structure to
+            publish. See <a href="/how-standing-works">how standing works</a> for what a conference
+            table will contain.
+          </p>
+        ) : (
+          <ul class="conf__list">
+            {conferences.map((conference) => (
+              <li>
+                <a href={`/standings/${conference.data.slug}`}>{conference.data.name}</a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2rem 3rem;
+  }
+  .conf,
+  .clubs-listed {
+    margin-top: 3rem;
+  }
+  .conf__empty,
+  .clubs-listed__note {
+    color: var(--text-soft);
+    margin-top: 0.75rem;
+  }
+  .conf__list {
+    list-style: none;
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+</style>

@@ -1,0 +1,14 @@
+{
+  "slug": "iowa",
+  "school": "University of Iowa",
+  "clubName": "Bodybuilding Club at UIowa",
+  "state": "IA",
+  "status": "active",
+  "sanctioned": false,
+  "lead": { "name": "Alex Swanson" },
+  "location": null,
+  "locationNote": "No campus coordinate verified against a primary source yet. Listed in the club directory; not plotted on the map. See docs/DEFERRED.md.",
+  "ipedsUnitId": null,
+  "verifiedMembers": null,
+  "provenance": "assets/data.js NCBO_DATA.clubs, read 2026-08-14"
+}

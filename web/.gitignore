@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.local
+.sessions/
+
+# Generated from data/templates/ by scripts/build-templates.ts on every build.
+# The Markdown sources are the versioned originals; these are artifacts.
+public/templates/

@@ -1,0 +1,105 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClubCard from '../../components/ClubCard.astro';
+import ClubMap from '../../components/ClubMap.astro';
+import { projectPin, type MapPin } from '../../lib/map.js';
+
+const clubs = (await getCollection('clubs')).sort((a, b) => a.data.school.localeCompare(b.data.school));
+
+const pins: MapPin[] = [];
+const unplotted: { slug: string; school: string }[] = [];
+for (const club of clubs) {
+  const location = club.data.location;
+  if (!location) {
+    unplotted.push({ slug: club.data.slug, school: club.data.school });
+    continue;
+  }
+  const pin = projectPin({
+    slug: club.data.slug,
+    school: club.data.school,
+    label: location.label.split(',')[0] ?? location.label,
+    lat: location.lat,
+    lng: location.lng,
+    precision: location.precision,
+  });
+  if (pin) pins.push(pin);
+  else unplotted.push({ slug: club.data.slug, school: club.data.school });
+}
+---
+
+<BaseLayout
+  title="Clubs"
+  description="The NCBO chapter directory: founding chapters, where they are, and who leads them."
+>
+  <div class="wrap page">
+    <h1>Clubs</h1>
+    <p class="lead">
+      NCBO's founding chapters. Every chapter listed here is confirmed; nothing on this page is
+      inferred or estimated, so fields we cannot verify are left out rather than filled in.
+    </p>
+
+    <ClubMap pins={pins} unplotted={unplotted} />
+
+    <section aria-labelledby="directory-heading">
+      <h2 id="directory-heading">Directory</h2>
+      <p class="dir-note">
+        The complete list, in alphabetical order. This is the primary way to reach a club page — the
+        map above is a second route to the same links, not a requirement.
+      </p>
+      <ul class="grid">
+        {
+          clubs.map((club) => (
+            <li>
+              <ClubCard
+                slug={club.data.slug}
+                school={club.data.school}
+                clubName={club.data.clubName}
+                campus={club.data.campus}
+                state={club.data.state}
+                status={club.data.status}
+                sanctioned={club.data.sanctioned}
+                plotted={club.data.location !== null}
+              />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="start">
+      <h2>No chapter at your school?</h2>
+      <p>
+        Chapters are started by students. The <a href="/resources/club-operations">club operations
+        playbook</a> covers officer structure, risk management, travel and the paperwork most
+        universities require, and <a href="https://thencbo.org/start-a-club.html">Start a Club</a> on
+        the main site is where to apply.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2.5rem 3rem;
+  }
+  .lead {
+    color: var(--text-soft);
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+  }
+  h2 {
+    margin-top: 2.5rem;
+  }
+  .dir-note {
+    color: var(--text-soft);
+    margin-top: 0.5rem;
+  }
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import Badge from './Badge.astro';
+interface Props {
+  slug: string;
+  school: string;
+  clubName: string;
+  campus?: string | undefined;
+  state: string;
+  status: 'active' | 'forming' | 'inactive';
+  sanctioned: boolean;
+  plotted: boolean;
+}
+const { slug, school, clubName, campus, state, status, sanctioned, plotted } = Astro.props;
+---
+
+<article class="card">
+  <div class="card__badges">
+    <Badge kind="chapter" />
+    {sanctioned && <Badge kind="sanctioned" />}
+  </div>
+  <h3 class="card__school">
+    <a href={`/clubs/${slug}`}>{school}</a>
+  </h3>
+  <p class="card__club">{clubName}</p>
+  <p class="card__meta">
+    {campus ? `${campus} · ` : ''}{state} · {status === 'active' ? 'Active' : status === 'forming' ? 'Forming' : 'Inactive'}
+  </p>
+  {!plotted && <p class="card__note">Not plotted on the map — no verified campus coordinate.</p>}
+</article>
+
+<style>
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.1rem;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+  }
+  .card__badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
+  .card__school {
+    font-size: 1.15rem;
+  }
+  .card__school a {
+    text-decoration: none;
+    color: var(--text);
+  }
+  .card__school a:hover {
+    color: var(--steel-deep);
+    text-decoration: underline;
+  }
+  .card__club {
+    color: var(--text-soft);
+    margin-top: 0.2rem;
+  }
+  .card__meta {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+    font-family: var(--font-display);
+    letter-spacing: 0.05em;
+  }
+  .card__note {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+  }
+</style>
