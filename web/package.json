@@ -13,7 +13,9 @@
     "check:content": "tsx scripts/check-content.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "fetch:enrollment": "tsx ../scripts/fetch-enrollment.ts",
-    "verify": "npm run check && npm run test && npm run check:content && npm run check:contrast"
+    "verify": "npm run check && npm run test && npm run check:content && npm run check:contrast",
+    "build:templates": "tsx scripts/build-templates.ts",
+    "prebuild": "tsx scripts/build-templates.ts"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
