@@ -1,0 +1,49 @@
+---
+/**
+ * A single number with a label. Used for pre-season states as often as for real
+ * figures, so `value` is a string: "—" and "Not started" are legitimate values
+ * and must not be dressed up as zero.
+ */
+interface Props {
+  value: string;
+  label: string;
+  note?: string;
+}
+const { value, label, note } = Astro.props;
+---
+
+<div class="tile">
+  <div class="tile__value">{value}</div>
+  <div class="tile__label">{label}</div>
+  {note && <p class="tile__note">{note}</p>}
+</div>
+
+<style>
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .tile__value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--steel-deep);
+  }
+  .tile__label {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+  }
+  .tile__note {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    margin-top: 0.5rem;
+  }
+</style>

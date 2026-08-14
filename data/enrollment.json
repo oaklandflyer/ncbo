@@ -1,0 +1,9 @@
+{
+  "_comment": "Undergraduate enrollment denominators, keyed by IPEDS UnitID. GENERATED FILE - do not hand-edit. Produced by scripts/fetch-enrollment.ts from the IPEDS HD (institutional directory) and EF (fall enrollment) complete data files published by the US Department of Education's National Center for Education Statistics. Public domain, no API key.",
+  "_status": "EMPTY - the fetch has not been run in an environment with access to nces.ed.gov. Until it is, every club reports 'Unranked - enrollment data not loaded'. No enrollment figure is guessed at or hand-entered. Run: npm run fetch:enrollment (from web/).",
+  "source": null,
+  "generatedAt": null,
+  "ipedsYear": null,
+  "denominator": "undergraduate_enrollment",
+  "institutions": {}
+}

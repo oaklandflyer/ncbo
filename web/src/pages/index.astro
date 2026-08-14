@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatTile from '../components/StatTile.astro';
+import { getCollection } from 'astro:content';
+
+const clubs = await getCollection('clubs');
+const states = new Set(clubs.map((club) => club.data.state));
+---
+
+<BaseLayout
+  title="Member Hub"
+  description="The NCBO member hub: standings, schedule, club directory and reference material for collegiate bodybuilding clubs."
+>
+  <section class="intro">
+    <div class="wrap">
+      <p class="intro__eyebrow">Member Hub</p>
+      <h1>Clubs. Competition. Community.</h1>
+      <p class="intro__lead">
+        The public floor of the NCBO member hub — standings, the schedule, the club directory and
+        the reference material behind them. No sign-in required, and nothing here is behind a login.
+      </p>
+      <p class="intro__pre">
+        <strong>The first NCBO season has not started.</strong> The standings system is built and
+        documented, but no club has earned a point. Everything you see describing competition
+        describes how it will work, not how it has gone.
+      </p>
+      <div class="intro__tiles">
+        <StatTile value={String(clubs.length)} label="Founding chapters" />
+        <StatTile value={String(states.size)} label="States" />
+        <StatTile value="Not started" label="Season" note="No results, no standings, no schedule yet." />
+        <StatTile value="In formation" label="Org status" note="A Pennsylvania nonprofit corporation in formation." />
+      </div>
+      <ul class="intro__links">
+        <li><a href="/standings">Standings</a></li>
+        <li><a href="/how-standing-works">How standing works</a></li>
+        <li><a href="/events">Events</a></li>
+        <li><a href="/clubs">Club directory &amp; map</a></li>
+        <li><a href="/resources">Resources</a></li>
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro {
+    padding-block: clamp(2rem, 6vw, 4rem);
+  }
+  .intro__eyebrow {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+  }
+  .intro__lead {
+    font-size: 1.15rem;
+    color: var(--text-soft);
+    margin-top: 1rem;
+  }
+  .intro__pre {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--steel);
+    border-radius: var(--r);
+    max-width: 70ch;
+  }
+  .intro__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .intro__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    list-style: none;
+    margin-top: 2rem;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>

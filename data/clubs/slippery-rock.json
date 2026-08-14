@@ -1,0 +1,23 @@
+{
+  "slug": "slippery-rock",
+  "school": "Slippery Rock University",
+  "clubName": "Slippery Rock Fitness and Wellness Club",
+  "state": "PA",
+  "status": "active",
+  "sanctioned": false,
+  "lead": { "name": "Sean Hanley" },
+  "location": {
+    "lat": 41.06361,
+    "lng": -80.055,
+    "precision": "city",
+    "label": "Slippery Rock, PA",
+    "source": {
+      "title": "Slippery Rock, Pennsylvania — Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Slippery_Rock,_Pennsylvania",
+      "accessed": "2026-08-14"
+    }
+  },
+  "ipedsUnitId": null,
+  "verifiedMembers": null,
+  "provenance": "assets/data.js NCBO_DATA.clubs, read 2026-08-14"
+}

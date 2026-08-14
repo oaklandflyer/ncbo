@@ -1,0 +1,81 @@
+---
+import Badge from './Badge.astro';
+interface Props {
+  slug: string;
+  title: string;
+  type: 'sanctioned' | 'club-meeting' | 'recruiting';
+  sanctioned: boolean;
+  start: string;
+  venue: string;
+  host: string;
+  pointsWeight: number;
+}
+const { slug, title, type, sanctioned, start, venue, host, pointsWeight } = Astro.props;
+
+const TYPE_LABEL = {
+  sanctioned: 'Sanctioned',
+  'club-meeting': 'Club meeting',
+  recruiting: 'Recruiting',
+} as const;
+
+const when = new Date(start);
+const dateLabel = when.toLocaleDateString('en-US', {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<article class="ev">
+  <div class="ev__badges">
+    <span class="ev__type">{TYPE_LABEL[type]}</span>
+    {sanctioned && <Badge kind="sanctioned" />}
+  </div>
+  <h3 class="ev__title"><a href={`/events/${slug}`}>{title}</a></h3>
+  <p class="ev__meta">
+    <time datetime={start}>{dateLabel}</time> · {venue}
+  </p>
+  <p class="ev__host">Hosted by {host}</p>
+  {pointsWeight > 0 && <p class="ev__pts">Points weight {pointsWeight}</p>}
+</article>
+
+<style>
+  .ev {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--steel);
+    border-radius: var(--r);
+    padding: 1.1rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .ev__badges {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .ev__type {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .ev__title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .ev__title a:hover {
+    color: var(--steel-deep);
+    text-decoration: underline;
+  }
+  .ev__meta,
+  .ev__host,
+  .ev__pts {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
+</style>

@@ -1,0 +1,13 @@
+{
+  "slug": "sample-club-meeting",
+  "title": "SAMPLE — Posing Practice",
+  "host": "sample-midwest-tech",
+  "type": "club-meeting",
+  "sanctioned": false,
+  "venue": { "name": "SAMPLE — Campus Rec Studio B" },
+  "start": "2026-09-18T19:00:00-05:00",
+  "end": "2026-09-18T20:30:00-05:00",
+  "description": "Sample event used to exercise the events UI in development. Not a real NCBO event.",
+  "pointsWeight": 0,
+  "sources": []
+}
