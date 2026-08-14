@@ -1,0 +1,23 @@
+{
+  "slug": "pitt",
+  "school": "University of Pittsburgh",
+  "clubName": "Fitness and Bodybuilding Club",
+  "state": "PA",
+  "status": "active",
+  "sanctioned": false,
+  "lead": { "name": "Rachel Hare" },
+  "location": {
+    "lat": 40.4424,
+    "lng": -79.9553,
+    "precision": "campus",
+    "label": "Pittsburgh, PA",
+    "source": {
+      "title": "David Lawrence Hall — Wikipedia (University of Pittsburgh campus building)",
+      "url": "https://en.wikipedia.org/wiki/David_Lawrence_Hall",
+      "accessed": "2026-08-14"
+    }
+  },
+  "ipedsUnitId": null,
+  "verifiedMembers": null,
+  "provenance": "assets/data.js NCBO_DATA.clubs, read 2026-08-14"
+}

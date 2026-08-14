@@ -1,0 +1,59 @@
+---
+/**
+ * Renders a source link with its access date, visibly.
+ *
+ * The access date is not decoration: promoter pages, federation rulebooks and
+ * help-line listings change, and a reader needs to know how old the claim is.
+ * A citation without one is a citation nobody can re-check.
+ */
+export interface CitationData {
+  title: string;
+  url: string;
+  accessed: string;
+  publisher?: string | undefined;
+  doi?: string | undefined;
+}
+interface Props extends CitationData {
+  index?: number;
+}
+const { title, url, accessed, publisher, doi, index } = Astro.props;
+---
+
+<li class="cite" id={index ? `source-${index}` : undefined}>
+  {index && <span class="cite__idx">[{index}]</span>}
+  <span class="cite__body">
+    <a href={url} rel="nofollow noopener">{title}</a>
+    {publisher && <span class="cite__pub">{publisher}</span>}
+    {doi && <span class="cite__doi">doi:{doi}</span>}
+    <span class="cite__accessed">Accessed {accessed}</span>
+  </span>
+</li>
+
+<style>
+  .cite {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+    list-style: none;
+  }
+  .cite__idx {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+  .cite__body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+  }
+  .cite__pub,
+  .cite__doi,
+  .cite__accessed {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .cite__doi {
+    font-family: var(--font-mono);
+  }
+</style>

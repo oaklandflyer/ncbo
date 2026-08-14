@@ -1,0 +1,42 @@
+---
+import Citation, { type CitationData } from './Citation.astro';
+interface Props {
+  sources: CitationData[];
+  heading?: string;
+}
+const { sources, heading = 'Sources' } = Astro.props;
+---
+
+{
+  sources.length > 0 && (
+    <section class="sources" aria-labelledby="sources-heading">
+      <h2 id="sources-heading">{heading}</h2>
+      <p class="sources__note">
+        Every factual claim on this page is sourced below. If something here cannot be traced to one
+        of these, it is a mistake — please report it.
+      </p>
+      <ol class="sources__list">
+        {sources.map((source, i) => (
+          <Citation {...source} index={i + 1} />
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+<style>
+  .sources {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--line-strong);
+  }
+  .sources__note {
+    color: var(--text-soft);
+    font-size: 0.92rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .sources__list {
+    padding: 0;
+    margin: 0;
+  }
+</style>

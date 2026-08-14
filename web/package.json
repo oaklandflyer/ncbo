@@ -30,5 +30,9 @@
     "us-atlas": "^3.0.1",
     "vitest": "^4.1.10",
     "zod": "^3.25.76"
+  },
+  "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0"
   }
 }

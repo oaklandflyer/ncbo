@@ -1,0 +1,102 @@
+---
+/**
+ * Public-floor navigation.
+ *
+ * There is deliberately no sign-in link. Real .edu magic-link auth needs an email
+ * provider, which needs an account, which is out of scope for this build — and a
+ * login button that does not work is worse than no button. See docs/AUTH.md.
+ */
+const links = [
+  { href: '/standings', label: 'Standings' },
+  { href: '/events', label: 'Events' },
+  { href: '/clubs', label: 'Clubs' },
+  { href: '/resources', label: 'Resources' },
+];
+const path = Astro.url.pathname;
+---
+
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a class="nav__brand" href="/">
+      <span class="nav__mark">NCBO</span>
+      <span class="nav__tag">Clubs. Competition. Community.</span>
+    </a>
+    <nav aria-label="Main">
+      <ul class="nav__list">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={path === link.href || path.startsWith(`${link.href}/`) ? 'page' : undefined}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+        <li><a class="nav__out" href="https://thencbo.org/">Main site</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 0.85rem;
+  }
+  .nav__brand {
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav__mark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+  }
+  .nav__tag {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+  .nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+    list-style: none;
+  }
+  .nav__list a {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 1rem;
+    color: var(--text);
+    text-decoration: none;
+    padding: 0.35rem 0;
+    border-bottom: 2px solid transparent;
+  }
+  .nav__list a:hover {
+    border-bottom-color: var(--steel);
+  }
+  .nav__list a[aria-current='page'] {
+    border-bottom-color: var(--steel-deep);
+    color: var(--steel-deep);
+  }
+  .nav__out {
+    color: var(--text-muted) !important;
+  }
+</style>

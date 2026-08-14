@@ -1,0 +1,45 @@
+---
+/**
+ * The sample-data banner.
+ *
+ * Persistent and non-dismissible by design — there is no close button and no
+ * JavaScript that could hide it. It is sticky so that it stays on screen while
+ * the table scrolls, because a banner that scrolls away is a banner that ends up
+ * cropped out of a screenshot.
+ */
+---
+
+<div class="sample" role="alert">
+  <div class="wrap sample__inner">
+    <strong class="sample__flag">SAMPLE DATA — NOT REAL STANDINGS</strong>
+    <span class="sample__body">
+      The first NCBO season has not started. These rows are fictional fixtures used to develop the
+      standings UI. No club has earned points, and nothing here reflects any real club's results.
+    </span>
+  </div>
+</div>
+
+<style>
+  .sample {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--warn-bg);
+    border-bottom: 3px solid var(--warn-line);
+    color: var(--warn-text);
+  }
+  .sample__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+    padding-block: 0.6rem;
+  }
+  .sample__flag {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+  }
+  .sample__body {
+    font-size: 0.9rem;
+  }
+</style>

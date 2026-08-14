@@ -1,0 +1,23 @@
+{
+  "slug": "florida-state",
+  "school": "Florida State University",
+  "clubName": "Bodybuilding and Fitness Club at FSU",
+  "state": "FL",
+  "status": "active",
+  "sanctioned": false,
+  "lead": { "name": "Eli Korta" },
+  "location": {
+    "lat": 30.455,
+    "lng": -84.25333,
+    "precision": "city",
+    "label": "Tallahassee, FL",
+    "source": {
+      "title": "Tallahassee, Florida — Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tallahassee,_Florida",
+      "accessed": "2026-08-14"
+    }
+  },
+  "ipedsUnitId": null,
+  "verifiedMembers": null,
+  "provenance": "assets/data.js NCBO_DATA.clubs, read 2026-08-14"
+}

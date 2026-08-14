@@ -1,0 +1,23 @@
+{
+  "slug": "purdue",
+  "school": "Purdue University",
+  "clubName": "Purdue Bodybuilding Club",
+  "state": "IN",
+  "status": "active",
+  "sanctioned": false,
+  "lead": { "name": "Vincent Panzica" },
+  "location": {
+    "lat": 40.431,
+    "lng": -86.9145,
+    "precision": "campus",
+    "label": "West Lafayette, IN",
+    "source": {
+      "title": "Purdue University — Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Purdue_University",
+      "accessed": "2026-08-14"
+    }
+  },
+  "ipedsUnitId": null,
+  "verifiedMembers": null,
+  "provenance": "assets/data.js NCBO_DATA.clubs, read 2026-08-14"
+}
