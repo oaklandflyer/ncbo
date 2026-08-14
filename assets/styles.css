@@ -473,7 +473,9 @@ body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate
   transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
 .person:hover { border-color: var(--steel); transform: translateY(-3px); box-shadow: var(--shadow-sm); }
-.person .photo-slot { aspect-ratio: 1; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+/* flex:none keeps the headshot square when a neighbouring card has more text
+   under it (a bio, a second line) and the grid row stretches this one. */
+.person .photo-slot { aspect-ratio: 1; height: auto; flex: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
 .person .photo-slot .photo-ph { display: none !important; }   /* monogram replaces it */
 
 /* initials monogram, shown until a real headshot loads */
@@ -491,6 +493,22 @@ body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate
   line-height: 1.1; text-transform: uppercase; color: var(--white);
 }
 .person-role { color: var(--silver); font-size: 0.9rem; margin-top: 0.2rem; }
+/* secondary line: a director's outside professional title, or the school a
+   team member is at. Quieter than the role it sits under. */
+.person-title { color: var(--muted); font-size: 0.84rem; margin-top: 0.15rem; }
+.person-bio { color: var(--silver); font-size: 0.86rem; line-height: 1.5; margin: 0.6rem 0 0; }
+
+/* one tier down: team members reporting into an executive board director.
+   Same card, smaller footprint, so the hierarchy reads without new furniture. */
+.people-sm { grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap: 1rem; }
+.people-sm .person-body { padding: 0.8rem 0.9rem 1rem; }
+.people-sm .person-name { font-size: 1.05rem; }
+.people-sm .person-role { font-size: 0.84rem; }
+.people-sm .person-photo .mono { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+
+/* the board block sits above the executive board; give the heading under it
+   the same breathing room the other sub-blocks get */
+#board-block:not([hidden]) + .reveal { margin-top: 3rem; }
 
 /* ── news ────────────────────────────────────────────────────────────── */
 .news-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); }

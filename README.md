@@ -179,6 +179,28 @@ as an initials monogram.
 
 ---
 
+## Who's who, and the order they appear in
+
+The Team section of the home page runs top-down in governance order. Each
+block is driven by one array in `assets/data.js`, and every block except the
+executive board stays hidden, heading included, while its array is empty.
+
+| Block | Array | What it is |
+|-------|-------|------------|
+| Board of directors | `board` | Independent directors who oversee the CEO. Being recruited, so the block is hidden today. |
+| Executive board | `leadership` | The CEO and the directors running day to day operations. |
+| Team | `teamMembers` | People reporting into an executive board director. |
+| Club leads | `clubLeads` + `clubs[].lead` | The students running each campus chapter. |
+| Coaching advisors | `advisory` | Coaches who advise the campus clubs on training and posing. **Not governance**, and the copy has to keep saying so. |
+
+A director carries a board office in `role` (President, Treasurer, Secretary,
+Director) and their outside job in `title`. The office is the line people read
+first. `boardHeld` stages a director who isn't confirmed in writing yet;
+nothing renders it, and the admin's **Publish** button is what moves someone
+across.
+
+---
+
 ## Note on structure
 
 This is a **multi-file** build because that's what a girlgains-style multi-page

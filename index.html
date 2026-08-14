@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-site-verification" content="IriAHVVFyW2daqc6X4nefgXraWrzZCcaP9NP4bARssc" />
   <title>NCBO — National Collegiate Bodybuilding Organization</title>
-  <meta name="description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at five universities. Find a club, start a club, become a member.">
+  <meta name="description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at six universities. Find a club, start a club, become a member.">
   <meta name="keywords" content="NCBO, thencbo, the NCBO, National Collegiate Bodybuilding Organization, collegiate bodybuilding, college bodybuilding, collegiate bodybuilding organization, college bodybuilding club, collegiate bodybuilding club, bodybuilding club, collegiate bodybuilding league, campus bodybuilding, college bodybuilding team, collegiate fitness, college fitness club, bodybuilding competition college, student bodybuilding, NCBO bodybuilding, thencbo.org">
   <meta name="author" content="NCBO — National Collegiate Bodybuilding Organization">
   <meta name="robots" content="index, follow">
@@ -14,13 +14,13 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
   <meta property="og:title" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta property="og:description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at five universities. Find a club, start a club, become a member.">
+  <meta property="og:description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at six universities. Find a club, start a club, become a member.">
   <meta property="og:url" content="https://thencbo.org/">
   <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="NCBO — National Collegiate Bodybuilding Organization">
-  <meta name="twitter:description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at five universities. Find a club, start a club, become a member.">
+  <meta name="twitter:description" content="NCBO is building collegiate bodybuilding into a real sport — school-affiliated clubs, and a season and school-vs-school competition in development. Founding chapters at six universities. Find a club, start a club, become a member.">
   <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
   <meta name="theme-color" content="#F4F8FD">
   <link rel="icon" href="assets/ncbo-logo.webp">
@@ -37,7 +37,7 @@
     "url": "https://thencbo.org/",
     "logo": "https://thencbo.org/assets/ncbo-logo.webp",
     "email": "thencbo@gmail.com",
-    "description": "NCBO is building collegiate bodybuilding into a real sport. A Pennsylvania nonprofit corporation in formation, with founding chapters at five universities.",
+    "description": "NCBO is building collegiate bodybuilding into a real sport. A Pennsylvania nonprofit corporation in formation, with founding chapters at six universities.",
     "sameAs": [
       "https://instagram.com/ncboofficial",
       "https://tiktok.com/@ncboofficial"
@@ -147,11 +147,34 @@
   <!-- TEAM ──────────────────────────────────────────────────────────── -->
   <section class="section" id="team">
     <div class="wrap">
+      <!-- Board of directors: independent oversight of the CEO. Hidden until a
+           director is seated. site.js reveals it only when the list is
+           non-empty, so an empty governance heading never ships. -->
+      <div id="board-block" hidden>
+        <div class="reveal" style="margin-bottom:1.8rem">
+          <p class="eyebrow">Governance</p>
+          <h2 class="h-display" style="margin-top:1rem">Board of directors.</h2>
+          <p class="lead" style="margin-top:1rem">Independent directors who oversee NCBO's finances, mission, and leadership.</p>
+        </div>
+        <div class="people" id="board"></div>
+      </div>
+
       <div class="reveal" style="margin-bottom:1.8rem">
-        <p class="eyebrow">Who runs NCBO</p>
-        <h2 class="h-display" style="margin-top:1rem">Leadership.</h2>
+        <p class="eyebrow">Day to day</p>
+        <h2 class="h-display" style="margin-top:1rem">Executive board.</h2>
+        <p class="lead" style="margin-top:1rem">The team running NCBO's operations, reporting to the CEO.</p>
       </div>
       <div class="people" id="leadership"></div>
+
+      <!-- Team members reporting into an executive board director. One tier
+           down visually; hidden while the list is empty. -->
+      <div id="team-members-block" hidden>
+        <div class="reveal" style="margin:3rem 0 1.6rem">
+          <p class="eyebrow">Supporting the directors</p>
+          <h2 class="h-display" style="margin-top:1rem">Team.</h2>
+        </div>
+        <div class="people people-sm" id="team-members"></div>
+      </div>
 
       <!-- Club leads: built from the clubs in data.js that have a named lead,
            so adding a lead in the admin puts them here automatically. Hidden
@@ -165,12 +188,15 @@
         <div class="people" id="club-leads"></div>
       </div>
 
-      <!-- Advisory board: hidden until at least one advisor is confirmed in
-           writing. site.js reveals it only when the list is non-empty. -->
+      <!-- Coaching advisors: they advise the campus clubs on training and
+           posing. Not governance, and the copy has to keep saying so. Hidden
+           until at least one advisor is confirmed in writing; site.js reveals
+           it only when the list is non-empty. -->
       <div id="advisory-block" hidden>
         <div class="reveal" style="margin:3rem 0 1.6rem">
-          <p class="eyebrow">Advisory board</p>
-          <h2 class="h-display" style="margin-top:1rem">Pros in our corner.</h2>
+          <p class="eyebrow">Coaching</p>
+          <h2 class="h-display" style="margin-top:1rem">Coaching advisors.</h2>
+          <p class="lead" style="margin-top:1rem">Competitive bodybuilding coaches who advise our campus clubs. They are not members of NCBO's board.</p>
         </div>
         <div class="people" id="advisory"></div>
       </div>
@@ -221,6 +247,21 @@
   <script>
     window.NCBO_PAGE = function (R) {
       const D = window.NCBO_DATA, $ = s => document.querySelector(s);
+
+      /* Chapter count in the meta/og/twitter copy. The static tags carry the
+         real number for crawlers that don't run scripts, and this keeps them
+         from drifting when a chapter is added in the admin. There is no build
+         step (GitHub Pages serves the repo as-is), so the static strings still
+         have to be corrected by hand if this ever disagrees with them. */
+      (function syncChapterCount() {
+        const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+                       'eight', 'nine', 'ten', 'eleven', 'twelve'];
+        const n = (D.clubs || []).length;
+        const word = words[n] || String(n);
+        document.querySelectorAll('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]')
+          .forEach(m => m.setAttribute('content',
+            m.getAttribute('content').replace(/chapters at \w+ universities/i, 'chapters at ' + word + ' universities')));
+      })();
 
       /* hero */
       $('#hero-eyebrow').textContent = D.hero.eyebrow;
@@ -276,8 +317,12 @@
       const startLink = D.forms && D.forms.startClub;
       if (startLink && startLink !== '#') $('#apply-btn').href = startLink;
 
-      /* team — the club-lead and advisory blocks stay hidden while empty */
+      /* team — every block but the executive board stays hidden while empty.
+         The board of directors is being recruited, so an empty governance
+         heading must not ship. */
+      if (R.board($('#board'), D.board) > 0) $('#board-block').hidden = false;
       R.people($('#leadership'), D.leadership);
+      if (R.people($('#team-members'), D.teamMembers) > 0) $('#team-members-block').hidden = false;
       if (R.clubLeads($('#club-leads')) > 0) $('#club-leads-block').hidden = false;
       if (R.people($('#advisory'), D.advisory) > 0) $('#advisory-block').hidden = false;
       if (D.forms && D.forms.board) $('#board-btn').href = D.forms.board;
