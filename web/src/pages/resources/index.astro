@@ -1,0 +1,81 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const resources = (await getCollection('resources')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout
+  title="Resources"
+  description="NCBO reference material: the competition pathway, evidence-based prep, health and wellbeing, and the club operations playbook."
+>
+  <div class="wrap page">
+    <h1>Resources</h1>
+    <p class="lead">
+      Reference material for members and club officers. Every factual claim carries a source link
+      and the date we last checked it. Where we could not verify something, we say so on the page
+      rather than leaving it in.
+    </p>
+
+    <ul class="list">
+      {
+        resources.map((resource) => (
+          <li>
+            <h2><a href={`/resources/${resource.id}`}>{resource.data.title}</a></h2>
+            <p>{resource.data.description}</p>
+            <p class="meta">Last updated {resource.data.updated}</p>
+          </li>
+        ))
+      }
+      <li>
+        <h2><a href="/resources/templates">Club templates</a></h2>
+        <p>
+          Officer transition checklist, event risk assessment, recruiting table kit and meeting
+          agenda — as Markdown and PDF, generated locally.
+        </p>
+      </li>
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2.5rem 3rem;
+  }
+  .lead {
+    color: var(--text-soft);
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+  }
+  .list {
+    list-style: none;
+    margin-top: 2rem;
+    display: grid;
+    gap: 1rem;
+  }
+  .list li {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  .list h2 {
+    font-size: 1.3rem;
+  }
+  .list h2 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .list h2 a:hover {
+    color: var(--steel-deep);
+    text-decoration: underline;
+  }
+  .list p {
+    margin-top: 0.5rem;
+    color: var(--text-soft);
+  }
+  .meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+</style>

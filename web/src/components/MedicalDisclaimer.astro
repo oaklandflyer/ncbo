@@ -1,0 +1,46 @@
+---
+/**
+ * Rendered automatically on any resource page whose frontmatter sets
+ * medicalDisclaimer: true. It is not optional and not dismissible, and the
+ * schema is what decides it renders — not whoever writes the Markdown.
+ */
+---
+
+<aside class="disc" role="note">
+  <h2 class="disc__head">This is general information, not medical advice</h2>
+  <p>
+    Nothing on this page is advice about you. It summarises published research for a general
+    audience. Before changing how you eat or train — especially while dieting for a
+    competition — talk to a qualified professional: your campus sports medicine service, a
+    physician, or a registered dietitian.
+  </p>
+  <p>
+    If you are struggling with food, your body or your training, that is worth taking
+    seriously and there is help.
+    <a href="/resources/health">Health &amp; wellbeing has the resources</a>, starting with
+    your campus counselling service.
+  </p>
+</aside>
+
+<style>
+  .disc {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    border-left: 4px solid var(--warn-line);
+    border-radius: var(--r);
+    padding: 1.1rem 1.25rem;
+    margin: 1.5rem 0;
+    color: var(--warn-text);
+  }
+  .disc__head {
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+  }
+  .disc p {
+    margin-top: 0.6rem;
+    max-width: 70ch;
+  }
+  .disc a {
+    color: var(--warn-text);
+  }
+</style>
