@@ -1,0 +1,48 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot__status">
+      NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3)
+      status; that status has not been granted, and contributions are not tax-deductible.
+    </p>
+    <p class="foot__pre">
+      The first NCBO season has not started. Standings, schedule and scoring shown here describe how
+      competition will work when it does — no result on this site is a real result.
+    </p>
+    <ul class="foot__links">
+      <li><a href="/how-standing-works">How standing works</a></li>
+      <li><a href="/resources/health">Health &amp; wellbeing</a></li>
+      <li><a href="https://thencbo.org/">Main site</a></li>
+    </ul>
+    <p class="foot__copy">&copy; {year} National Collegiate Bodybuilding Organization</p>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    background: var(--bg-band);
+    border-top: 1px solid var(--line);
+    margin-top: 4rem;
+    padding-block: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-soft);
+  }
+  .foot__status,
+  .foot__pre {
+    max-width: 70ch;
+    margin-bottom: 0.75rem;
+  }
+  .foot__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    list-style: none;
+    margin: 1rem 0;
+  }
+  .foot__copy {
+    color: var(--text-muted);
+  }
+</style>

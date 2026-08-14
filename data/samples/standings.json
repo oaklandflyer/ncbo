@@ -1,0 +1,53 @@
+{
+  "_comment": "SAMPLE DATA - NOT REAL STANDINGS. Loads only when NCBO_DEMO_DATA=1 on the dev server, never in a production build (the build throws). Institution names here are deliberately fictional so that even a screenshot taken without the banner cannot be mistaken for a real NCBO club's result. The rows are chosen to exercise the scoring edge cases: a large steady club, a small club whose raw rate is inflated by its denominator, a club below the roster floor, and a club with no enrollment figure.",
+  "clubs": [
+    {
+      "slug": "sample-large-state",
+      "name": "Sample State University (SAMPLE)",
+      "points": 420,
+      "enrollment": 32000,
+      "verifiedMembers": 96,
+      "conference": null
+    },
+    {
+      "slug": "sample-midwest-tech",
+      "name": "Sample Midwest Tech (SAMPLE)",
+      "points": 260,
+      "enrollment": 18500,
+      "verifiedMembers": 54,
+      "conference": null
+    },
+    {
+      "slug": "sample-river-college",
+      "name": "Sample River College (SAMPLE)",
+      "points": 88,
+      "enrollment": 1400,
+      "verifiedMembers": 21,
+      "conference": null
+    },
+    {
+      "slug": "sample-coastal-a-and-m",
+      "name": "Sample Coastal A&M (SAMPLE)",
+      "points": 175,
+      "enrollment": 24000,
+      "verifiedMembers": 38,
+      "conference": null
+    },
+    {
+      "slug": "sample-new-chapter",
+      "name": "Sample New Chapter (SAMPLE)",
+      "points": 30,
+      "enrollment": 9000,
+      "verifiedMembers": 6,
+      "conference": null
+    },
+    {
+      "slug": "sample-no-denominator",
+      "name": "Sample Unlisted Institute (SAMPLE)",
+      "points": 60,
+      "enrollment": null,
+      "verifiedMembers": 25,
+      "conference": null
+    }
+  ]
+}

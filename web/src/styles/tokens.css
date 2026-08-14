@@ -1,0 +1,186 @@
+/* ============================================================================
+   NCBO member hub — design tokens
+
+   Ported from assets/styles.css so the hub and the marketing site are one site.
+   The live site runs a light theme: a soft whitish-blue ground with navy text,
+   steel blue as the live accent, and deep navy surviving as a scrim over photo
+   surfaces. Barlow Condensed uppercase for display, Barlow for body.
+
+   Names here are semantic rather than the historical --navy/--white pairs used
+   in the legacy stylesheet, whose names read backwards after the dark-to-light
+   flip. The values are the same.
+
+   Every foreground/background pair used in this file is checked mechanically by
+   scripts/check-contrast.ts against WCAG 2.1 AA. Do not add a colour pair here
+   without adding it to that script's list.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --bg: #f4f8fd;
+  --bg-band: #e8f0fa;
+  --surface: #ffffff;
+  --surface-raised: #dee9f7;
+  --line: #d2e0f0;
+  --line-strong: #6382a9;
+
+  /* Accent */
+  --steel: #2f5fa8;
+  --steel-light: #3a6bb8;
+  --steel-deep: #1e4478;
+  --steel-wash: rgba(47, 95, 168, 0.08);
+
+  /* Type */
+  --text: #0e1a2f;
+  --text-soft: #3e4e68;
+  --text-muted: #566580;
+  --text-fine: #4a5771;
+
+  /* Inverted, for use over the navy scrim */
+  --on-dark: #ffffff;
+  --on-dark-soft: #d8e3f2;
+  --scrim: #0a1228;
+
+  /* Status colours. Contrast-checked against --surface. */
+  --warn-bg: #fff4e0;
+  --warn-line: #b3720a;
+  --warn-text: #6b4300;
+  --good: #1c6b3f;
+  --danger: #a3231f;
+
+  /* Type scale */
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Barlow', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  /* Layout */
+  --maxw: 1180px;
+  --pad: clamp(1.25rem, 4vw, 3rem);
+  --r: 8px;
+  --r-sm: 4px;
+  --shadow: 0 18px 40px -24px rgba(14, 26, 47, 0.3);
+  --shadow-sm: 0 2px 10px -4px rgba(14, 26, 47, 0.16);
+
+  /* Focus ring — one definition, used everywhere. */
+  --focus: 3px solid #1e4478;
+  --focus-offset: 2px;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+}
+h2 {
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+}
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  max-width: 68ch;
+}
+
+a {
+  color: var(--steel-deep);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--steel);
+}
+
+/* One focus style, on everything, always visible. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--r-sm);
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-inline: var(--pad);
+}
+
+.stack > * + * {
+  margin-top: 1rem;
+}
+
+/* Visible only to screen readers, until focused. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--steel-deep);
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

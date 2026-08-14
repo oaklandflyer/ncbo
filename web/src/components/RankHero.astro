@@ -1,0 +1,61 @@
+---
+/**
+ * The masthead for a standings page. Renders a rank when there is one and an
+ * honest placeholder when there is not — it never shows "1st" for an empty table.
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+  rank?: number | null;
+  subtitle?: string;
+}
+const { eyebrow, title, rank = null, subtitle } = Astro.props;
+---
+
+<header class="hero">
+  <div class="wrap hero__inner">
+    <p class="hero__eyebrow">{eyebrow}</p>
+    <div class="hero__row">
+      {rank !== null && <div class="hero__rank" aria-label={`Rank ${rank}`}>{rank}</div>}
+      <div>
+        <h1 class="hero__title">{title}</h1>
+        {subtitle && <p class="hero__sub">{subtitle}</p>}
+      </div>
+    </div>
+    <slot />
+  </div>
+</header>
+
+<style>
+  .hero {
+    background: var(--scrim);
+    color: var(--on-dark);
+    padding-block: clamp(2rem, 6vw, 3.5rem);
+  }
+  .hero__eyebrow {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.85rem;
+    color: var(--on-dark-soft);
+  }
+  .hero__row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .hero__rank {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 9vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .hero__title {
+    color: var(--on-dark);
+  }
+  .hero__sub {
+    color: var(--on-dark-soft);
+    margin-top: 0.5rem;
+  }
+</style>

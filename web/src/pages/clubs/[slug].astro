@@ -1,0 +1,159 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Badge from '../../components/Badge.astro';
+import Citation from '../../components/Citation.astro';
+
+export const getStaticPaths = (async () => {
+  const clubs = await getCollection('clubs');
+  return clubs.map((club) => ({ params: { slug: club.data.slug }, props: { club } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  club: CollectionEntry<'clubs'>;
+}
+const { club }: Props = Astro.props;
+const data = club.data;
+
+const STATUS_LABEL = { active: 'Active', forming: 'Forming', inactive: 'Inactive' } as const;
+---
+
+<BaseLayout
+  title={data.school}
+  description={`${data.clubName} at ${data.school} — an NCBO founding chapter.`}
+>
+  <div class="wrap page">
+    <p class="back"><a href="/clubs">← All clubs</a></p>
+    <div class="badges">
+      <Badge kind="chapter" />
+      {data.sanctioned && <Badge kind="sanctioned" />}
+    </div>
+    <h1>{data.school}</h1>
+    <p class="club-name">{data.clubName}</p>
+
+    <dl class="meta">
+      <div>
+        <dt>Status</dt>
+        <dd>{STATUS_LABEL[data.status]}</dd>
+      </div>
+      {data.campus && (
+        <div>
+          <dt>Campus</dt>
+          <dd>{data.campus}</dd>
+        </div>
+      )}
+      <div>
+        <dt>State</dt>
+        <dd>{data.state}</dd>
+      </div>
+      {data.lead && (
+        <div>
+          <dt>Club lead</dt>
+          <dd>{data.lead.name}</dd>
+        </div>
+      )}
+    </dl>
+
+    <section class="standing">
+      <h2>Standing</h2>
+      <p>
+        Unranked. The first NCBO season has not started, so no club has earned points.{' '}
+        <a href="/how-standing-works">How standing will be scored</a>.
+      </p>
+    </section>
+
+    <section class="location">
+      <h2>Location</h2>
+      {
+        data.location ? (
+          <>
+            <p>
+              {data.location.label} — plotted at {data.location.precision === 'campus' ? 'campus' : 'campus-city'}{' '}
+              precision on the <a href="/clubs">chapter map</a>.
+            </p>
+            <ol class="src">
+              <Citation {...data.location.source} />
+            </ol>
+          </>
+        ) : (
+          <p>
+            {data.locationNote ??
+              'No verified coordinate on file, so this chapter is not plotted on the map.'}
+          </p>
+        )
+      }
+    </section>
+
+    <section class="gaps">
+      <h2>What we don't publish here</h2>
+      <p>
+        Member counts, contact details, social accounts and founding dates are not listed, because
+        NCBO holds no verified record of them for this chapter. They will appear when there is
+        something confirmed to publish — not before. Member profiles are private by default; see the
+        privacy note in the repository's <code>docs/PRIVACY.md</code>.
+      </p>
+      <p class="prov">Record provenance: {data.provenance}</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2rem 3rem;
+  }
+  .back {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1.25rem;
+  }
+  .badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .club-name {
+    font-size: 1.15rem;
+    color: var(--text-soft);
+    margin-top: 0.25rem;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.25rem;
+  }
+  dt {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  dd {
+    margin-top: 0.25rem;
+  }
+  h2 {
+    margin-top: 2.5rem;
+  }
+  section p {
+    margin-top: 0.75rem;
+  }
+  .src {
+    margin-top: 0.5rem;
+    padding: 0;
+  }
+  .prov {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+/**
+ * A progress bar with a cut line — "where you are" against "what qualifies".
+ *
+ * The bar is decorative; the numbers beside it are the accessible content, and
+ * the whole thing carries role="img" with a full text alternative, because a
+ * screen-reader user should get the same information without parsing geometry.
+ */
+interface Props {
+  value: number;
+  max: number;
+  /** Where the qualifying line sits, in the same units as value. */
+  cut: number;
+  label: string;
+  unit?: string;
+}
+const { value, max, cut, label, unit = '' } = Astro.props;
+
+const safeMax = max > 0 ? max : 1;
+const pct = Math.max(0, Math.min(100, (value / safeMax) * 100));
+const cutPct = Math.max(0, Math.min(100, (cut / safeMax) * 100));
+const met = value >= cut;
+const description = met
+  ? `${label}: ${value}${unit} of ${max}${unit}. Above the cut line of ${cut}${unit}.`
+  : `${label}: ${value}${unit} of ${max}${unit}. ${cut - value}${unit} below the cut line of ${cut}${unit}.`;
+---
+
+<div class="ptc">
+  <div class="ptc__head">
+    <span class="ptc__label">{label}</span>
+    <span class="ptc__value">{value}{unit} <span class="ptc__of">/ {cut}{unit} to qualify</span></span>
+  </div>
+  <div class="ptc__track" role="img" aria-label={description}>
+    <div class={`ptc__fill${met ? ' ptc__fill--met' : ''}`} style={`width:${pct}%`}></div>
+    <div class="ptc__cut" style={`left:${cutPct}%`}></div>
+  </div>
+</div>
+
+<style>
+  .ptc__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+  .ptc__label {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .ptc__of {
+    color: var(--text-muted);
+  }
+  .ptc__track {
+    position: relative;
+    height: 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .ptc__fill {
+    height: 100%;
+    background: var(--steel);
+  }
+  .ptc__fill--met {
+    background: var(--good);
+  }
+  .ptc__cut {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--text);
+  }
+</style>

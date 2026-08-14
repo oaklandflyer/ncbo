@@ -1,0 +1,80 @@
+---
+/**
+ * Status badge.
+ *
+ * Deliberately excludes any generic authority badge. The prototype had a
+ * "Verified Knowledge" badge on coaches; an IFBB pro card is a competition
+ * credential, not a nutrition or medical one, and a badge that blurs the two
+ * misleads exactly the people least able to spot it. Credentials are rendered by
+ * Credential.astro, which shows the specific qualification or nothing.
+ *
+ * VERIFIED here means a membership or club record has been checked by NCBO. It
+ * says nothing about expertise.
+ */
+export type BadgeKind = 'sanctioned' | 'chapter' | 'verified' | 'your-club';
+
+interface Props {
+  kind: BadgeKind;
+  /** Optional override; defaults to the standard label for the kind. */
+  label?: string;
+}
+
+const { kind, label } = Astro.props;
+
+const LABELS: Record<BadgeKind, string> = {
+  sanctioned: 'SANCTIONED',
+  chapter: 'NCBO CHAPTER',
+  verified: 'VERIFIED',
+  'your-club': 'YOUR CLUB',
+};
+
+const TITLES: Record<BadgeKind, string> = {
+  sanctioned: 'Sanctioned by NCBO for season points',
+  chapter: 'A recognised NCBO founding chapter',
+  verified: 'Membership record checked by NCBO — not a statement about expertise',
+  'your-club': 'The club linked to your member profile',
+};
+---
+
+<span class={`badge badge--${kind}`} title={TITLES[kind]}>{label ?? LABELS[kind]}</span>
+
+<style>
+  .badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .badge--sanctioned {
+    background: var(--steel-deep);
+    border-color: var(--steel-deep);
+    color: var(--on-dark);
+  }
+
+  .badge--chapter {
+    background: var(--steel-wash);
+    border-color: var(--steel);
+    color: var(--steel-deep);
+  }
+
+  .badge--verified {
+    background: var(--surface);
+    border-color: var(--good);
+    color: var(--good);
+  }
+
+  .badge--your-club {
+    background: var(--scrim);
+    border-color: var(--scrim);
+    color: var(--on-dark);
+  }
+</style>

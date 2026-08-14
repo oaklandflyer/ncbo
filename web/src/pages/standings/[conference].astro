@@ -1,0 +1,54 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RankHero from '../../components/RankHero.astro';
+import SampleDataBanner from '../../components/SampleDataBanner.astro';
+import StandingsTable from '../../components/StandingsTable.astro';
+import PreseasonNotice from '../../components/PreseasonNotice.astro';
+import { getStandingsView } from '../../lib/data/standings.js';
+
+/**
+ * One page per defined conference. `data/conferences/` is empty today, so this
+ * route generates nothing — which is the correct behaviour: an invented
+ * conference would read as a real NCBO structure.
+ */
+export const getStaticPaths = (async () => {
+  const conferences = await getCollection('conferences');
+  return conferences.map((conference) => ({
+    params: { conference: conference.data.slug },
+    props: { name: conference.data.name, description: conference.data.description ?? null },
+  }));
+}) satisfies GetStaticPaths;
+
+const { conference } = Astro.params;
+const { name, description } = Astro.props;
+const view = await getStandingsView(conference);
+---
+
+<BaseLayout title={`${name} Standings`} description={description ?? `NCBO ${name} club standings.`}>
+  {view.isSample && <SampleDataBanner />}
+  <RankHero eyebrow="Conference" title={`${name} Standings`} subtitle={description ?? undefined} />
+  <div class="wrap page">
+    <p class="back"><a href="/standings">← All standings</a></p>
+    {
+      view.table.isEmpty && !view.isSample ? (
+        <PreseasonNotice reasons={view.emptyReasons} />
+      ) : (
+        <StandingsTable table={view.table} movement={[]} />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2rem 3rem;
+  }
+  .back {
+    margin-bottom: 1.5rem;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>

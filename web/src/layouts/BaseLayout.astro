@@ -1,0 +1,56 @@
+---
+/**
+ * The shell for every public page.
+ *
+ * Fonts are self-hosted via @fontsource rather than loaded from the Google Fonts
+ * CDN the legacy site uses, so a built page makes no network request at all —
+ * no CDN, no key, no third party. Barlow and Barlow Condensed are the same
+ * families, under the SIL Open Font License.
+ */
+import '@fontsource/barlow/400.css';
+import '@fontsource/barlow/500.css';
+import '@fontsource/barlow/600.css';
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
+import '../styles/tokens.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Overrides the OG type; defaults to website. */
+  ogType?: string;
+}
+
+const { title, description, ogType = 'website' } = Astro.props;
+const fullTitle = title === 'NCBO' ? 'NCBO' : `${title} — NCBO`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://thencbo.org');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#f4f8fd" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <SiteHeader />
+    <main id="main">
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

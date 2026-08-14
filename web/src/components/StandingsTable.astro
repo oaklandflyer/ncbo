@@ -1,0 +1,182 @@
+---
+import type { RankMovement, StandingsTable } from '../lib/scoring/index.js';
+import { MIN_ROSTER } from '../lib/scoring/index.js';
+
+interface Props {
+  table: StandingsTable;
+  movement?: RankMovement[];
+}
+const { table, movement = [] } = Astro.props;
+const movementBySlug = new Map(movement.map((m) => [m.slug, m]));
+const hasMovement = movement.length > 0;
+
+const REASONS: Record<string, string> = {
+  'below-roster-floor': `Unranked — building roster (fewer than ${MIN_ROSTER} verified members)`,
+  'missing-enrollment': 'Unranked — no verified enrollment figure on file',
+  'invalid-enrollment': 'Unranked — enrollment on file is not usable as a denominator',
+};
+
+const fmt = (n: number) => n.toFixed(2);
+---
+
+<div class="table-scroll">
+  <table class="st">
+    <caption class="visually-hidden">
+      Club standings, ordered by shrinkage-adjusted points per 1,000 undergraduates
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col" class="st__rank">#</th>
+        <th scope="col">Club</th>
+        <th scope="col" class="st__num">Points</th>
+        <th scope="col" class="st__num">Undergrads</th>
+        <th scope="col" class="st__num">
+          Raw rate
+          <span class="st__hint" title="points per 1,000 undergraduates, unadjusted">
+            per 1k
+          </span>
+        </th>
+        <th scope="col" class="st__num">
+          Adjusted rate
+          <span
+            class="st__hint"
+            title="The raw rate pulled toward the league mean in proportion to how little enrollment stands behind it. Small denominators move a long way; large ones barely move. This is the column the table is ordered by."
+          >
+            shrunk
+          </span>
+        </th>
+        {hasMovement && <th scope="col" class="st__num">Movement</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        table.ranked.map((club) => {
+          const move = movementBySlug.get(club.slug);
+          return (
+            <tr>
+              <td class="st__rank">{club.rank}</td>
+              <th scope="row" class="st__club">
+                {club.name}
+              </th>
+              <td class="st__num">{club.points}</td>
+              <td class="st__num">{club.enrollment.toLocaleString('en-US')}</td>
+              <td class="st__num st__raw">{fmt(club.rawRate)}</td>
+              <td class="st__num st__adj">{fmt(club.adjustedRate)}</td>
+              {hasMovement && (
+                <td class="st__num">
+                  {move ? (
+                    <span class={move.delta > 0 ? 'up' : move.delta < 0 ? 'down' : 'flat'}>
+                      {move.delta > 0 ? `▲ ${move.delta}` : move.delta < 0 ? `▼ ${Math.abs(move.delta)}` : '—'}
+                    </span>
+                  ) : (
+                    <span class="flat">—</span>
+                  )}
+                </td>
+              )}
+            </tr>
+          );
+        })
+      }
+      {
+        table.unranked.map((club) => (
+          <tr class="st__unranked">
+            <td class="st__rank">—</td>
+            <th scope="row" class="st__club">
+              {club.name}
+            </th>
+            <td colspan={hasMovement ? 5 : 4} class="st__reason">
+              {REASONS[club.reason] ?? 'Unranked'}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+
+{
+  table.ranked.length > 0 && (
+    <p class="st__mean">
+      League mean: <strong>{fmt(table.leagueMean)}</strong> points per 1,000 undergraduates, pooled
+      across ranked clubs. This is the value each club's rate is shrunk toward.{' '}
+      <a href="/how-standing-works">How this is calculated</a>.
+    </p>
+  )
+}
+
+<style>
+  .table-scroll {
+    overflow-x: auto;
+  }
+  .st {
+    width: 100%;
+    min-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+  }
+  .st th,
+  .st td {
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: baseline;
+  }
+  .st thead th {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--line-strong);
+  }
+  .st__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .st__rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    width: 3rem;
+  }
+  .st__club {
+    font-weight: 600;
+  }
+  .st__raw {
+    color: var(--text-muted);
+  }
+  .st__adj {
+    font-weight: 600;
+  }
+  .st__hint {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    border-bottom: 1px dotted var(--text-muted);
+    cursor: help;
+    width: fit-content;
+    margin-left: auto;
+  }
+  .st__unranked {
+    background: var(--bg-band);
+  }
+  .st__reason {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+  }
+  .st__mean {
+    margin-top: 1rem;
+    color: var(--text-soft);
+    font-size: 0.92rem;
+  }
+  .up {
+    color: var(--good);
+  }
+  .down {
+    color: var(--danger);
+  }
+  .flat {
+    color: var(--text-muted);
+  }
+</style>

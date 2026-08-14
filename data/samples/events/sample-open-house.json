@@ -1,0 +1,13 @@
+{
+  "slug": "sample-open-house",
+  "title": "SAMPLE — Fall Recruiting Table",
+  "host": "sample-large-state",
+  "type": "recruiting",
+  "sanctioned": false,
+  "venue": { "name": "SAMPLE — Student Union Concourse" },
+  "start": "2026-09-10T15:00:00-04:00",
+  "end": "2026-09-10T18:00:00-04:00",
+  "description": "Sample event used to exercise the events UI in development. Not a real NCBO event.",
+  "pointsWeight": 0,
+  "sources": []
+}
