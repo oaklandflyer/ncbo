@@ -1,0 +1,52 @@
+# GitHub Pages / Jekyll configuration.
+#
+# The public site is hand-written static HTML. Jekyll is not used to build it —
+# it just happens to be what GitHub Pages runs, and by default it walks the whole
+# repository and publishes anything it finds.
+#
+# That became a problem when the member hub source landed in this repo: Jekyll
+# renders any committed Markdown into a live page. Two of those pages are the
+# contest-prep and health reference content, and Jekyll renders their body only —
+# the medical disclaimer is a component, and the citations live in frontmatter it
+# does not display. So they would publish, at thencbo.org/web/src/..., stripped of
+# both. docs/CONTENT-POLICY.md says every page making a health claim carries the
+# disclaimer and its sources; this file is what makes that true of the deployed
+# site and not just the app.
+#
+# It also keeps application source, internal planning docs and organisation data
+# out of the published site.
+#
+# NOTE: `exclude` replaces Jekyll's default list rather than adding to it, so the
+# standard entries are repeated here.
+
+exclude:
+  # Jekyll / Ruby defaults — must be restated, see note above.
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+  # Member hub application source. Built separately with Astro; see web/README.md
+  # and docs/DEFERRED.md for the deployment options. Nothing in here is meant to
+  # be served by Pages.
+  - web/
+
+  # Internal documentation: plan, content policy, privacy, auth and sources.
+  # Readable in the repository, not published as pages on the public site.
+  - docs/
+
+  # Build and data scripts.
+  - scripts/
+
+  # Organisation data consumed at build time by the hub, not by this site.
+  # data/members.json is deliberately NOT excluded: members.html fetches it at
+  # runtime for sign-in, and excluding it would break the live member area.
+  - data/clubs/
+  - data/conferences/
+  - data/events/
+  - data/samples/
+  - data/templates/
+  - data/enrollment.json
