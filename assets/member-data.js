@@ -28,9 +28,14 @@ window.NCBO_MEMBER = {
   },
 
   /* Only numbers we can evidence. No season is scheduled, so there is no
-     meet count and no countdown. */
+     meet count and no countdown.
+
+     Keep "Founding chapters" in step with NCBO_DATA.clubs in assets/data.js --
+     the chapter directory further down this same page is rendered from that
+     array, so a stale number here contradicts the list directly below it.
+     Six chapters as of Aug 2026. */
   "stats": [
-    { "num": "5", "lab": "Founding chapters" },
+    { "num": "6", "lab": "Founding chapters" },
     { "num": "4", "lab": "States" }
   ],
 
@@ -48,30 +53,51 @@ window.NCBO_MEMBER = {
   "calendar": [],
   "calendarEmpty": "No season is scheduled yet. When the first event is confirmed with a host school, it will appear here.",
 
-  /* ── Resources ──────────────────────────────────────────────────────── */
+  /* ── Resources ──────────────────────────────────────────────────────
+     These describe the member hub reference pages (see web/ in this repo):
+     four written pages plus four downloadable club templates.
+
+     Every href is "#" on purpose. app.js renders a non-clickable row flagged
+     "In development" for anything that is not an absolute http(s) URL, which is
+     the honest state until the hub is actually deployed -- see
+     docs/DEFERRED.md, "Deployment". Once it is live, swap each "#" for its real
+     URL (https://thencbo.org/resources/prep and so on) and the rows become
+     links with no other change needed.
+
+     Two entries were removed in this pass rather than rewritten:
+
+       - "Training templates ... in-season, off-season, and peak week." NCBO's
+         content policy prohibits publishing peak-week water, electrolyte or
+         diuretic protocols, which is what a peak-week template is usually asked
+         for. Advertising one commits us to writing something we will not write.
+         See docs/CONTENT-POLICY.md.
+       - "Off-season to stage timeline -- a 16-week framework." The same policy
+         rules out publishing cut timelines. Rate-of-loss guidance from the
+         published literature is in the prep guide instead, without a countdown.
+
+     "Brand kit" is also gone: nobody is writing one, and a resource list is not
+     a wish list. Add it back when it exists. */
   "resourceGroups": [
     {
-      "group": "Competition",
+      "group": "Competing",
       "items": [
-        { "title": "Rulebook & scoring", "text": "Divisions, weight classes, judging criteria, and how school-vs-school points are awarded.", "href": "#" },
-        { "title": "Meet-day checklist", "text": "What to bring, weigh-in timing, tanning and trunks rules, backstage flow.", "href": "#" },
-        { "title": "Posing library", "text": "Mandatory poses by division, with a printable stage-walk sheet.", "href": "#" }
+        { "title": "The competition pathway", "text": "How collegiate competitors actually get on stage today: NPC collegiate eligibility, the NPC card you have to buy in advance, the divisions, and the drug-tested federations as a separate route. Sourced and dated.", "href": "#" },
+        { "title": "How standing works", "text": "The scoring formula in full -- points per 1,000 undergraduates, shrunk toward the league mean -- plus a worked example and an honest account of its limits.", "href": "#" }
       ]
     },
     {
-      "group": "Prep",
+      "group": "Prep & health",
       "items": [
-        { "title": "Off-season to stage timeline", "text": "A 16-week framework club leads can adapt for first-time competitors.", "href": "#" },
-        { "title": "Nutrition basics", "text": "Practical guidance built for a college dining hall and a student budget.", "href": "#" },
-        { "title": "Training templates", "text": "Split templates for in-season, off-season, and peak week.", "href": "#" }
+        { "title": "Evidence-based contest prep", "text": "Rate of loss, protein, fat and carbohydrate, meal distribution, and the three supplements with real evidence behind them. Grounded in Helms et al. (2014) and the ISSN protein position stand, with sources on the page.", "href": "#" },
+        { "title": "Health & wellbeing", "text": "Relative Energy Deficiency in Sport per the 2023 IOC consensus, eating disorder risk in aesthetic sport, and where to get help -- starting with your campus counselling and sports medicine services.", "href": "#" },
+        { "title": "Supplement safety", "text": "Third-party certification, what NSF Certified for Sport does and does not protect you from, and why an uncertified product is an eligibility risk. Part of the prep guide.", "href": "#" }
       ]
     },
     {
       "group": "Club operations",
       "items": [
-        { "title": "Club lead playbook", "text": "Recruiting, running meetings, keeping a roster, and staying in good standing with your school.", "href": "#" },
-        { "title": "Brand kit", "text": "NCBO crest, colors, and templates for club flyers and socials.", "href": "#" },
-        { "title": "Travel & fundraising", "text": "How other clubs cover meet travel — sponsorships, dues, and school funding.", "href": "#" }
+        { "title": "Club lead playbook", "text": "Officer structure, annual recertification, waivers and emergency contacts, first aid and CPR cover, travel rules, hazing prohibition and reporting, fundraising approval, and facility booking.", "href": "#" },
+        { "title": "Club templates", "text": "Officer transition checklist, event risk assessment, recruiting table kit and meeting agenda -- editable Markdown and printable PDF.", "href": "#" }
       ]
     }
   ],
@@ -79,7 +105,13 @@ window.NCBO_MEMBER = {
   /* ── Channels + Q&A board ───────────────────────────────────────────── */
   "channels": [
     { "id": "general",     "name": "General",        "desc": "Anything network-wide." },
-    { "id": "prep",        "name": "Prep & Training","desc": "Programming, peak week, and everything before stage." },
+    /* "peak week" was dropped from this description deliberately. The topic is
+       not banned -- training, posing, travel and nerves in the final week are
+       all fair questions. But answers posted to this board appear publicly on
+       this page, and NCBO does not publish water, electrolyte or diuretic
+       manipulation protocols in any form. Naming peak week in the invitation
+       solicits exactly the question we cannot answer. See docs/CONTENT-POLICY.md. */
+    { "id": "prep",        "name": "Prep & Training","desc": "Programming, training through a prep, and everything before stage." },
     { "id": "nutrition",   "name": "Nutrition",      "desc": "Dining halls, budgets, cutting and filling." },
     { "id": "posing",      "name": "Posing",         "desc": "Mandatories, routines, stage presence." },
     { "id": "club-leads",  "name": "Club Leads",     "desc": "Running a club: roster, school paperwork, recruiting." },
@@ -99,7 +131,7 @@ window.NCBO_MEMBER = {
 
   "ask": {
     "title": "Ask the network",
-    "text": "Questions go to the NCBO exec team. Answered questions get posted back to the board so the next person doesn't have to ask.",
+    "text": "Questions go to the NCBO exec team. Answered questions get posted back to the board so the next person doesn't have to ask. Some things we won't answer here: we don't publish water, electrolyte or diuretic protocols, or anything about banned substances beyond what the rules are — those belong with your campus sports medicine service, not a message board.",
     "note": "Drafts you write here stay in this browser until you send them — this site has no server behind it.",
     "form": "#"
   },
