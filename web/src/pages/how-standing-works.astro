@@ -1,0 +1,247 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DENOMINATOR, ENROLLMENT_UNIT, K, MIN_ROSTER } from '../lib/scoring/index.js';
+import { adjustedRate, rawRate } from '../lib/scoring/index.js';
+
+/**
+ * The worked example is computed with the real scoring functions rather than
+ * typed in, so it cannot drift away from the code that produces the table.
+ */
+const mean = 6;
+const examples = [
+  { name: 'A 30,000-undergraduate university', points: 180, enrollment: 30_000 },
+  { name: 'A 6,000-undergraduate university', points: 48, enrollment: 6_000 },
+  { name: 'A 1,200-undergraduate college', points: 36, enrollment: 1_200 },
+].map((row) => ({
+  ...row,
+  raw: rawRate(row.points, row.enrollment),
+  adjusted: adjustedRate(row.points, row.enrollment, mean, K),
+}));
+const fmt = (n: number) => n.toFixed(2);
+---
+
+<BaseLayout
+  title="How Standing Works"
+  description="The NCBO standings formula in full: points per 1,000 undergraduates, shrunk toward the league mean, with a minimum roster floor — and an honest account of its limits."
+>
+  <div class="wrap page">
+    <h1>How standing works</h1>
+    <p class="lead">
+      This page is the whole method. If the table ever disagrees with what is written here, the table
+      is wrong.
+    </p>
+
+    <h2>The problem</h2>
+    <p>
+      Ranking clubs on total points rewards big schools for being big. A university with 30,000
+      undergraduates has ten times the recruiting pool of one with 3,000, and a table topped by the
+      largest campuses every year measures enrollment, not effort.
+    </p>
+    <p>
+      The obvious fix is points per student. That is worse, and it is worse in a way that is easy to
+      miss: dividing by a small number inflates the result. A 1,200-student college needs a
+      twenty-fifth of the points of a 30,000-student university to post the same rate. Small schools
+      then win by construction — the mirror image of the problem we started with. Worse, rates
+      measured over small populations swing violently. One good week from a twelve-person club moves
+      the national table, and the ranking ends up measuring luck.
+    </p>
+
+    <h2>What we do instead</h2>
+    <p>
+      Each club's rate is pulled toward the league average by an amount that depends on how much
+      evidence stands behind it. This is standard practice for rate statistics over uneven sample
+      sizes, and it is the same idea behind regression to the mean.
+    </p>
+    <pre class="formula"><code>raw_rate    = points / (enrollment / {ENROLLMENT_UNIT})
+league_mean = Σpoints / Σ(enrollment / {ENROLLMENT_UNIT})    // ranked clubs only
+adjusted    = (points + K × league_mean) / (enrollment / {ENROLLMENT_UNIT} + K)</code></pre>
+    <p>
+      Read the adjustment as: every club is treated as though it also carried
+      <strong>K = {K}</strong> thousand students' worth of league-average performance. For a
+      30,000-undergraduate university that is about 6% of the denominator and changes almost nothing.
+      For a 2,000-undergraduate college it is the same size as the denominator, so its rate lands
+      halfway between its own result and the league average.
+    </p>
+    <p>
+      <strong>Nobody is penalised for their school's size.</strong> Clubs are damped in proportion to
+      the uncertainty their sample size implies — which is a different thing, and it cuts both ways:
+      a small club with a genuinely large result still finishes top, because the result is big enough
+      to survive the shrinkage.
+    </p>
+
+    <h3>A worked example</h3>
+    <p>Assume a league mean of {mean}.00 points per {ENROLLMENT_UNIT.toLocaleString('en-US')} undergraduates.</p>
+    <div class="table-scroll">
+      <table class="ex">
+        <thead>
+          <tr>
+            <th scope="col">Club</th>
+            <th scope="col">Points</th>
+            <th scope="col">Undergrads</th>
+            <th scope="col">Raw rate</th>
+            <th scope="col">Adjusted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            examples.map((row) => (
+              <tr>
+                <th scope="row">{row.name}</th>
+                <td class="num">{row.points}</td>
+                <td class="num">{row.enrollment.toLocaleString('en-US')}</td>
+                <td class="num">{fmt(row.raw)}</td>
+                <td class="num strong">{fmt(row.adjusted)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">
+      All three post a raw rate of {fmt(examples[0]!.raw)}. After adjustment the small college sits
+      lower, not because it did worse, but because {examples[2]!.enrollment.toLocaleString('en-US')}{' '}
+      students is thin evidence for a national ranking. Give it a second strong season and it stays
+      high; the shrinkage does not accumulate against it.
+    </p>
+
+    <h2>The minimum roster floor</h2>
+    <p>
+      A club with fewer than <strong>{MIN_ROSTER} verified members</strong> is listed as
+      <strong>"Unranked — building roster"</strong>. It appears in the table, with its points, but
+      without a position, and it does not contribute to the league mean.
+    </p>
+    <p>
+      Shrinkage cannot rescue a sample that small, and a heavily-shrunk number still looks like a
+      ranking to anyone reading quickly. A visible "not enough data yet" is more honest than a
+      position nobody should trust.
+    </p>
+
+    <h2>The denominator</h2>
+    <p>
+      The denominator is <strong>undergraduate enrollment</strong> (<code>{DENOMINATOR}</code>), taken
+      from IPEDS, the US Department of Education's public institutional data set.
+    </p>
+    <p>
+      <strong>This is a judgment call, and it has losers.</strong> Undergraduate enrollment was chosen
+      because NCBO membership is overwhelmingly undergraduate, and using total enrollment would
+      penalise universities with large graduate and professional populations for students who were
+      never plausible members. But it treats a large part-time or online undergraduate population as
+      though it were a recruiting pool on the same terms as a residential one, which it is not. A
+      commuter campus is measured against a denominator that overstates its realistic reach.
+    </p>
+    <p>
+      We have not found a denominator without a defect like this. The choice is published as a
+      configurable constant so that changing it is a visible decision rather than a quiet one.
+    </p>
+
+    <h2>What this method cannot do</h2>
+    <ul class="limits">
+      <li>
+        <strong>K = {K} has not been tuned.</strong> The principled way to set it is to fit it against
+        real results — pick the value that best predicts the second half of a season from the first —
+        and there is no season yet. {K} is a defensible starting point and nothing more. It will
+        change once there is data, and when it does, we will say so.
+      </li>
+      <li>
+        <strong>The floor of {MIN_ROSTER} is likewise a starting point</strong>, picked to be reachable
+        by a genuinely new club within a semester.
+      </li>
+      <li>
+        <strong>Points themselves are the bigger lever.</strong> No adjustment to the denominator
+        fixes a badly-designed points weighting. Event weights are published per event.
+      </li>
+      <li>
+        <strong>Rate statistics reward consistency over peaks.</strong> That is a deliberate choice
+        about what the table should measure, not a neutral fact about the maths.
+      </li>
+      <li>
+        <strong>Rank movement is only shown when there is real history to move against.</strong> A
+        column of zeroes implying "held position" in a season where nothing has happened would be a
+        small lie, and it is the kind that erodes trust in the rest of the table.
+      </li>
+    </ul>
+
+    <h2>Both numbers, always</h2>
+    <p>
+      The standings table shows the raw rate next to the adjusted one on every row. Showing only the
+      adjusted figure would ask you to trust a calculation you cannot see; showing only the raw one
+      would publish the noise. If you disagree with the adjustment, the unadjusted number is right
+      there to argue with.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 2.5rem 3rem;
+  }
+  .lead {
+    font-size: 1.15rem;
+    color: var(--text-soft);
+    margin-top: 0.75rem;
+  }
+  h2 {
+    margin-top: 2.5rem;
+  }
+  h3 {
+    margin-top: 1.75rem;
+  }
+  p {
+    margin-top: 0.85rem;
+  }
+  .formula {
+    background: var(--scrim);
+    color: var(--on-dark);
+    padding: 1rem;
+    border-radius: var(--r);
+    overflow-x: auto;
+    margin-top: 1rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    margin-top: 1rem;
+  }
+  .ex {
+    width: 100%;
+    min-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .ex th,
+  .ex td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+  }
+  .ex thead th {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .strong {
+    font-weight: 600;
+  }
+  .caption {
+    color: var(--text-soft);
+    font-size: 0.92rem;
+  }
+  .limits {
+    margin: 1rem 0 0 1.1rem;
+  }
+  .limits li {
+    margin-bottom: 0.75rem;
+    max-width: 72ch;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+</style>

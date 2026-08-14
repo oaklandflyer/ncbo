@@ -1,0 +1,117 @@
+---
+/**
+ * The pre-season empty state.
+ *
+ * This is the honest answer to "what are the standings?" — there aren't any, and
+ * the page says so first, in plain words, before explaining anything else. It
+ * also names the specific things missing, because "coming soon" tells a club
+ * nothing about what would have to happen for their name to appear here.
+ */
+import { K, MIN_ROSTER } from '../lib/scoring/index.js';
+
+interface Props {
+  reasons: {
+    noSeason: boolean;
+    noEnrollmentData: boolean;
+    noVerifiedRosters: boolean;
+  };
+}
+const { reasons } = Astro.props;
+---
+
+<section class="pre">
+  <h2 class="pre__head">The first NCBO season hasn't started yet.</h2>
+  <p class="pre__lead">
+    There are no standings, because no club has competed for points. Here's how standing will be
+    scored when the season does start — the system is built and running, it just has nothing to
+    rank.
+  </p>
+
+  <h3>What has to exist before this table fills in</h3>
+  <ul class="pre__list">
+    {
+      reasons.noSeason && (
+        <li>
+          <strong>A season.</strong> Sanctioned events with a points weight, and results recorded
+          against them. Nothing is scheduled yet.
+        </li>
+      )
+    }
+    {
+      reasons.noEnrollmentData && (
+        <li>
+          <strong>Enrollment denominators.</strong> Standing is a rate, not a total, so every ranked
+          club needs a verified undergraduate enrollment figure. These come from IPEDS, the US
+          Department of Education's public data set. The fetch has not been run, and no figure is
+          estimated in the meantime.
+        </li>
+      )
+    }
+    {
+      reasons.noVerifiedRosters && (
+        <li>
+          <strong>Verified rosters.</strong> A club needs at least {MIN_ROSTER} verified members to be
+          ranked at all. Below that, a rate is mostly noise, so clubs are listed as "building
+          roster" instead of being given a position they haven't earned.
+        </li>
+      )
+    }
+  </ul>
+
+  <h3>The short version of the scoring</h3>
+  <p>
+    Clubs are ranked on points per 1,000 undergraduates, not on raw points — otherwise the biggest
+    schools win by default. But a plain per-capita rate has the opposite problem: a small
+    denominator inflates the quotient, so the smallest schools would win by default instead, and one
+    good week from a twelve-person club would swing the national table.
+  </p>
+  <p>
+    So each club's rate is <strong>shrunk toward the league mean</strong> by an amount that depends on
+    how much enrollment stands behind it (K = {K}). Big clubs barely move. Very small ones move a
+    long way, because there is genuinely less evidence about them. Both the raw and the adjusted rate
+    are shown, always.
+  </p>
+  <p>
+    <a class="pre__link" href="/how-standing-works">Read the full explanation, including its limits</a>
+  </p>
+</section>
+
+<style>
+  .pre {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--steel);
+    border-radius: var(--r);
+    padding: clamp(1.25rem, 4vw, 2rem);
+    box-shadow: var(--shadow-sm);
+  }
+  .pre__head {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+  }
+  .pre__lead {
+    margin-top: 0.75rem;
+    font-size: 1.08rem;
+    color: var(--text-soft);
+  }
+  .pre h3 {
+    margin-top: 1.75rem;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+  .pre__list {
+    margin: 0.75rem 0 0 1.1rem;
+  }
+  .pre__list li {
+    margin-bottom: 0.6rem;
+    max-width: 70ch;
+  }
+  .pre p {
+    margin-top: 0.75rem;
+  }
+  .pre__link {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>
