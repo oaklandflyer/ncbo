@@ -456,6 +456,20 @@
     cb.addEventListener('change',()=>{ set(cb.checked); markDirty(); });
     f.appendChild(cb); f.appendChild(document.createTextNode(labelText)); return f;
   }
+  // dropdown backed by a fixed list of options. An existing value that isn't
+  // in the list is kept as an option of its own rather than silently dropped.
+  function fieldSelect(labelText, options, get, set, opts={}){
+    const f=document.createElement('div'); f.className='field'+(opts.full?' full':'');
+    const lab=document.createElement('label'); lab.textContent=labelText;
+    const sel=document.createElement('select');
+    const cur=get()||'';
+    if(opts.blank!==false){ const b=document.createElement('option'); b.value=''; b.textContent=opts.blankLabel||'— choose —'; sel.appendChild(b); }
+    options.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op); });
+    if(cur && options.indexOf(cur)===-1){ const op=document.createElement('option'); op.value=cur; op.textContent=cur; sel.appendChild(op); }
+    sel.value=cur;
+    sel.addEventListener('change',()=>{ set(sel.value); markDirty(); });
+    f.appendChild(lab); f.appendChild(sel); f.__input=sel; return f;
+  }
   // editable list of plain strings (e.g. marquee, features)
   function stringList(arr, opts={}){
     const wrap=document.createElement('div'); wrap.className='string-list';
@@ -524,20 +538,41 @@
     render(); return host;
   }
 
-  // generic list-of-objects editor with add/remove
+  // generic list-of-objects editor with add/remove, and optional reorder
   function objectList(arr, cfg){
-    // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(), fields(item, card), onChange()}
+    // cfg: {title, aspect, imgKey, imgPrefix, titleKey, addLabel, newItem(),
+    //       fields(item, card), onChange(), reorder, emptyText, extraActions(item, idx)}
     const host=document.createElement('div');
+    function move(i,to){
+      if(to<0||to>=arr.length) return;
+      const [it]=arr.splice(i,1); arr.splice(to,0,it); markDirty(); render();
+      if(cfg.onChange) cfg.onChange();
+    }
     function render(){
       host.innerHTML='';
+      if(!arr.length && cfg.emptyText){
+        const empty=document.createElement('div'); empty.className='note';
+        empty.style.marginTop='0'; empty.textContent=cfg.emptyText;
+        host.appendChild(empty);
+      }
       arr.forEach((item,idx)=>{
         const card=document.createElement('div'); card.className='card';
         const head=document.createElement('div'); head.className='card-head';
         const t=document.createElement('div'); t.className='t';
         t.textContent=(cfg.titleKey? (item[cfg.titleKey]||'(new)') : ('#'+(idx+1)));
+        const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;';
+        if(cfg.reorder){
+          const up=document.createElement('button'); up.className='small'; up.textContent='↑'; up.title='Move up';
+          up.disabled=idx===0; up.addEventListener('click',()=>move(idx,idx-1));
+          const dn=document.createElement('button'); dn.className='small'; dn.textContent='↓'; dn.title='Move down';
+          dn.disabled=idx===arr.length-1; dn.addEventListener('click',()=>move(idx,idx+1));
+          btns.appendChild(up); btns.appendChild(dn);
+        }
+        if(cfg.extraActions) cfg.extraActions(item, idx).forEach(b=>btns.appendChild(b));
         const del=document.createElement('button'); del.className='small danger'; del.textContent='Remove';
         del.addEventListener('click',()=>{ if(confirm('Remove this entry?')){ arr.splice(idx,1); markDirty(); render(); if(cfg.onChange) cfg.onChange(); } });
-        head.appendChild(t); head.appendChild(del); card.appendChild(head);
+        btns.appendChild(del);
+        head.appendChild(t); head.appendChild(btns); card.appendChild(head);
 
         cfg.fields(item, card, ()=>{ if(cfg.titleKey) t.textContent=item[cfg.titleKey]||'(new)'; });
 
@@ -829,16 +864,121 @@
 
     'Team': ()=>{
       const frag=document.createDocumentFragment();
-      let p=panel('Leadership team — positions & photos'); DATA.leadership=DATA.leadership||[];
-      p.appendChild(noteEl('Shows on the home page under <b>Team</b> (index.html#team). '+
-        'Edit each person’s <b>position/role</b>, reorder isn’t needed — order here is the order shown. Upload square photos (they crop to a square on the site).'));
+
+      /* ── Board of directors ──────────────────────────────────────────────
+         Independent governance, seated separately from the executive board.
+         Two lists, the same held/published split the rest of the file uses:
+         `board` publishes, `boardHeld` stages someone whose appointment isn't
+         confirmed in writing yet. Nothing renders `boardHeld`. */
+      let p=panel('Board of directors'); DATA.board=DATA.board||[]; DATA.boardHeld=DATA.boardHeld||[];
+      p.appendChild(noteEl('Shows on the home page under <b>Team → Board of directors</b> (index.html#team), above the executive board. '+
+        'The whole section, heading included, stays hidden on the live site until at least one director is published here.<br><br>'+
+        '<b>Board role</b> is the office they hold at NCBO and is the line people read first. '+
+        '<b>Professional title</b> is their outside job, e.g. “CFO, Example Nonprofit”, and sits underneath it.<br><br>'+
+        '<b>Staged directors</b> below are saved but never published. Use that list for anyone whose appointment isn’t confirmed in writing yet, '+
+        'then press <b>Publish</b> to move them up. Fill in the name first, then upload a photo; the image path is generated from the name. Square photos work best.'));
+
+      const BOARD_ROLES=['President','Treasurer','Secretary','Director'];
+      const newDirector=()=>({name:'',role:'',title:'',bio:'',img:'',termStart:''});
+      let boardList, heldList;
+
+      function directorFields(it,card,upd){
+        const g=document.createElement('div'); g.className='grid-2';
+        g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+        g.appendChild(fieldSelect('Board role', BOARD_ROLES, ()=>it.role, v=>it.role=v));
+        g.appendChild(fieldText('Professional title', ()=>it.title, v=>it.title=v));
+        g.appendChild(fieldText('Term start (e.g. Sep 2026)', ()=>it.termStart, v=>it.termStart=v));
+        card.appendChild(g);
+        card.appendChild(fieldRowFull(fieldText('Short bio (one or two sentences)', ()=>it.bio, v=>it.bio=v, {full:true,textarea:true,rows:2})));
+        /* Name and board role are what the card renders; say so rather than
+           letting a half-filled director reach the site. */
+        const warn=document.createElement('div'); warn.className='status-line';
+        function check(){
+          const missing=[]; if(!String(it.name||'').trim()) missing.push('a name');
+          if(!String(it.role||'').trim()) missing.push('a board role');
+          if(missing.length){ setStatus(warn,'Needs '+missing.join(' and ')+' before this is worth publishing.','err'); }
+          else setStatus(warn,'','');
+        }
+        card.appendChild(warn);
+        card.__check=check; check();
+        card.addEventListener('input',check);
+        card.addEventListener('change',check);
+      }
+
+      boardList=objectList(DATA.board,{
+        titleKey:'name', imgKey:'img', imgPrefix:'board', aspect:1, addLabel:'Add director',
+        reorder:true, newItem:newDirector, fields:directorFields,
+        emptyText:'No directors seated yet. The board section stays hidden on the public site until you add one.',
+        extraActions:(it,idx)=>{
+          const b=document.createElement('button'); b.className='small'; b.textContent='Unpublish';
+          b.title='Move back to the staged list. Stays saved, stops showing on the site.';
+          b.addEventListener('click',()=>{
+            DATA.board.splice(idx,1); DATA.boardHeld.push(it);
+            markDirty(); boardList.rerender(); heldList.rerender();
+          });
+          return [b];
+        }
+      });
+      p.appendChild(boardList);
+
+      p.appendChild(subhead('Staged directors: saved, not published'));
+      p.appendChild(noteEl('Nothing here shows on the live site. Press <b>Publish</b> once the appointment is confirmed in writing.'));
+      heldList=objectList(DATA.boardHeld,{
+        titleKey:'name', imgKey:'img', imgPrefix:'board', aspect:1, addLabel:'Stage a director',
+        reorder:true, newItem:()=>Object.assign(newDirector(),{heldReason:''}),
+        emptyText:'Nobody staged.',
+        fields:(it,card,upd)=>{
+          directorFields(it,card,upd);
+          card.appendChild(fieldRowFull(fieldText('Why this one is held back', ()=>it.heldReason, v=>it.heldReason=v, {full:true})));
+        },
+        extraActions:(it,idx)=>{
+          const b=document.createElement('button'); b.className='small primary'; b.textContent='Publish';
+          b.title='Move into the published board of directors.';
+          b.addEventListener('click',()=>{
+            if(!String(it.name||'').trim() || !String(it.role||'').trim()){
+              alert('Give this director a name and a board role before publishing.'); return;
+            }
+            if(!confirm('Publish '+it.name+' to the live board of directors?')) return;
+            DATA.boardHeld.splice(idx,1);
+            const pub=Object.assign({},it); delete pub.heldReason;
+            DATA.board.push(pub);
+            markDirty(); boardList.rerender(); heldList.rerender();
+          });
+          return [b];
+        }
+      });
+      p.appendChild(heldList);
+      frag.appendChild(p);
+
+      p=panel('Executive board: positions & photos'); DATA.leadership=DATA.leadership||[];
+      p.appendChild(noteEl('Shows on the home page under <b>Team → Executive board</b> (index.html#team). '+
+        'The CEO and the directors running day to day operations. This is management, not the board of directors above. '+
+        'Order here is the order shown. Upload square photos (they crop to a square on the site).'));
       p.appendChild(objectList(DATA.leadership,{
-        titleKey:'name', imgKey:'img', imgPrefix:'team', aspect:1, addLabel:'Add team member',
-        newItem:()=>({name:'',role:'',img:''}),
+        titleKey:'name', imgKey:'img', imgPrefix:'team', aspect:1, addLabel:'Add executive',
+        reorder:true, newItem:()=>({name:'',role:'',img:''}),
         fields:(it,card,upd)=>{
           const g=document.createElement('div'); g.className='grid-2';
           g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
           g.appendChild(fieldText('Position / role', ()=>it.role, v=>it.role=v));
+          card.appendChild(g);
+        }
+      })); frag.appendChild(p);
+
+      /* Team members reporting into an executive board director. Rendered one
+         tier down from the executive board, hidden while the list is empty. */
+      p=panel('Team members'); DATA.teamMembers=DATA.teamMembers||[];
+      p.appendChild(noteEl('Shows on the home page under <b>Team → Team</b>, below the executive board and in smaller cards. '+
+        'Use the role to name the team they sit on, e.g. “Marketing Team”. The block stays hidden while this list is empty.'));
+      p.appendChild(objectList(DATA.teamMembers,{
+        titleKey:'name', imgKey:'img', imgPrefix:'team', aspect:1, addLabel:'Add team member',
+        reorder:true, newItem:()=>({name:'',role:'',school:'',img:''}),
+        emptyText:'No team members yet. The block stays hidden on the public site until you add one.',
+        fields:(it,card,upd)=>{
+          const g=document.createElement('div'); g.className='grid-2';
+          g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
+          g.appendChild(fieldText('Team / role', ()=>it.role, v=>it.role=v));
+          g.appendChild(fieldText('School (optional)', ()=>it.school, v=>it.school=v));
           card.appendChild(g);
         }
       })); frag.appendChild(p);
@@ -905,10 +1045,14 @@
       refreshImport();
       frag.appendChild(p);
 
-      p=panel('Advisory board'); DATA.advisory=DATA.advisory||[];
+      p=panel('Coaching advisors'); DATA.advisory=DATA.advisory||[];
+      p.appendChild(noteEl('Shows on the home page under <b>Team → Coaching advisors</b>. '+
+        'These are competitive bodybuilding coaches who advise the campus clubs on training and posing. '+
+        'They are <b>not</b> members of NCBO’s board and the section must not be worded as governance. '+
+        'The board of directors is the panel at the top of this tab.'));
       p.appendChild(objectList(DATA.advisory,{
         titleKey:'name', imgKey:'img', imgPrefix:'advisor', aspect:1, addLabel:'Add advisor',
-        newItem:()=>({name:'',role:'',img:''}),
+        reorder:true, newItem:()=>({name:'',role:'Coaching Advisor',img:''}),
         fields:(it,card,upd)=>{
           const g=document.createElement('div'); g.className='grid-2';
           g.appendChild(fieldText('Name', ()=>it.name, v=>{it.name=v;upd();}));
@@ -991,9 +1135,20 @@
       '        a 501(c)(3). Nothing may imply donations are tax-deductible.\n'+
       '     4. Do not publish an email address that nobody monitors.\n'+
       '\n'+
-      '   The `clubsHeld`, `advisoryHeld` and `voicesHeld` arrays are entries that\n'+
-      '   are deliberately NOT published pending confirmation. Nothing renders them.\n'+
-      '   Move an entry into `clubs` / `advisory` / `voices` only once confirmed.\n'+
+      '   The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are\n'+
+      '   entries that are deliberately NOT published pending confirmation. Nothing\n'+
+      '   renders them. Move an entry into `clubs` / `board` / `advisory` / `voices`\n'+
+      '   only once confirmed.\n'+
+      '\n'+
+      '   ── STRUCTURE ──────────────────────────────────────────────────────────────\n'+
+      '   The people arrays run top-down in governance order:\n'+
+      '\n'+
+      '     board        independent directors who oversee the CEO (being recruited)\n'+
+      '     leadership   the CEO and the executive board that runs operations\n'+
+      '     teamMembers  people reporting into an executive board director\n'+
+      '     clubLeads    the students running each campus chapter\n'+
+      '     advisory     coaching advisors to the clubs, NOT governance\n'+
+      '\n'+
       '   ========================================================================== */\n';
     return header+'window.NCBO_DATA = '+JSON.stringify(DATA, null, 2)+';\n';
   }
