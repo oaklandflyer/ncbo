@@ -44,8 +44,13 @@ so keep that side uncluttered. The list lives in `heroPhotos` in
 ## About page
 | File | Shows up as | Best shape |
 |------|-------------|-----------|
-| `team-andrew.jpg`, `team-neha.jpg`, `team-luke.jpg`, `team-vincent.jpg`, `team-rachel.jpg`, `team-alex.jpg`, `team-olivia.jpg` | Leadership headshots | square 1:1 |
-| `advisor-jasmine.jpg`, `advisor-megan.jpg`, `advisor-gab.jpg` | Advisory headshots | square 1:1 |
+| `board-<name>.jpg` | Board of directors headshots, one per seated director | square 1:1 |
+| `team-andrew.jpg`, `team-neha.jpg`, `team-luke.jpg`, `team-vincent.jpg`, `team-rachel.jpg`, `team-alex.jpg`, `team-olivia.jpg` | Executive board headshots | square 1:1 |
+| `team-altan.jpg`, `team-lauren-rowe.jpg` | Team member headshots | square 1:1 |
+| `advisor-jasmine.jpg`, `advisor-megan.jpg`, `advisor-gab.jpg` | Coaching advisor headshots | square 1:1 |
+
+Anyone without a photo on file renders as an initials monogram in the same
+card, so a missing headshot reads as deliberate rather than broken.
 
 ## News page
 | File | Shows up as | Best shape |

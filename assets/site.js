@@ -227,6 +227,26 @@
           <div class="person-body">
             <div class="person-name">${p.name}</div>
             ${p.role ? `<div class="person-role">${p.role}</div>` : ''}
+            ${p.school ? `<div class="person-title">${p.school}</div>` : ''}
+          </div>
+        </div>`).join('');
+      return people.length;
+    },
+    /* Board of directors. Same card as `people`, plus the director's outside
+       professional title on a second line — the board office is the primary
+       line because that's the role they hold here. Returns the count so the
+       page can keep the whole block hidden while no director is seated. */
+    board(el, list) {
+      if (!el) return 0;
+      const people = list || [];
+      el.innerHTML = people.map(p => `
+        <div class="person reveal">
+          ${personPhoto(p.img, p.name)}
+          <div class="person-body">
+            <div class="person-name">${p.name}</div>
+            ${p.role ? `<div class="person-role">${p.role}</div>` : ''}
+            ${p.title ? `<div class="person-title">${p.title}</div>` : ''}
+            ${p.bio ? `<p class="person-bio">${p.bio}</p>` : ''}
           </div>
         </div>`).join('');
       return people.length;
