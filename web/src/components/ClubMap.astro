@@ -1,0 +1,113 @@
+---
+import { buildGeometry, MAP_HEIGHT, MAP_WIDTH, type MapPin } from '../lib/map.js';
+
+interface Props {
+  pins: MapPin[];
+  unplotted: { slug: string; school: string }[];
+}
+const { pins, unplotted } = Astro.props;
+const { states, borders } = buildGeometry();
+---
+
+<figure class="map">
+  <svg
+    class="map__svg"
+    viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+    role="img"
+    aria-labelledby="map-title map-desc"
+    preserveAspectRatio="xMidYMid meet"
+  >
+    <title id="map-title">Map of the United States showing NCBO chapters</title>
+    <desc id="map-desc">
+      {pins.length} of {pins.length + unplotted.length} chapters are plotted. The full list of chapters,
+      including any not plotted here, follows below the map.
+    </desc>
+    <path class="map__land" d={states} />
+    <path class="map__borders" d={borders} />
+    {
+      pins.map((pin) => (
+        <a href={`/clubs/${pin.slug}`} class="map__pin" aria-label={`${pin.school} — ${pin.label}`}>
+          <circle class="map__halo" cx={pin.x} cy={pin.y} r="14" />
+          <circle class="map__dot" cx={pin.x} cy={pin.y} r="6" />
+          <text class="map__label" x={pin.x + 12} y={pin.y + 4}>
+            {pin.label}
+          </text>
+        </a>
+      ))
+    }
+  </svg>
+  <figcaption class="map__cap">
+    Pins are placed at campus or campus-city coordinates, each sourced on the club's page.
+    {
+      unplotted.length > 0 && (
+        <>
+          {' '}
+          {unplotted.length} chapter{unplotted.length === 1 ? ' is' : 's are'} not plotted because no
+          coordinate has been verified against a source: {unplotted.map((club) => club.school).join(', ')}.
+          {unplotted.length === 1 ? ' It is' : ' They are'} listed below like every other chapter.
+        </>
+      )
+    }
+  </figcaption>
+</figure>
+
+<style>
+  .map {
+    margin: 1.5rem 0 0;
+  }
+  .map__svg {
+    width: 100%;
+    height: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+  }
+  .map__land {
+    fill: var(--surface-raised);
+    stroke: none;
+  }
+  .map__borders {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 1;
+    stroke-linejoin: round;
+  }
+  .map__halo {
+    fill: var(--steel);
+    opacity: 0.18;
+  }
+  .map__dot {
+    fill: var(--steel-deep);
+    stroke: var(--surface);
+    stroke-width: 2;
+  }
+  .map__label {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    fill: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .map__pin:hover .map__dot,
+  .map__pin:focus-visible .map__dot {
+    fill: var(--danger);
+  }
+  /* The SVG focus ring has to be drawn, not outlined — outline on an <a> inside
+     SVG is unreliable across browsers. */
+  .map__pin:focus-visible .map__halo {
+    opacity: 1;
+    fill: none;
+    stroke: var(--steel-deep);
+    stroke-width: 3;
+  }
+  .map__pin:focus-visible {
+    outline: none;
+  }
+  .map__cap {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    max-width: 70ch;
+  }
+</style>

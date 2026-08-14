@@ -6,24 +6,20 @@
  * are validated against the same schema as real ones so they cannot drift.
  */
 
-import { readdirSync, readFileSync } from 'node:fs';
 import { getCollection } from 'astro:content';
 import { eventSchema } from '../schemas.js';
 import { isDemo } from './demo.js';
 
 export type EventData = ReturnType<typeof eventSchema.parse>;
 
+// Globbed at build time by the bundler, so sample files are inlined and there is
+// no directory read at runtime. Still parsed through the real schema.
+const sampleModules = import.meta.glob('../../../../data/samples/events/*.json', {
+  eager: true,
+}) as Record<string, { default: unknown }>;
+
 function loadSampleEvents(): EventData[] {
-  const dir = new URL('../../../../data/samples/events/', import.meta.url);
-  let files: string[] = [];
-  try {
-    files = readdirSync(dir).filter((file) => file.endsWith('.json'));
-  } catch {
-    return [];
-  }
-  return files.map((file) =>
-    eventSchema.parse(JSON.parse(readFileSync(new URL(file, dir), 'utf8'))),
-  );
+  return Object.values(sampleModules).map((module) => eventSchema.parse(module.default));
 }
 
 export async function getEvents(): Promise<EventData[]> {

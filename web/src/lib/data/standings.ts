@@ -4,9 +4,9 @@
  * the table is computed", and it is deliberately thin.
  */
 
-import { readFileSync } from 'node:fs';
 import { getCollection } from 'astro:content';
 import { z } from 'zod';
+import sampleJson from '../../../../data/samples/standings.json';
 import { computeStandings, type ClubScoringInput, type StandingsTable } from '../scoring/index.js';
 import { isDemo } from './demo.js';
 import { enrollmentFor, enrollmentIsEmpty } from './enrollment.js';
@@ -25,8 +25,7 @@ const sampleFileSchema = z.object({
 });
 
 function loadSampleInputs(): ClubScoringInput[] {
-  const path = new URL('../../../../data/samples/standings.json', import.meta.url);
-  const parsed = sampleFileSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
+  const parsed = sampleFileSchema.parse(sampleJson);
   return parsed.clubs.map((club) => ({
     slug: club.slug,
     name: club.name,
