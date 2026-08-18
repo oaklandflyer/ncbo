@@ -8,11 +8,11 @@
    Order of business:
      1. Hide the body immediately, with a <style> injected before the parser
         reaches any content — the page must never flash before we've decided.
-     2. Load the Supabase stack (CDN library, config, auth core), then read
-        the session and that member's `profiles` row.
+     2. Load the Supabase library, then read the session and that account's
+        `profiles` row.
      3. Approved admin → drop the hiding style, reveal the page.
         Any other signed-in account → "admins only" overlay.
-        No session → "sign in" overlay, linking to members.html.
+        No session → "sign in" overlay.
      4. A script failed to load, a query threw, or anything else unexpected →
         blocked overlay. Fail closed. There is no path here that reveals the
         page on an error.
@@ -26,7 +26,31 @@
 
   var HIDE_ID = 'ncbo-gate-hide';
   var OVERLAY_ID = 'ncbo-gate-overlay';
-  var MEMBER_PAGE = '../members.html';
+
+  /* Where to send someone who needs to sign in. The member hub is the Next.js
+     app now, deployed separately — put its URL here once it has one. Until
+     then this points at the public site rather than at a page that 404s. */
+  var SIGN_IN_URL = '../index.html';
+
+  /* This page is the only static page left that talks to Supabase, so it
+     carries its own project values rather than sharing a config file with a
+     member hub that no longer exists here. Both are public by design; the
+     service_role key must never appear in this file. */
+  var SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
+  var SUPABASE_ANON_KEY = 'YOUR-SUPABASE-ANON-KEY';
+
+  function configured() {
+    return SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1 &&
+           SUPABASE_ANON_KEY.indexOf('YOUR-SUPABASE-ANON-KEY') === -1;
+  }
+
+  /* An approved admin, and nothing else. A missing profile row is not an
+     admin: this fails closed on anything it doesn't recognise. */
+  function isApprovedAdmin(profile) {
+    return !!profile &&
+           String(profile.role || '').toLowerCase() === 'admin' &&
+           String(profile.status || '').toLowerCase() === 'approved';
+  }
 
   /* ── 1. hide first, ask questions later ───────────────────────────── */
   var hide = document.createElement('style');
@@ -83,7 +107,7 @@
     overlay(
       'Sign in with an admin account',
       'These pages edit the live site, so they’re limited to admin accounts.',
-      MEMBER_PAGE,
+      SIGN_IN_URL,
       'Go to sign-in'
     );
   }
@@ -94,19 +118,16 @@
       'You’re signed in as <b>' + esc(session.name || session.user) + '</b>' +
       (session.role ? ' (' + esc(session.role) + ')' : '') +
       ', which doesn’t have admin access. Ask an admin if you need it.',
-      MEMBER_PAGE,
-      'Back to the member area'
+      SIGN_IN_URL,
+      'Back to the site'
     );
   }
 
-  /* ── 2. load the Supabase stack and decide ────────────────────────
-     Three scripts, in order, each waiting on the last. Any failure anywhere
-     in the chain lands in blockAnonymous() — an admin page that reveals
-     itself because a CDN was slow is not a gate. */
+  /* ── 2. load Supabase and decide ──────────────────────────────────
+     Any failure anywhere lands in blockAnonymous() — an admin page that
+     reveals itself because a CDN was slow is not a gate. */
   var STACK = [
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
-    '../assets/supabase-config.js',
-    '../assets/ncbo-auth-core.js'
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
   ];
 
   function load(list, done, failed) {
@@ -119,16 +140,13 @@
   }
 
   function decide() {
-    var Core = window.NCBOAuthCore;
-    var config = window.NCBO_SUPABASE;
-
-    if (!Core || !config || !Core.isConfigured(config) ||
+    if (!configured() ||
         !window.supabase || typeof window.supabase.createClient !== 'function') {
       blockAnonymous();
       return;
     }
 
-    var client = window.supabase.createClient(config.url, config.anonKey, {
+    var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
 
@@ -142,11 +160,11 @@
         .maybeSingle()
         .then(function (out) {
           var profile = (!out.error && out.data) || null;
-          if (!Core.canReviewMembers(profile)) {
+          if (!isApprovedAdmin(profile)) {
             blockMember({
-              name: Core.displayNameFor(profile, session.user.email),
+              name: (profile && profile.display_name) || session.user.email,
               user: session.user.email,
-              role: profile ? Core.normalizeRole(profile.role) : ''
+              role: (profile && profile.role) || ''
             });
             return;
           }
@@ -163,8 +181,8 @@
               detail: {
                 id: session.user.id,
                 email: session.user.email,
-                name: Core.displayNameFor(profile, session.user.email),
-                role: Core.normalizeRole(profile.role),
+                name: profile.display_name || session.user.email,
+                role: profile.role,
                 client: client
               }
             }));

@@ -30,20 +30,12 @@ Change the text between the quotes, save, refresh the page.
 | `join.html` | Become a Member — the detail page behind the nav CTA |
 | `contact.html` | Contact info + form |
 | `news.html` | News & Updates |
-| `members.html` | Member hub — Supabase magic-link sign-in + member area |
 | `clubs.html`, `start-a-club.html`, `about.html`, `faqs.html` | Redirect stubs → the matching `index.html#` section (old links keep working) |
 | `assets/data.js` | **All site content. Edit this.** |
-| `assets/member-data.js` | **All member-hub content.** Loaded only once the hub renders. |
-| `assets/supabase-config.js` | Your Supabase project URL and public anon key. **Fill this in.** |
-| `assets/ncbo-auth-core.js` | The gate's rules, with no DOM or network attached — unit-tested |
-| `assets/ncbo-auth.js` | Sign-in: magic link, session, and which panel is on screen |
-| `assets/ncbo-review.js` | `review.html`: the queue of accounts waiting for an admin |
-| `review.html` | Admin page — approve or hold pending accounts |
 | `admin/index.html`, `admin/photos.html` | Admin pages (admin accounts only) |
 | `admin/gate.js` | The gate on every admin page |
-| `test/core.test.js`, `test/guards.sh` | The test suite — `node`/`bash`, no dependencies |
-| `SECURITY-NOTES.md` | **What this sign-in protects and what it doesn't. Read it.** |
-| `assets/app.js` / `app.css` | Member hub: calendar, updates, resources, Q&A, directory |
+| `app/` | **The member hub — Next.js + Supabase.** Everything behind sign-in. |
+| `SECURITY-NOTES.md` | **What protects the member area, and what doesn't. Read it.** |
 | `assets/usmap.js` | Reusable US club map (state outlines + campus pins) |
 | `assets/styles.css` | Design system (colors, layout). Edit only for look changes. |
 | `assets/site.js` | Builds the shared nav/footer and renders the data. Don't edit unless adding features. |
@@ -90,77 +82,24 @@ Everything is plain HTML/CSS/JS. No build step, no dependencies, no server.
 
 ---
 
-## Two member surfaces — which is which
+## Two halves of this repository
 
-| | `members.html` | `app/` |
+| | The public site | `app/` |
 |---|---|---|
-| What | Static page, Supabase magic-link sign-in | Full app: accounts, roles, topics, moderation |
-| Runs on | GitHub Pages, this repo | Next.js on a host of its own |
-| Data | The same Supabase project | The same Supabase project |
-| Security | Row-level security in Postgres | Row-level security in Postgres |
+| What | Marketing pages: home, join, contact, news | The member hub, behind sign-in |
+| Built with | Hand-written HTML + `assets/site.js`, no build step | Next.js 15 + React 19 |
+| Runs on | GitHub Pages, from this repo, at thencbo.org | Deployed separately |
+| Data | `assets/data.js` | Supabase Postgres |
+| Access control | None — it is a public website | Row-level security in Postgres |
 
-Both now sit on top of the same Supabase project and the same migrations in
-`app/supabase/migrations/`, so an account works in either. `members.html` is the
-one that is live; `app/` is the larger application being built alongside it.
+The static member hub that used to live at `members.html` is gone. It was a
+prototype, and everything it did — sign-in, the approval queue, the board — is
+now the Next.js app. See `app/README.md` and `docs/SUPABASE-SETUP.md`.
 
----
-
-## The member hub (`members.html`)
-
-Members sign in with a link emailed to them — no password to set, and nothing
-committed to this repository. Everything after sign-in is one scrolling page —
-calendar, updates, resources, the Q&A board, and the club directory — with a
-jump bar at the top.
-
-**Setup, once:** apply the migrations and fill your project's URL and **anon**
-(public) key into `assets/supabase-config.js` — the whole procedure, including
-the redirect allowlist that silently breaks magic links if it's skipped, is in
-[`docs/SUPABASE-SETUP.md`](docs/SUPABASE-SETUP.md). Both values are public by design and safe to commit; the `service_role`
-key is not and must never go in this repository. Until they are filled in, the
-hub shows a "not connected yet" panel and attempts no sign-in.
-
-**Editing content:** the hub's content lives in `assets/member-data.js` —
-announcements, calendar, resource links, channels, and seeded Q&A. It's kept out
-of `data.js` on purpose, because the admin content manager rewrites `data.js`
-wholesale and would wipe it.
-
-**Accounts:** anyone can ask for a sign-in link, and the database decides what
-happens next (`public.handle_new_user()` in `app/supabase/migrations/`):
-
-| Address | Result |
-|---|---|
-| `.edu` at a school in `public.schools` | Approved on the spot |
-| On the `allowed_emails` staff list | Approved on the spot |
-| Anything else | **Pending** — an admin decides on `review.html` |
-
-A pending account can sign in and see that it is pending. It cannot read the
-board, and that is enforced by row-level security in Postgres, not by this page.
-
-**Admin pages:** `review.html` is the approval queue. `admin/index.html` and
-`admin/photos.html` are the content manager; `admin/gate.js` hides them before
-anything renders and only reveals them for an approved admin. Saving from the
-content manager still needs your own GitHub token — sign-in decides who sees the
-tool, the token decides who can change the site.
-
-**Tests:** `node test/core.test.js` covers the gate's rules, and
-`bash test/guards.sh` checks the repository invariants — the load order at the
-end of `members.html`, the cache-busting query strings, and that no password
-file has come back. Both run in CI on every push and pull request
-(`.github/workflows/tests.yml`). `guards.sh` warns, without failing, while
-`supabase-config.js` still holds its placeholders.
-
-**What the sign-in is and isn't:** what protects member data is row-level
-security in the database — every table is closed by default and each policy
-names who may read or write it. This page decides what to *draw*; Postgres
-decides what may be *read*. What is still true of a static site: anything
-committed here (including `assets/member-data.js`) is public to anyone who
-requests the file directly, so member-only *content* in this repository is still
-"members only, please" rather than protected.
-**Read `SECURITY-NOTES.md` before deciding what to put behind it.**
-
-The Q&A ask box saves drafts to the member's own browser only; set `ask.form`
-in `member-data.js` to a Google Form link to give them a real way to send
-questions in.
+> **The "Members" link is currently missing from the public nav.** It pointed
+> at `members.html`, which no longer exists, and a nav item that 404s is worse
+> than one that is absent. Add it back in `assets/data.js` (and the footer list
+> in `assets/site.js`) with the app's URL once it is deployed.
 
 ---
 

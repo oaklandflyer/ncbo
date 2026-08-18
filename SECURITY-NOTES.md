@@ -23,8 +23,9 @@ the old hashes. Delete it and re-clone.
 |---|---|---|
 | Row-level security | What a signed-in account may **read or write** | `app/supabase/migrations/` |
 | `handle_new_user()` | Whether a new account is approved or pending | same |
-| `assets/ncbo-auth.js` | Which panel is **drawn** on `members.html` | this repo |
-| `admin/gate.js` | Whether the admin pages are revealed | this repo |
+| `guard_profile_privileges()` | Who may change a role, a status, or the 18+ attestation | same |
+| `app/src/app/hub/layout.js` | Which screen a signed-in account is **shown** | `app/` |
+| `admin/gate.js` | Whether the static content manager is revealed | this repo |
 
 Only the first two are security. The other two are presentation: hiding a panel
 is not access control, because anyone can call the Supabase API directly with
@@ -37,14 +38,14 @@ that holds.
 This site is still static files on GitHub Pages, so **every file committed to
 this repository is served to anyone who asks for it**, including:
 
-- `assets/member-data.js` — the member hub's content
-- `admin/index.html`, `admin/photos.html`, `review.html` — the admin pages
-- `assets/supabase-config.js` — the project URL and anon key
+- `assets/data.js` — everything on the public marketing site
+- `admin/index.html`, `admin/photos.html` — the content manager for that site
+- `admin/gate.js` — including the project URL and anon key it carries
 
 The anon key being public is fine and intended: it identifies the project, not
 the person, and grants nothing on its own. The **`service_role` key is the
 opposite** — it bypasses RLS entirely. It must never appear in this repository,
-in a page, or in a browser. `test/guards.sh` checks for it.
+in a page, or in a browser.
 
 What this means for content:
 
@@ -55,8 +56,9 @@ resource drafts, club operations documents.
 contact details, addresses, dues or payment information, health or body-
 composition data, judging keys, credentials or API tokens for anything.
 
-Anything genuinely private belongs in a Supabase table behind a policy, not in
-`assets/member-data.js`.
+Nothing member-only is served from this repository any more — the member hub is
+the Next.js app in `app/`, and everything it shows comes from Supabase through a
+policy. Keep it that way: content committed here is public content.
 
 ## Accounts, approval, and roles
 
@@ -71,19 +73,29 @@ in `public.handle_new_user()`:
 | Anything else | **Pending** — an admin decides |
 
 Pending accounts can sign in and see their own status. They cannot read the
-board. An admin clears the queue on `review.html`.
+board. An admin clears the queue at `/hub/admin`.
+
+**Declined is not suspended.** `rejected` means an admin read the application
+and said no; `suspended` means an approved member's access was stopped. They get
+different screens, and `admin_actions` records which decision was made, by whom,
+and what the status was before it.
+
+**The audit log is append-only.** `admin_actions` has policies for insert and
+select and none for update or delete, so with RLS on, an admin cannot edit or
+erase a decision through the API — including their own.
 
 Roles are `member` → `club_lead` → `advisor` → `admin`, least to most
-privileged. The order of `ROLES` in `assets/ncbo-auth-core.js` mirrors the
-`public.user_role` enum and is **load-bearing**: `roleAtLeast()` compares by
-index, so inserting a role in the middle silently changes who can reach what.
+privileged, matching the `public.user_role` enum. The order is **load-bearing**
+wherever it is compared by index — inserting a role in the middle silently
+changes who can reach what.
 
 ## Admin pages
 
-`admin/gate.js` is the first script in the `<head>` of every admin page. It
-hides the body before anything renders, loads the Supabase stack, reads the
+`admin/gate.js` is the first script in the `<head>` of every page under
+`admin/`. It hides the body before anything renders, loads Supabase, reads the
 session and that account's `profiles` row, and removes the hiding style only for
-an **approved admin**. Anything else — no session, a member session, a script
+an **approved admin**. It carries its own project URL and anon key, being the
+last static page that talks to Supabase. Anything else — no session, a member session, a script
 failing to load, a query throwing — leaves the body hidden behind an overlay. It
 fails closed.
 
@@ -96,28 +108,29 @@ repo. Keep tokens fine-grained, scoped to this one repository,
 ## Deliberate details, so nobody "simplifies" them away
 
 - **Sign-in never says whether an address has an account.** The same
-  "check your inbox" panel comes back either way. Anything else is an
+  "check your inbox" message comes back either way. Anything else is an
   enumeration oracle.
-- **A missing `profiles` row is treated as pending, never approved.**
-  `viewFor()` and `canReadHub()` both fail towards the least revealing panel.
-- **An unrecognised status is pending, not approved.** `normalizeStatus()`
-  refuses to guess.
-- **Member content is not fetched until the hub actually renders.**
-  `assets/member-data.js` is loaded on demand by `buildHub()`, so a browser
-  sitting on the sign-in screen never requests it. That is bandwidth and tidiness,
-  not protection — the file is public either way.
-- **Sign-out clears the old gate's storage keys** (`ncbo-session-v1`,
-  `ncbo-member-access`), so a device left "signed in" under either previous
-  scheme doesn't keep a stale record of who used it.
-- **`assets/ncbo-auth-core.js` has no DOM, no network and no SDK**, so every
-  rule above is unit-tested by `node test/core.test.js` without a browser.
+- **A missing `profiles` row is treated as pending, never approved**, and the
+  hub page fails closed on a null profile rather than trusting the layout to
+  have redirected — layouts and pages render in parallel.
+- **An unrecognised status is not approved.** The layout matches `pending`,
+  `rejected` and `suspended` explicitly and treats anything else as unapproved.
+- **The 18+ attestation can only be made by the member themselves.** The
+  privilege guard checks that before the admin bypass, so not even an admin can
+  tick it for someone else — a legal statement made by the wrong person is worth
+  nothing.
+- **Onboarding runs before the approval queue**, so an admin decides about a
+  person with a name and a school year rather than an email address.
+- **`display_name` is never manufactured from an email address.** Guessing
+  "a.swanson24" from an address and printing it on a roster is worse than
+  asking.
 
 ## Rotating access
 
-- **Remove someone:** set their `profiles.status` to `suspended` on
-  `review.html`. Their next request is refused by policy.
+- **Remove someone:** suspend them at `/hub/admin`. Their next request is
+  refused by policy, and the decision lands in `admin_actions`.
 - **Rotate the project keys:** Supabase dashboard → Project Settings → API, then
-  update `assets/supabase-config.js` and bump the `?v=` cache-busting date on the
-  script tags.
+  update the app's `NEXT_PUBLIC_SUPABASE_*` environment variables and the two
+  constants at the top of `admin/gate.js`.
 - **A leaked `service_role` key** is an emergency: rotate it in the dashboard
   immediately. It is not repairable by editing this repository.

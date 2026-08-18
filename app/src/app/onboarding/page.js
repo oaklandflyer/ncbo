@@ -20,6 +20,8 @@ export default async function Onboarding() {
   const profile = await getProfile(supabase);
 
   if (!profile) redirect('/login');
+  // A decided account has nothing to fill in: /hub shows it the decision.
+  if (profile.status === 'rejected' || profile.status === 'suspended') redirect('/hub');
   // Nothing left to collect — don't make anyone fill in a form twice.
   if (isOnboarded(profile)) redirect('/hub');
 

@@ -2,7 +2,20 @@
 # Spin up a throwaway Postgres, apply the migrations, run the policy tests.
 set -euo pipefail
 
+# Whatever major version this machine happens to have. Pinning 16 meant the
+# suite silently didn't run anywhere that shipped 17.
+if [ -z "${PGBIN:-}" ]; then
+  PGBIN=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)
+fi
 PGBIN=${PGBIN:-/usr/lib/postgresql/16/bin}
+if [ ! -x "$PGBIN/initdb" ]; then
+  echo "No Postgres found. Set PGBIN to a directory containing initdb." >&2
+  exit 1
+fi
+
+# initdb creates `postgres`; it does not create one named after the OS user,
+# which is what psql would otherwise default to.
+PSQL_DB=${PGDATABASE:-postgres}
 DIR=$(mktemp -d)
 HERE=$(cd "$(dirname "$0")" && pwd)
 
@@ -14,9 +27,9 @@ chmod 755 "$DIR"
 "$PGBIN/pg_ctl" -D "$DIR/data" -o "-p 5433 -k $DIR" -l "$DIR/log" start >/dev/null
 sleep 2
 
-psql -h "$DIR" -p 5433 -U "$(whoami)" -q -v ON_ERROR_STOP=1 -f "$HERE/00_supabase_shim.sql"
+psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 -f "$HERE/00_supabase_shim.sql"
 for m in $(ls "$HERE"/../migrations/*.sql | sort); do
   echo "applying $(basename "$m")"
-  psql -h "$DIR" -p 5433 -U "$(whoami)" -q -v ON_ERROR_STOP=1 -f "$m"
+  psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 -f "$m"
 done
-psql -h "$DIR" -p 5433 -U "$(whoami)" -f "$HERE/01_rls.sql"
+psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -f "$HERE/01_rls.sql"
