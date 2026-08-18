@@ -1,9 +1,18 @@
 # Auth
 
+> **Update — the static site now signs people in with Supabase.**
+> `members.html` uses magic-link sign-in (`assets/ncbo-auth.js`) against the
+> Supabase project whose schema lives in `app/supabase/migrations/`, with
+> row-level security deciding what a member may read. The question this
+> document ends on — "someone has to pick one" — has been answered: **Supabase**.
+> Everything below describes the `web/` seam, which is the alternative that was
+> not taken. It is kept for its analysis of the magic-link flow, the domain
+> mapping, and what still has to be provisioned.
+
 ## Status: seam built, system not
 
-There is **no working authentication in this build**, and no sign-in button on
-the public site. A login that does not work is worse than no login.
+There is **no working authentication in the `web/` build**, and no sign-in
+button on it. A login that does not work is worse than no login.
 
 What exists:
 

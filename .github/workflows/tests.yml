@@ -1,0 +1,38 @@
+# ============================================================================
+# NCBO — tests
+#
+# The public site has no build step and no dependencies, so this is the whole
+# of CI: the auth core's unit tests, and the repository guards that keep the
+# member gate wired together (load order, cache busting, and the absence of
+# the password file this project used to ship).
+#
+# Both run on stock Node and bash, so there is nothing to install.
+# ============================================================================
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # test/guards.sh walks the tracked files with `git ls-files`, so it
+          # needs a real checkout rather than an export.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Unit tests — assets/ncbo-auth-core.js
+        run: node test/core.test.js
+
+      - name: Repository guards
+        run: bash test/guards.sh
