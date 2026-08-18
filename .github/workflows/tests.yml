@@ -1,12 +1,13 @@
 # ============================================================================
 # NCBO — tests
 #
-# The public site has no build step and no dependencies, so this is the whole
-# of CI: the auth core's unit tests, and the repository guards that keep the
-# member gate wired together (load order, cache busting, and the absence of
-# the password file this project used to ship).
+# The member hub is the Next.js app under app/. Two things are worth checking
+# on every push: that it builds, and that the migrations apply to a real
+# Postgres with the row-level security suite passing — the policies are where
+# access is actually decided, so a broken one is not a cosmetic failure.
 #
-# Both run on stock Node and bash, so there is nothing to install.
+# The public marketing site at the repository root is hand-written static HTML
+# with no build step; there is nothing to run against it.
 # ============================================================================
 name: tests
 
@@ -18,21 +19,41 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  app:
+    name: Next.js build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
     steps:
       - uses: actions/checkout@v4
-        with:
-          # test/guards.sh walks the tracked files with `git ls-files`, so it
-          # needs a real checkout rather than an export.
-          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
 
-      - name: Unit tests — assets/ncbo-auth-core.js
-        run: node test/core.test.js
+      - run: npm ci
 
-      - name: Repository guards
-        run: bash test/guards.sh
+      # The build needs the two public values to exist, not to be real: every
+      # page that talks to Supabase is server-rendered on demand, so nothing
+      # here connects to a project.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-time-placeholder
+
+  database:
+    name: Migrations and RLS policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ubuntu-latest ships Postgres; the harness starts its own throwaway
+      # cluster on port 5433, applies every migration in order, then runs the
+      # policy tests against it.
+      - name: Apply migrations and run the policy suite
+        run: ./supabase/tests/run.sh
+        working-directory: app

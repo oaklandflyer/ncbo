@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
 import SignOut from './sign-out';
-import Pending from './pending';
+import AccountStatus from './status';
 
 export default async function HubLayout({ children }) {
   const supabase = await createClient();
@@ -13,15 +13,24 @@ export default async function HubLayout({ children }) {
   // where a user exists but their profile row doesn't (a failed signup).
   if (!profile) redirect('/login');
 
-  // Onboarding comes before everything, including the waiting screen: an
-  // admin reviewing the queue should see a person with a name and a school
-  // year, not an email address. Checked here rather than in the middleware so
-  // it costs one query per page render, not one per asset request.
+  // A decision has already been made about these two, so there is nothing
+  // left to collect — sending a declined applicant through an onboarding form
+  // would be asking for work we have no intention of reading.
+  if (profile.status === 'rejected' || profile.status === 'suspended') {
+    return <AccountStatus status={profile.status} profile={profile} />;
+  }
+
+  // Onboarding comes before the waiting screen: an admin reviewing the queue
+  // should see a person with a name and a school year, not an email address.
+  // Checked here rather than in the middleware so it costs one query per page
+  // render, not one per asset request.
   if (!isOnboarded(profile)) redirect('/onboarding');
 
-  // An unapproved account gets the waiting screen instead of the app. RLS
-  // would hand it empty pages anyway; this explains why.
-  if (profile.status !== 'approved') return <Pending profile={profile} />;
+  // Anything still not approved is waiting on a person. RLS would hand it
+  // empty pages anyway; this explains why.
+  if (profile.status !== 'approved') {
+    return <AccountStatus status="pending" profile={profile} />;
+  }
 
   return (
     <>

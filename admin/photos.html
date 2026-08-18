@@ -238,7 +238,7 @@
   if (signOutLink) signOutLink.addEventListener('click', e => {
     e.preventDefault();
     const client = window.NCBO_SUPABASE_CLIENT;
-    const go = () => { location.href = '../members.html'; };
+    const go = () => { location.href = '../index.html'; };
     if (client) client.auth.signOut().then(go, go); else go();
   });
 

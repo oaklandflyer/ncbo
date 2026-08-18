@@ -1,10 +1,10 @@
 # Auth
 
-> **Update — the static site now signs people in with Supabase.**
-> `members.html` uses magic-link sign-in (`assets/ncbo-auth.js`) against the
-> Supabase project whose schema lives in `app/supabase/migrations/`, with
-> row-level security deciding what a member may read. The question this
+> **Update — the member hub is the Next.js app in `app/`, on Supabase.**
+> Magic-link sign-in, an onboarding form, an approval queue and an audit log,
+> with row-level security deciding what a member may read. The question this
 > document ends on — "someone has to pick one" — has been answered: **Supabase**.
+> The static prototype that briefly lived at `members.html` has been deleted.
 > Everything below describes the `web/` seam, which is the alternative that was
 > not taken. It is kept for its analysis of the magic-link flow, the domain
 > mapping, and what still has to be provisioned.

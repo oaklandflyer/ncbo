@@ -111,7 +111,6 @@
                 <li><a href="join.html">Become a Member</a></li>
                 <li><a href="index.html#clubs">Find a Club</a></li>
                 <li><a href="index.html#start">Start a Club</a></li>
-                <li><a href="members.html">Member Hub</a></li>
               </ul>
             </div>
             <div class="footer-col">

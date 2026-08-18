@@ -188,3 +188,35 @@ set test.uid = '44444444-4444-4444-4444-444444444444';
 update profiles set is_adult = true
   where id = '55555555-5555-5555-5555-555555555555';
 reset role;
+
+\echo ''
+\echo '=== 28. declining is its own status, distinct from suspension ==='
+set role authenticated;
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set status = 'rejected' where id = '55555555-5555-5555-5555-555555555555';
+select status as after_decline from profiles where id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 29. an admin CAN write an audit entry in their own name ==='
+insert into admin_actions (actor_id, target_id, action, previous_status)
+values ('44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555',
+        'rejected', 'pending');
+select action, previous_status from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 30. an admin CANNOT write one in someone else''s name ==='
+insert into admin_actions (actor_id, target_id, action)
+values ('77777777-7777-7777-7777-777777777777', '55555555-5555-5555-5555-555555555555', 'approved');
+
+\echo ''
+\echo '=== 31. the log is append-only — no update, no delete, even for an admin ==='
+update admin_actions set action = 'approved' where target_id = '55555555-5555-5555-5555-555555555555';
+select count(*) as rows_changed_by_update from admin_actions where action = 'approved';
+delete from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+select count(*) as rows_left_after_delete from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 32. a member CANNOT read the log ==='
+set test.uid = '77777777-7777-7777-7777-777777777777';
+select count(*) as log_rows_visible_to_a_member from admin_actions;
+reset role;

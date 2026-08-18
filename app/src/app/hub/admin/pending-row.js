@@ -11,6 +11,7 @@ export default function PendingRow({ member }) {
       <td>
         {member.display_name || <span className="muted">No name yet</span>}
         {state?.error && <div className="msg err" style={{ fontSize: '0.8rem' }}>{state.error}</div>}
+        {state?.warning && <div className="msg err" style={{ fontSize: '0.8rem' }}>{state.warning}</div>}
       </td>
       <td>{member.schools?.name || <span className="muted">No school on file</span>}</td>
       <td>
@@ -24,7 +25,7 @@ export default function PendingRow({ member }) {
           </form>
           <form action={action}>
             <input type="hidden" name="id" value={member.id} />
-            <input type="hidden" name="status" value="suspended" />
+            <input type="hidden" name="status" value="rejected" />
             <button className="btn btn-ghost btn-sm" type="submit" disabled={pending}>Decline</button>
           </form>
         </div>

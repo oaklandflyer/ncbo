@@ -1,10 +1,10 @@
 # Supabase setup — connecting the member hub
 
-What someone with the Supabase dashboard open has to do, in order, to take
-`members.html` from "not connected yet" to a working sign-in.
+What someone with the Supabase dashboard open has to do, in order, to take the
+member hub (`app/`) from nothing to a working sign-in.
 
-Everything here is dashboard and SQL work plus **two values** pasted into
-`assets/supabase-config.js`. No other file in this repository changes.
+Everything here is dashboard and SQL work plus **two values** put into the
+app's environment. No application code changes.
 
 ---
 
@@ -18,12 +18,16 @@ thing as the keys below and is not needed by this site.
 
 **SQL Editor** → paste and run each file, oldest first:
 
-1. `app/supabase/migrations/20260731000001_init.sql`
-2. `app/supabase/migrations/20260731000002_allowed_emails.sql`
-3. `app/supabase/migrations/20260731000003_approvals.sql`
+1. `20260731000001_init.sql`
+2. `20260731000002_allowed_emails.sql`
+3. `20260731000003_approvals.sql`
+4. `20260818000004_onboarding.sql`
+5. `20260818000005_rejected_status.sql`
+6. `20260818000006_admin_actions.sql`
 
-Order matters — 0002 and 0003 each rewrite `handle_new_user()` and the read
-policies that 0001 created.
+All under `app/supabase/migrations/`. Order matters — each of 0002, 0003 and
+0004 rewrites `handle_new_user()`, and 0006 uses the enum value 0005 adds.
+`npm run db:push` from `app/` applies them in order for you.
 
 What you get: the schema, row-level security on every table, the six founding
 schools with their email domains already seeded, their clubs, and the six
@@ -39,15 +43,13 @@ Check it landed: `select domain from public.schools;` should return six rows.
 (`signInWithOtp`), so no password settings matter.
 
 **Authentication → URL Configuration** — this is the step that silently breaks
-sign-in if it is skipped. `ncbo-auth.js` asks for a link back to the page it was
-requested from, and Supabase refuses any redirect not on the allowlist:
+sign-in if it is skipped. The sign-in link comes back to `/auth/callback`, and
+Supabase refuses any redirect not on the allowlist:
 
-- **Site URL:** `https://thencbo.org`
-- **Redirect URLs:** add both pages, plus localhost if anyone develops locally:
-  - `https://thencbo.org/members.html`
-  - `https://thencbo.org/review.html`
-  - `http://localhost:*/**` (development only — remove it if you would rather not
-    have localhost on the list)
+- **Site URL:** the app's deployed URL
+- **Redirect URLs:**
+  - `<app URL>/auth/callback`
+  - `http://localhost:3000/auth/callback` (development only)
 
 A link that opens and bounces straight back to a signed-out page is almost
 always a missing entry here.
@@ -60,28 +62,24 @@ members are told to sign in, set up **custom SMTP** under
 **Project Settings → Auth → SMTP Settings**, with a domain that has SPF/DKIM
 configured — otherwise the links land in spam.
 
-`ncbo-auth-core.js` already turns Supabase's rate-limit error into
-"That is a lot of links in a short time. Wait a minute, then try again." If
-testers see that, it is the built-in limit, not a bug.
+If testers see a rate-limit message, that is the built-in limit, not a bug.
 
 ## 5. Fill in the two public values
 
-**Project Settings → API**, then edit `assets/supabase-config.js`:
+**Project Settings → API**, then set the app's environment (`app/.env.local`
+locally, and the same two on the host):
 
-```js
-url:     'https://<your-project-ref>.supabase.co',
-anonKey: '<the anon / publishable key>'
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<the anon / publishable key>
 ```
 
-Both are public by design and safe to commit — the anon key grants nothing on
-its own, because RLS decides everything. **Never paste the `service_role` key
-here**; it bypasses RLS entirely. `test/guards.sh` fails the build if a key of
-that shape ever reaches a file the browser loads.
+The static content manager under `admin/` needs the same two values in the
+constants at the top of `admin/gate.js`.
 
-While you are in there, bump the `?v=` date on the script and stylesheet tags
-across the HTML files so nobody gets a cached copy of the old config. Running
-`bash test/guards.sh` afterwards should report no warnings at all — the two
-placeholder warnings are how you know the values are still unset.
+Both are public by design and safe to commit — the anon key grants nothing on
+its own, because RLS decides everything. **Never use the `service_role` key here**; it bypasses RLS entirely and has no
+business in anything a browser loads.
 
 ## 6. Make yourself the first admin
 
@@ -90,7 +88,7 @@ an admin can promote anyone. The way through is the SQL Editor, which runs with
 no `auth.uid()` — the privilege guard's first branch allows that deliberately,
 because there is no admin yet to authorise it.
 
-1. Sign in once at `members.html` with your own address, so the account exists.
+1. Sign in once at `/login` with your own address, so the account exists.
 2. SQL Editor:
 
 ```sql
@@ -99,8 +97,8 @@ update public.profiles
  where id = (select id from auth.users where email = 'you@example.com');
 ```
 
-3. Reload `members.html`. The hub opens and a **Member review** link appears in
-   the header; `review.html` is now yours.
+3. Reload `/hub`. The **Admin** link appears in the header, and the approval
+   queue is yours.
 
 ## 7. Staff who have no school email
 
@@ -113,7 +111,7 @@ values ('coach@example.com', 'Advisory board — posing');
 ```
 
 Anyone not on that list and not at a seeded school signs up fine and waits in
-the queue on `review.html`. That is the intended path, not a failure.
+the queue at `/hub/admin`. That is the intended path, not a failure.
 
 ---
 
@@ -121,11 +119,12 @@ the queue on `review.html`. That is the intended path, not a failure.
 
 | Try this | Expect |
 |---|---|
-| `members.html` before step 5 | "Member sign-in isn't live yet" panel |
-| A chapter `.edu` address | link → signed in → hub opens |
-| A personal address | link → signed in → "Waiting on approval" |
-| That account, after Approve on `review.html` | hub opens on next load |
-| `review.html` as a non-admin | "This page is for NCBO admins" |
+| A chapter `.edu` address | link → signed in → onboarding form → hub |
+| A personal address | link → onboarding form → "Waiting on approval" |
+| That account, after Approve at `/hub/admin` | hub opens on next load |
+| That account, after Decline | "Application declined." |
+| An approved member, after Suspend | "This account is on hold." |
+| `/hub/admin` as a non-admin | no Admin link, and the page returns nothing |
 | `admin/index.html` as a non-admin | body stays hidden behind the overlay |
 
 If a signed-in member sees "Waiting on approval" when they should not, check

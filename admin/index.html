@@ -56,7 +56,7 @@
   </div>
   <div class="who">
     <span id="who"></span>
-    <a class="link" href="../members.html" style="text-decoration:none;">Member area</a>
+    
     <button class="link" type="button" id="signout">Sign out</button>
   </div>
 </header>
@@ -87,7 +87,7 @@
 
   document.getElementById('signout').addEventListener('click', function(){
     var client = window.NCBO_SUPABASE_CLIENT;
-    var go = function(){ location.href = '../members.html'; };
+    var go = function(){ location.href = '../index.html'; };
     if (client) client.auth.signOut().then(go, go); else go();
   });
 })();
