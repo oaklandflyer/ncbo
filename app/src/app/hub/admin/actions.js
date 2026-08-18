@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getProfile } from '@/lib/supabase/server';
+import { canReview, canManageRoles, reviewScope } from '@/lib/review';
 
 /**
  * Change a member's role, club, or school.
@@ -56,6 +57,9 @@ export async function setStatus(prev, formData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'You are signed out.' };
 
+  const me = await getProfile(supabase);
+  if (!canReview(me)) return { error: 'You are not on the review queue.' };
+
   const id = String(formData.get('id') || '');
   const status = String(formData.get('status') || '');
   const note = String(formData.get('note') || '').trim().slice(0, 500);
@@ -69,8 +73,24 @@ export async function setStatus(prev, formData) {
   // rather than just the destination. An approval that was already approved
   // reads very differently from one that reinstates a suspended account.
   const { data: before } = await supabase
-    .from('profiles').select('status').eq('id', id).single();
+    .from('profiles').select('status, school_id').eq('id', id).single();
   const previous = before?.status || null;
+
+  // A club lead's remit: a pending account at their own school, approved or
+  // declined. Everything else is an admin's. Postgres refuses these too — this
+  // is here so the answer is a sentence rather than a policy violation.
+  const scope = reviewScope(me);
+  if (scope.kind === 'school') {
+    if (!canManageRoles(me) && status === 'suspended') {
+      return { error: 'Only an NCBO admin can suspend an account.' };
+    }
+    if (!before || before.school_id !== scope.schoolId) {
+      return { error: 'That account is not at your school.' };
+    }
+    if (previous !== 'pending') {
+      return { error: 'That account has already been decided. An NCBO admin can change it.' };
+    }
+  }
 
   const { error } = await supabase
     .from('profiles')
