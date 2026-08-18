@@ -1,17 +1,23 @@
 /* ============================================================================
    NCBO — app.js
-   Members-only area controller.
+   The member hub itself: Calendar · Updates · Resources · Q&A · Clubs, one
+   scrolling column, no tabs and no side rails.
 
-   - Username + password sign-in, checked in the browser by assets/js/auth.js
-     against the hashes in data/members.json
-   - One scrolling hub: Calendar · Updates · Resources · Q&A · Clubs
-     (no tabs, no side rails — everything stacks in one column on phones)
+   This file no longer knows anything about signing in. Supabase decides who
+   is signed in and whether their account is approved (assets/ncbo-auth.js);
+   this file is handed a member and draws the hub:
 
-   What the sign-in does and doesn't protect: SECURITY-NOTES.md.
+       window.NCBOHub.buildHub(member)
+
+   `member` is { id, email, name, role, status, isAdmin, client }. It is called
+   once, from ncbo-auth.js, only after the profile row comes back approved —
+   so member content is never fetched by a browser that hasn't signed in.
+
+   The markup it fills lives inside <section data-auth-view="approved"> in
+   members.html; `#app` is the hub root.
    ========================================================================== */
 (function () {
   const DRAFTS = 'ncbo-member-drafts';
-  const Auth = window.NCBOAuth;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
@@ -20,17 +26,7 @@
 
   const norm = s => String(s || '').trim().toLowerCase();
 
-  /* Gate copy lives here rather than in member-data.js, because member-data.js
-     is member-only content and isn't fetched until someone is actually in. */
-  const GATE = {
-    eyebrow: 'Members only',
-    title: ['The member', 'locker room.'],
-    sub: 'Sign in with your NCBO username and password to get into the member hub — the chapter directory, and resources as they come online.',
-    help: "No account yet? Your club lead can request one for you, or email us and we'll set it up: ",
-    remember: 'Keep me signed in on this device'
-  };
-
-  /* member-data.js is loaded on demand, after sign-in — nothing member-only
+  /* member-data.js is loaded on demand, at render time — nothing member-only
      is fetched by a browser sitting on the sign-in screen. */
   let memberDataPromise = null;
   function loadMemberData() {
@@ -48,123 +44,26 @@
     return memberDataPromise;
   }
 
-  /* Where the admin gate sends people to sign in: members.html?next=admin.
-     Honour it so an admin lands back where they were headed. */
-  function wantsAdmin() {
-    try { return new URLSearchParams(location.search).get('next') === 'admin'; }
-    catch (e) { return /[?&]next=admin\b/.test(location.search); }
-  }
-
-  /* ── sign-in ──────────────────────────────────────────────────────── */
-  function buildGate() {
-    const A = GATE;
-    const D = window.NCBO_DATA || {};
-    const host = $('#gate');
-    if (!host) return;
-
-    const canSignIn = !!(Auth && Auth.available);
-
-    host.innerHTML = `
-      <div class="gate-card">
-        <img class="gate-crest" src="assets/ncbo-logo.webp" alt="NCBO crest">
-        <p class="eyebrow">${esc(A.eyebrow || 'Members only')}</p>
-        <h1>${(A.title || ['Member access']).map(esc).join('<br>')}</h1>
-        <p class="gate-sub">${esc(A.sub || '')}</p>
-        ${canSignIn ? '' : `<p class="gate-warn">This page has to be served over <b>https</b> (or opened at
-             <b>localhost</b>) before a password can be checked — your browser won't
-             do the maths otherwise. Try the https address for this site.</p>`}
-        <form class="gate-form" id="gate-form">
-          <div class="gate-field">
-            <label for="gate-user">Username</label>
-            <input type="text" id="gate-user" name="username" autocomplete="username"
-                   spellcheck="false" autocapitalize="none" enterkeyhint="next"
-                   ${canSignIn ? '' : 'disabled'}>
-          </div>
-          <div class="gate-field">
-            <label for="gate-pass">Password</label>
-            <input type="password" id="gate-pass" name="password" autocomplete="current-password"
-                   enterkeyhint="go" ${canSignIn ? '' : 'disabled'}>
-          </div>
-          <label class="gate-remember">
-            <input type="checkbox" id="gate-remember" ${canSignIn ? '' : 'disabled'}>
-            <span>${esc(A.remember || 'Keep me signed in on this device')}</span>
-          </label>
-          <button class="btn btn-primary" type="submit" id="gate-submit"
-                  ${canSignIn ? '' : 'disabled'}>Sign in</button>
-          <p class="gate-msg" id="gate-msg" role="alert" aria-live="assertive"></p>
-        </form>
-        <p class="gate-help">${esc(A.help || '')}
-          ${D.org && D.org.email ? `<a href="mailto:${esc(D.org.email)}">${esc(D.org.email)}</a>` : ''}</p>
-      </div>`;
-
-    if (!canSignIn) return;
-
-    const form = $('#gate-form');
-    const btn = $('#gate-submit');
-    const msg = $('#gate-msg');
-    const pass = $('#gate-pass');
-
-    function fail(text) {
-      msg.textContent = text;
-      const card = $('.gate-card', host);
-      card.classList.remove('shake');
-      void card.offsetWidth;            // restart the animation
-      card.classList.add('shake');
-      pass.value = '';
-      pass.focus();
-    }
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const user = $('#gate-user').value;
-      const remember = $('#gate-remember').checked;
-      const label = btn.textContent;
-
-      msg.textContent = '';
-      btn.disabled = true;
-      btn.textContent = 'Checking…';
-
-      /* Whatever happens — match, no match, or a thrown error — the button
-         comes back. A failed sign-in must never leave it stuck. */
-      const done = () => { btn.disabled = false; btn.textContent = label; };
-
-      Auth.verify(user, pass.value)
-        .then(member => {
-          if (!member) { done(); fail("That username and password didn't match."); return; }
-          Auth.signIn(member, remember);
-          done();
-          if (Auth.isAdmin(member)) { location.href = Auth.adminIndex; return; }
-          openApp(member);
-        })
-        .catch(err => {
-          done();
-          fail(err && err.message ? err.message : 'Sign-in is unavailable in this browser.');
-        });
-    });
-  }
-
   /* ── hub shell ────────────────────────────────────────────────────── */
   let built = false;
   let who = null;
 
-  function openApp(member) {
-    const gate = $('#gate'), app = $('#app');
+  /* The render hook ncbo-auth.js calls. Idempotent: a session refresh or a
+     second auth event must not rebuild the hub underneath someone. */
+  function buildHub(member) {
+    const app = $('#app');
     if (!app) return;
     who = member || who;
-    gate.hidden = true;
-    app.hidden = false;
-    document.body.classList.add('member-in');
-    if (!built) {
-      built = true;
-      loadMemberData().then(buildApp);
-    }
-    window.scrollTo(0, 0);
+    if (built) return;
+    built = true;
+    loadMemberData().then(buildApp);
   }
 
-  /* Signing out clears both stores (and the key the old shared-passcode gate
-     used) and reloads, so nothing built from member data stays on screen. */
+  /* Signing out is ncbo-auth.js's job — it has the Supabase client. The hub
+     only asks. */
   function signOut() {
-    if (Auth) Auth.signOut();
+    const btn = $('[data-auth-action="sign-out"]');
+    if (btn) { btn.click(); return; }
     location.replace(location.pathname);
   }
 
@@ -181,8 +80,8 @@
       const hello = who && who.name
         ? `Welcome back, ${esc(String(who.name).split(/\s+/)[0])}.`
         : esc(W.title || 'Welcome back.');
-      const adminLink = (Auth && Auth.isAdmin(who))
-        ? `<a class="admin-link" href="${esc(Auth.adminIndex)}">Admin pages</a>`
+      const adminLink = (who && who.isAdmin)
+        ? `<a class="admin-link" href="review.html?v=2026-08-15">Member review</a>`
         : '';
 
       bar.innerHTML = `
@@ -437,19 +336,10 @@
       </div>`;
   }
 
-  /* ── boot ─────────────────────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', () => {
-    buildGate();
-
-    const s = Auth && Auth.session();
-    if (s) {
-      /* An admin who arrived here from the admin gate goes straight through. */
-      if (wantsAdmin() && Auth.isAdmin(s)) { location.replace(Auth.adminIndex); return; }
-      openApp(s);
-      return;
-    }
-
-    const u = $('#gate-user');
-    if (u && !u.disabled) u.focus();
-  });
+  /* ── the one entry point ──────────────────────────────────────────
+     ncbo-auth.js may have finished deciding before this file even parses, so
+     announce readiness as well as exposing the hook — whichever happens
+     second wins the race. */
+  window.NCBOHub = { buildHub };
+  document.dispatchEvent(new CustomEvent('ncbo:hub-ready'));
 })();

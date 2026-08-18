@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="gate.js"></script>
+<script src="gate.js?v=2026-08-15"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>NCBO — Admin</title>
-<link rel="icon" href="../assets/ncbo-logo.webp">
+<link rel="icon" href="../assets/ncbo-logo.webp?v=2026-08-15">
 <style>
   :root{
     --navy-deep:#060B1A; --navy:#0A1228; --navy-1:#0E1830; --navy-2:#14213F; --line:#1E2C4F;
@@ -77,18 +77,18 @@
 
 <script>
 (function(){
-  /* gate.js loads auth.js asynchronously, so NCBOAuth usually isn't here yet
-     when this runs. It announces itself once the page has been cleared. */
+  /* gate.js checks the Supabase session before this page is revealed, and
+     announces who it found. Listen rather than assume. */
   function ready(s){
     document.getElementById('who').textContent =
-      'Signed in as ' + (s.name || s.user) + (s.role ? ' · ' + s.role : '');
+      'Signed in as ' + (s.name || s.email || 'admin') + (s.role ? ' · ' + s.role : '');
   }
-  if (window.NCBO_GATE_READY && window.NCBOAuth) ready(window.NCBOAuth.session() || {});
-  else document.addEventListener('ncbo-auth-ready', function(e){ ready(e.detail || {}); });
+  document.addEventListener('ncbo-auth-ready', function(e){ ready(e.detail || {}); });
 
   document.getElementById('signout').addEventListener('click', function(){
-    if (window.NCBOAuth) window.NCBOAuth.signOut();
-    location.href = '../members.html';
+    var client = window.NCBO_SUPABASE_CLIENT;
+    var go = function(){ location.href = '../members.html'; };
+    if (client) client.auth.signOut().then(go, go); else go();
   });
 })();
 </script>

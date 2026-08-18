@@ -6,12 +6,12 @@
    where it won't get clobbered.
 
    ── Who gets in ───────────────────────────────────────────────────────────
-   Sign-in is a username + password per person, checked in the browser against
-   the PBKDF2 hashes in data/members.json. Add and remove accounts with
-   `python3 tools/make-member.py`. The shared access code this file used to
-   carry is gone.
+   Sign-in is a magic link sent to the member's email, handled by Supabase
+   (assets/ncbo-auth.js). Accounts live in Postgres; a .edu address at a
+   chapter school is approved on signup, everyone else waits for an admin on
+   review.html. There is no password file in this repository any more.
 
-   This file is only fetched after someone signs in — but that is a
+   This file is only fetched once the hub actually renders — but that is a
    convenience, not a wall. On static hosting anyone can request it directly.
    Treat what you put here the way you'd treat a printed members-only handout:
    fine for schedules, resources and Q&A; not for personal contact details,

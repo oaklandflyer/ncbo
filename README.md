@@ -30,17 +30,20 @@ Change the text between the quotes, save, refresh the page.
 | `join.html` | Become a Member — the detail page behind the nav CTA |
 | `contact.html` | Contact info + form |
 | `news.html` | News & Updates |
-| `members.html` | Member hub — username/password sign-in + member area |
+| `members.html` | Member hub — Supabase magic-link sign-in + member area |
 | `clubs.html`, `start-a-club.html`, `about.html`, `faqs.html` | Redirect stubs → the matching `index.html#` section (old links keep working) |
 | `assets/data.js` | **All site content. Edit this.** |
-| `assets/member-data.js` | **All member-hub content.** Loaded only after sign-in. |
-| `assets/js/auth.js` | Sign-in: PBKDF2 via the browser's WebCrypto, sessions, admin check |
-| `data/members.json` | The accounts — salts and hashes, never plaintext |
+| `assets/member-data.js` | **All member-hub content.** Loaded only once the hub renders. |
+| `assets/supabase-config.js` | Your Supabase project URL and public anon key. **Fill this in.** |
+| `assets/ncbo-auth-core.js` | The gate's rules, with no DOM or network attached — unit-tested |
+| `assets/ncbo-auth.js` | Sign-in: magic link, session, and which panel is on screen |
+| `assets/ncbo-review.js` | `review.html`: the queue of accounts waiting for an admin |
+| `review.html` | Admin page — approve or hold pending accounts |
 | `admin/index.html`, `admin/photos.html` | Admin pages (admin accounts only) |
 | `admin/gate.js` | The gate on every admin page |
-| `tools/make-member.py` | Add, list and remove accounts |
+| `test/core.test.js`, `test/guards.sh` | The test suite — `node`/`bash`, no dependencies |
 | `SECURITY-NOTES.md` | **What this sign-in protects and what it doesn't. Read it.** |
-| `assets/app.js` / `app.css` | Member hub: sign-in form, calendar, updates, resources, Q&A, directory |
+| `assets/app.js` / `app.css` | Member hub: calendar, updates, resources, Q&A, directory |
 | `assets/usmap.js` | Reusable US club map (state outlines + campus pins) |
 | `assets/styles.css` | Design system (colors, layout). Edit only for look changes. |
 | `assets/site.js` | Builds the shared nav/footer and renders the data. Don't edit unless adding features. |
@@ -91,60 +94,67 @@ Everything is plain HTML/CSS/JS. No build step, no dependencies, no server.
 
 | | `members.html` | `app/` |
 |---|---|---|
-| What | Static page, per-person username + password | Real app: accounts, roles, database |
-| Runs on | GitHub Pages, this repo | Next.js + Supabase, deployed separately |
-| Security | Hashes checked in the browser — the file is public | Row-level security in Postgres |
+| What | Static page, Supabase magic-link sign-in | Full app: accounts, roles, topics, moderation |
+| Runs on | GitHub Pages, this repo | Next.js on a host of its own |
+| Data | The same Supabase project | The same Supabase project |
+| Security | Row-level security in Postgres | Row-level security in Postgres |
 
-`members.html` is live now and documented below. `app/` is the real
-application being built alongside it — see `app/README.md` for setup. Once the
-app covers what the static page does, the static page can retire.
+Both now sit on top of the same Supabase project and the same migrations in
+`app/supabase/migrations/`, so an account works in either. `members.html` is the
+one that is live; `app/` is the larger application being built alongside it.
 
 ---
 
 ## The member hub (`members.html`)
 
-Members sign in with a username and password to get to the season hub.
-Everything after that is one scrolling page — calendar, updates, resources, the
-Q&A board (channel chips + expandable answers), and the club directory — with a
-jump bar at the top. No tabs and no side rails, so it works the same on a phone
-as on a laptop.
+Members sign in with a link emailed to them — no password to set, and nothing
+committed to this repository. Everything after sign-in is one scrolling page —
+calendar, updates, resources, the Q&A board, and the club directory — with a
+jump bar at the top.
 
-**Editing it:** the hub's content lives in `assets/member-data.js` —
+**Setup, once:** fill your project's URL and **anon** (public) key into
+`assets/supabase-config.js`, from the Supabase dashboard under Project Settings
+→ API. Both values are public by design and safe to commit; the `service_role`
+key is not and must never go in this repository. Until they are filled in, the
+hub shows a "not connected yet" panel and attempts no sign-in.
+
+**Editing content:** the hub's content lives in `assets/member-data.js` —
 announcements, calendar, resource links, channels, and seeded Q&A. It's kept out
 of `data.js` on purpose, because the admin content manager rewrites `data.js`
 wholesale and would wipe it.
 
-**Accounts:** everyone has their own login. Add, list and remove them with
+**Accounts:** anyone can ask for a sign-in link, and the database decides what
+happens next (`public.handle_new_user()` in `app/supabase/migrations/`):
 
-```bash
-python3 tools/make-member.py --user jdoe --name "J Doe" --role Curator --kind admin
-python3 tools/make-member.py --list
-python3 tools/make-member.py --remove jdoe
-```
+| Address | Result |
+|---|---|
+| `.edu` at a school in `public.schools` | Approved on the spot |
+| On the `allowed_emails` staff list | Approved on the spot |
+| Anything else | **Pending** — an admin decides on `review.html` |
 
-Passwords are stored as PBKDF2-SHA256 hashes (210,000 iterations, random salt
-per user) in `data/members.json` and checked in the browser with WebCrypto. No
-third-party identity provider, no auth SDK, no CDN script. Commit and push
-`data/members.json` for a change to go live.
+A pending account can sign in and see that it is pending. It cannot read the
+board, and that is enforced by row-level security in Postgres, not by this page.
 
-The repo ships with a starter `admin` and `member` account whose passwords are
-written down in `SECURITY-NOTES.md` — which means they're public. Replace them
-before the site is doing anything real.
-
-**Admin pages:** `admin/index.html` and `admin/photos.html` require an account
-with `kind: admin`. `admin/gate.js` hides the page before anything renders and
-only reveals it for an admin session; a member sees an "admins only" screen and
-a signed-out visitor is sent to the sign-in page. Saving from the content
-manager still needs your own GitHub token — the sign-in decides who sees the
+**Admin pages:** `review.html` is the approval queue. `admin/index.html` and
+`admin/photos.html` are the content manager; `admin/gate.js` hides them before
+anything renders and only reveals them for an approved admin. Saving from the
+content manager still needs your own GitHub token — sign-in decides who sees the
 tool, the token decides who can change the site.
 
-**What the sign-in is and isn't:** this is a static site, so `data/members.json`
-is downloadable by anyone and the hashes can be attacked offline. PBKDF2 makes
-that slow, which is enough for "members only, please" material — schedules,
-resources, internal links, Q&A — and not enough for secrets, credentials, or
-personal data about members. Real access control means putting the site behind
-something that authenticates before serving the page (Cloudflare Access,
-Netlify password protection); that's a hosting change, not a code change.
+**Tests:** `node test/core.test.js` covers the gate's rules, and
+`bash test/guards.sh` checks the repository invariants — the load order at the
+end of `members.html`, the cache-busting query strings, and that no password
+file has come back. Both run in CI on every push and pull request
+(`.github/workflows/tests.yml`). `guards.sh` warns, without failing, while
+`supabase-config.js` still holds its placeholders.
+
+**What the sign-in is and isn't:** what protects member data is row-level
+security in the database — every table is closed by default and each policy
+names who may read or write it. This page decides what to *draw*; Postgres
+decides what may be *read*. What is still true of a static site: anything
+committed here (including `assets/member-data.js`) is public to anyone who
+requests the file directly, so member-only *content* in this repository is still
+"members only, please" rather than protected.
 **Read `SECURITY-NOTES.md` before deciding what to put behind it.**
 
 The Q&A ask box saves drafts to the member's own browser only; set `ask.form`
