@@ -42,8 +42,8 @@ exclude:
   - scripts/
 
   # Organisation data consumed at build time by the hub, not by this site.
-  # data/members.json is deliberately NOT excluded: members.html fetches it at
-  # runtime for sign-in, and excluding it would break the live member area.
+  # Nothing here is fetched at runtime any more: sign-in is Supabase, and the
+  # member list lives in Postgres rather than in a committed file.
   - data/clubs/
   - data/conferences/
   - data/events/

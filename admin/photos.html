@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="gate.js"></script>
+<script src="gate.js?v=2026-08-15"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>NCBO — Admin (content & photos)</title>
-<script src="../assets/data.js"></script>
-<script src="../assets/usmap.js"></script>
+<script src="../assets/data.js?v=2026-08-15"></script>
+<script src="../assets/usmap.js?v=2026-08-15"></script>
 <style>
   :root{
     --navy-deep:#060B1A; --navy:#0A1228; --navy-1:#0E1830; --navy-2:#14213F; --line:#1E2C4F;
@@ -237,8 +237,9 @@
   const signOutLink = $('#adminSignOut');
   if (signOutLink) signOutLink.addEventListener('click', e => {
     e.preventDefault();
-    if (window.NCBOAuth) window.NCBOAuth.signOut();
-    location.href = '../members.html';
+    const client = window.NCBO_SUPABASE_CLIENT;
+    const go = () => { location.href = '../index.html'; };
+    if (client) client.auth.signOut().then(go, go); else go();
   });
 
   const ORIG = window.NCBO_DATA || {};

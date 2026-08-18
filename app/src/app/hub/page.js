@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 
 /**
@@ -10,6 +11,11 @@ import { createClient, getProfile } from '@/lib/supabase/server';
 export default async function Hub() {
   const supabase = await createClient();
   const profile = await getProfile(supabase);
+
+  // The layout redirects too, but layouts and pages render in parallel — this
+  // page still runs, and would crash on profile.role before the layout's
+  // redirect lands. Fail closed here as well.
+  if (!profile) redirect('/login');
 
   const canAnswer = profile.role === 'advisor' || profile.role === 'admin';
 
@@ -34,7 +40,7 @@ export default async function Hub() {
     <main className="page wrap">
       <div className="page-head">
         <p className="eyebrow">{profile.schools?.name || 'NCBO'}</p>
-        <h1>{profile.clubs?.name || `Welcome back, ${profile.display_name}.`}</h1>
+        <h1>{profile.clubs?.name || `Welcome back, ${profile.display_name || 'member'}.`}</h1>
         <p>
           {profile.clubs?.name
             ? `${profile.schools?.name} · ${roster.length} member${roster.length === 1 ? '' : 's'}`
@@ -69,7 +75,7 @@ export default async function Hub() {
               <tbody>
                 {roster.map((m) => (
                   <tr key={m.id}>
-                    <td>{m.display_name}</td>
+                    <td>{m.display_name || <span className="muted">No name yet</span>}</td>
                     <td>
                       {m.role === 'member'
                         ? <span className="muted">Member</span>

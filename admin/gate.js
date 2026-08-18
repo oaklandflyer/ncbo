@@ -8,13 +8,14 @@
    Order of business:
      1. Hide the body immediately, with a <style> injected before the parser
         reaches any content — the page must never flash before we've decided.
-     2. Load ../assets/js/auth.js and check the session in its onload.
-     3. Admin session → drop the hiding style, reveal the page.
-        Member session → "admins only" overlay.
-        No session → "sign in" overlay, linking to members.html?next=admin.
-     4. auth.js failed to load, threw, or anything else unexpected → blocked
-        overlay. Fail closed. There is no path here that reveals the page on
-        an error.
+     2. Load the Supabase library, then read the session and that account's
+        `profiles` row.
+     3. Approved admin → drop the hiding style, reveal the page.
+        Any other signed-in account → "admins only" overlay.
+        No session → "sign in" overlay.
+     4. A script failed to load, a query threw, or anything else unexpected →
+        blocked overlay. Fail closed. There is no path here that reveals the
+        page on an error.
 
    This keeps honest people out of the wrong page. It is not a wall: the admin
    pages are static files anyone can request, and the GitHub token is what
@@ -25,7 +26,31 @@
 
   var HIDE_ID = 'ncbo-gate-hide';
   var OVERLAY_ID = 'ncbo-gate-overlay';
-  var MEMBER_PAGE = '../members.html';
+
+  /* Where to send someone who needs to sign in. The member hub is the Next.js
+     app now, deployed separately — put its URL here once it has one. Until
+     then this points at the public site rather than at a page that 404s. */
+  var SIGN_IN_URL = '../index.html';
+
+  /* This page is the only static page left that talks to Supabase, so it
+     carries its own project values rather than sharing a config file with a
+     member hub that no longer exists here. Both are public by design; the
+     service_role key must never appear in this file. */
+  var SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
+  var SUPABASE_ANON_KEY = 'YOUR-SUPABASE-ANON-KEY';
+
+  function configured() {
+    return SUPABASE_URL.indexOf('YOUR-PROJECT-REF') === -1 &&
+           SUPABASE_ANON_KEY.indexOf('YOUR-SUPABASE-ANON-KEY') === -1;
+  }
+
+  /* An approved admin, and nothing else. A missing profile row is not an
+     admin: this fails closed on anything it doesn't recognise. */
+  function isApprovedAdmin(profile) {
+    return !!profile &&
+           String(profile.role || '').toLowerCase() === 'admin' &&
+           String(profile.status || '').toLowerCase() === 'approved';
+  }
 
   /* ── 1. hide first, ask questions later ───────────────────────────── */
   var hide = document.createElement('style');
@@ -82,7 +107,7 @@
     overlay(
       'Sign in with an admin account',
       'These pages edit the live site, so they’re limited to admin accounts.',
-      MEMBER_PAGE + '?next=admin',
+      SIGN_IN_URL,
       'Go to sign-in'
     );
   }
@@ -93,39 +118,82 @@
       'You’re signed in as <b>' + esc(session.name || session.user) + '</b>' +
       (session.role ? ' (' + esc(session.role) + ')' : '') +
       ', which doesn’t have admin access. Ask an admin if you need it.',
-      MEMBER_PAGE,
-      'Back to the member area'
+      SIGN_IN_URL,
+      'Back to the site'
     );
   }
 
-  /* ── 2. load auth.js and decide ───────────────────────────────────── */
-  function decide() {
-    var Auth = window.NCBOAuth;
-    if (!Auth) { blockAnonymous(); return; }
+  /* ── 2. load Supabase and decide ──────────────────────────────────
+     Any failure anywhere lands in blockAnonymous() — an admin page that
+     reveals itself because a CDN was slow is not a gate. */
+  var STACK = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
 
-    var s = null;
-    try { s = Auth.session(); } catch (e) { s = null; }
-
-    if (!s) { blockAnonymous(); return; }
-    if (!Auth.isAdmin(s)) { blockMember(s); return; }
-    reveal();
-
-    /* auth.js is fetched asynchronously, so a page's own inline scripts have
-       usually already run by now and found no window.NCBOAuth. Tell them.
-       A page that wants the session listens for this rather than assuming. */
-    window.NCBO_GATE_READY = true;
-    try {
-      document.dispatchEvent(new CustomEvent('ncbo-auth-ready', { detail: s }));
-    } catch (e) { /* very old browser — the page just won't show the name */ }
+  function load(list, done, failed) {
+    if (!list.length) { done(); return; }
+    var el = document.createElement('script');
+    el.src = list[0];
+    el.onload = function () { load(list.slice(1), done, failed); };
+    el.onerror = failed;
+    (document.head || document.documentElement).appendChild(el);
   }
 
-  var script = document.createElement('script');
-  script.src = '../assets/js/auth.js';
-  script.onload = function () {
-    /* A throw in decide() must not leave the page revealed — it can't,
-       since reveal() is the last thing decide() does, but be explicit. */
+  function decide() {
+    if (!configured() ||
+        !window.supabase || typeof window.supabase.createClient !== 'function') {
+      blockAnonymous();
+      return;
+    }
+
+    var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+
+    client.auth.getSession().then(function (res) {
+      var session = res && res.data ? res.data.session : null;
+      if (!session || !session.user) { blockAnonymous(); return; }
+
+      return client.from('profiles')
+        .select('id, display_name, role, status')
+        .eq('id', session.user.id)
+        .maybeSingle()
+        .then(function (out) {
+          var profile = (!out.error && out.data) || null;
+          if (!isApprovedAdmin(profile)) {
+            blockMember({
+              name: (profile && profile.display_name) || session.user.email,
+              user: session.user.email,
+              role: (profile && profile.role) || ''
+            });
+            return;
+          }
+
+          window.NCBO_SUPABASE_CLIENT = client;
+          reveal();
+
+          /* The stack is fetched asynchronously, so a page's own inline
+             scripts have usually already run. Tell them rather than leaving
+             them to assume. */
+          window.NCBO_GATE_READY = true;
+          try {
+            document.dispatchEvent(new CustomEvent('ncbo-auth-ready', {
+              detail: {
+                id: session.user.id,
+                email: session.user.email,
+                name: profile.display_name || session.user.email,
+                role: profile.role,
+                client: client
+              }
+            }));
+          } catch (e) { /* very old browser — the page just won't show the name */ }
+        });
+    }).catch(function () { blockAnonymous(); });
+  }
+
+  load(STACK, function () {
+    /* A throw in decide() must not leave the page revealed — it can't, since
+       reveal() only runs on the admin path, but be explicit. */
     try { decide(); } catch (e) { blockAnonymous(); }
-  };
-  script.onerror = function () { blockAnonymous(); };
-  (document.head || document.documentElement).appendChild(script);
+  }, blockAnonymous);
 })();

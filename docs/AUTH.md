@@ -1,9 +1,18 @@
 # Auth
 
+> **Update — the member hub is the Next.js app in `app/`, on Supabase.**
+> Magic-link sign-in, an onboarding form, an approval queue and an audit log,
+> with row-level security deciding what a member may read. The question this
+> document ends on — "someone has to pick one" — has been answered: **Supabase**.
+> The static prototype that briefly lived at `members.html` has been deleted.
+> Everything below describes the `web/` seam, which is the alternative that was
+> not taken. It is kept for its analysis of the magic-link flow, the domain
+> mapping, and what still has to be provisioned.
+
 ## Status: seam built, system not
 
-There is **no working authentication in this build**, and no sign-in button on
-the public site. A login that does not work is worse than no login.
+There is **no working authentication in the `web/` build**, and no sign-in
+button on it. A login that does not work is worse than no login.
 
 What exists:
 

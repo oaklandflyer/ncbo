@@ -1,0 +1,59 @@
+# ============================================================================
+# NCBO — tests
+#
+# The member hub is the Next.js app under app/. Two things are worth checking
+# on every push: that it builds, and that the migrations apply to a real
+# Postgres with the row-level security suite passing — the policies are where
+# access is actually decided, so a broken one is not a cosmetic failure.
+#
+# The public marketing site at the repository root is hand-written static HTML
+# with no build step; there is nothing to run against it.
+# ============================================================================
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Next.js build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+
+      # The build needs the two public values to exist, not to be real: every
+      # page that talks to Supabase is server-rendered on demand, so nothing
+      # here connects to a project.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-time-placeholder
+
+  database:
+    name: Migrations and RLS policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ubuntu-latest ships Postgres; the harness starts its own throwaway
+      # cluster on port 5433, applies every migration in order, then runs the
+      # policy tests against it.
+      - name: Apply migrations and run the policy suite
+        run: ./supabase/tests/run.sh
+        working-directory: app

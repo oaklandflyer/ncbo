@@ -154,3 +154,69 @@ update profiles set status = 'approved', approved_at = now(), approved_by = auth
 set test.uid = '77777777-7777-7777-7777-777777777777';
 select count(*) as channels_visible_after_approval from channels;
 reset role;
+
+\echo ''
+\echo '=== 24. signup no longer manufactures a name from the email address ==='
+-- 0004 removed the split_part(email, '@', 1) fallback. A new profile arrives
+-- with no display_name at all, which is what sends the member to /onboarding.
+select count(*) as profiles_with_a_manufactured_name
+  from profiles p join auth.users u on u.id = p.id
+ where p.display_name is not null
+   and lower(p.display_name) = lower(split_part(u.email, '@', 1));
+
+\echo ''
+\echo '=== 25. a member CAN fill in their own onboarding fields ==='
+set role authenticated;
+set test.uid = '77777777-7777-7777-7777-777777777777';
+update profiles
+   set full_name = 'Sam Rivera', display_name = 'Sam', class_year = 'Junior',
+       major = 'Kinesiology', lifting_experience = '3–5 years', is_adult = true
+ where id = '77777777-7777-7777-7777-777777777777';
+select is_onboarded(p) as onboarded_after_the_form
+  from profiles p where id = '77777777-7777-7777-7777-777777777777';
+
+\echo ''
+\echo '=== 26. an unfinished profile does NOT count as onboarded ==='
+select is_onboarded(p) as onboarded_with_no_form_filled_in
+  from profiles p where id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 27. nobody can make the 18+ attestation for someone else ==='
+-- Not even an admin: this is the member's own statement, so the guard checks
+-- it before the admin bypass.
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set is_adult = true
+  where id = '55555555-5555-5555-5555-555555555555';
+reset role;
+
+\echo ''
+\echo '=== 28. declining is its own status, distinct from suspension ==='
+set role authenticated;
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set status = 'rejected' where id = '55555555-5555-5555-5555-555555555555';
+select status as after_decline from profiles where id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 29. an admin CAN write an audit entry in their own name ==='
+insert into admin_actions (actor_id, target_id, action, previous_status)
+values ('44444444-4444-4444-4444-444444444444', '55555555-5555-5555-5555-555555555555',
+        'rejected', 'pending');
+select action, previous_status from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 30. an admin CANNOT write one in someone else''s name ==='
+insert into admin_actions (actor_id, target_id, action)
+values ('77777777-7777-7777-7777-777777777777', '55555555-5555-5555-5555-555555555555', 'approved');
+
+\echo ''
+\echo '=== 31. the log is append-only — no update, no delete, even for an admin ==='
+update admin_actions set action = 'approved' where target_id = '55555555-5555-5555-5555-555555555555';
+select count(*) as rows_changed_by_update from admin_actions where action = 'approved';
+delete from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+select count(*) as rows_left_after_delete from admin_actions where target_id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 32. a member CANNOT read the log ==='
+set test.uid = '77777777-7777-7777-7777-777777777777';
+select count(*) as log_rows_visible_to_a_member from admin_actions;
+reset role;

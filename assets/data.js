@@ -49,10 +49,6 @@ window.NCBO_DATA = {
       "href": "index.html"
     },
     {
-      "label": "Members",
-      "href": "members.html"
-    },
-    {
       "label": "Join NCBO",
       "href": "join.html",
       "cta": true
