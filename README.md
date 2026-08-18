@@ -112,9 +112,10 @@ committed to this repository. Everything after sign-in is one scrolling page —
 calendar, updates, resources, the Q&A board, and the club directory — with a
 jump bar at the top.
 
-**Setup, once:** fill your project's URL and **anon** (public) key into
-`assets/supabase-config.js`, from the Supabase dashboard under Project Settings
-→ API. Both values are public by design and safe to commit; the `service_role`
+**Setup, once:** apply the migrations and fill your project's URL and **anon**
+(public) key into `assets/supabase-config.js` — the whole procedure, including
+the redirect allowlist that silently breaks magic links if it's skipped, is in
+[`docs/SUPABASE-SETUP.md`](docs/SUPABASE-SETUP.md). Both values are public by design and safe to commit; the `service_role`
 key is not and must never go in this repository. Until they are filled in, the
 hub shows a "not connected yet" panel and attempts no sign-in.
 
