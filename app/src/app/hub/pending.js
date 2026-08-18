@@ -12,7 +12,7 @@ export default function Pending({ profile }) {
         <p className="eyebrow" style={{ justifyContent: 'center' }}>Almost in</p>
         <h1>Waiting on<br />approval.</h1>
         <p className="lead" style={{ marginTop: '1rem', fontSize: '0.98rem' }}>
-          Your account is created, {profile.display_name} — an NCBO admin needs to approve it
+          Your account is created, {profile.display_name || 'and ready'} — an NCBO admin needs to approve it
           before the board opens up.
         </p>
         <div className="notice" style={{ marginTop: '1.4rem', textAlign: 'left' }}>
