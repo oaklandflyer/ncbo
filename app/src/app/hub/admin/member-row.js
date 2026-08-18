@@ -9,7 +9,7 @@ export default function MemberRow({ member, clubs }) {
   return (
     <tr>
       <td>
-        {member.display_name}
+        {member.display_name || <span className="muted">No name yet</span>}
         {state?.error && <div className="msg err" style={{ fontSize: '0.8rem' }}>{state.error}</div>}
         {state?.ok && <div className="msg ok" style={{ fontSize: '0.8rem' }}>Saved.</div>}
       </td>

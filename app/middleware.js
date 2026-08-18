@@ -3,7 +3,11 @@ import { NextResponse } from 'next/server';
 
 /**
  * Refreshes the auth session on every request and keeps unauthenticated
- * visitors out of /hub.
+ * visitors out of /hub and /onboarding.
+ *
+ * Whether a signed-in member has *finished* onboarding is decided in
+ * hub/layout.js, not here: answering it needs a profile query, and this
+ * function runs on far more requests than the layout does.
  *
  * This is a redirect for the sake of the user experience, not a security
  * boundary — the real gate is row-level security in Postgres, which applies
@@ -32,7 +36,10 @@ export async function middleware(request) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith('/hub')) {
+  const guarded = ['/hub', '/onboarding']
+    .some((prefix) => request.nextUrl.pathname.startsWith(prefix));
+
+  if (!user && guarded) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', request.nextUrl.pathname);

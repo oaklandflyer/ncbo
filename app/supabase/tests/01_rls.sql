@@ -154,3 +154,37 @@ update profiles set status = 'approved', approved_at = now(), approved_by = auth
 set test.uid = '77777777-7777-7777-7777-777777777777';
 select count(*) as channels_visible_after_approval from channels;
 reset role;
+
+\echo ''
+\echo '=== 24. signup no longer manufactures a name from the email address ==='
+-- 0004 removed the split_part(email, '@', 1) fallback. A new profile arrives
+-- with no display_name at all, which is what sends the member to /onboarding.
+select count(*) as profiles_with_a_manufactured_name
+  from profiles p join auth.users u on u.id = p.id
+ where p.display_name is not null
+   and lower(p.display_name) = lower(split_part(u.email, '@', 1));
+
+\echo ''
+\echo '=== 25. a member CAN fill in their own onboarding fields ==='
+set role authenticated;
+set test.uid = '77777777-7777-7777-7777-777777777777';
+update profiles
+   set full_name = 'Sam Rivera', display_name = 'Sam', class_year = 'Junior',
+       major = 'Kinesiology', lifting_experience = '3–5 years', is_adult = true
+ where id = '77777777-7777-7777-7777-777777777777';
+select is_onboarded(p) as onboarded_after_the_form
+  from profiles p where id = '77777777-7777-7777-7777-777777777777';
+
+\echo ''
+\echo '=== 26. an unfinished profile does NOT count as onboarded ==='
+select is_onboarded(p) as onboarded_with_no_form_filled_in
+  from profiles p where id = '55555555-5555-5555-5555-555555555555';
+
+\echo ''
+\echo '=== 27. nobody can make the 18+ attestation for someone else ==='
+-- Not even an admin: this is the member's own statement, so the guard checks
+-- it before the admin bypass.
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set is_adult = true
+  where id = '55555555-5555-5555-5555-555555555555';
+reset role;
