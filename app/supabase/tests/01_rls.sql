@@ -220,3 +220,70 @@ select count(*) as rows_left_after_delete from admin_actions where target_id = '
 set test.uid = '77777777-7777-7777-7777-777777777777';
 select count(*) as log_rows_visible_to_a_member from admin_actions;
 reset role;
+
+-- ── club lead review scoping ────────────────────────────────────────────────
+-- Fixtures: one pending account at Pitt (where user 1 is the club lead) and
+-- one at Penn State (where they are not). Both addresses auto-approve on
+-- signup, so they are put back to pending as superuser to make the queue.
+reset role;
+-- Clear the acting user as well as the role: auth.uid() reads a session GUC
+-- that `reset role` leaves alone, and the privilege guard would otherwise
+-- treat this superuser fixture as whoever the last test was pretending to be.
+select set_config('test.uid', '', false);
+insert into auth.users (id, email) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'freshman@pitt.edu'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'freshman@psu.edu');
+update profiles set status = 'pending', approved_at = null
+ where id in ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+              'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+
+\echo ''
+\echo '=== 33. a club lead CAN approve a pending account at their own school ==='
+set role authenticated;
+set test.uid = '11111111-1111-1111-1111-111111111111';   -- alex@pitt.edu, club_lead
+update profiles set status = 'approved', approved_at = now(), approved_by = auth.uid()
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+select status as pitt_pending_after_lead_approval
+  from profiles where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+\echo ''
+\echo '=== 34. a club lead CANNOT decide on another school''s account ==='
+update profiles set status = 'approved'
+ where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+select status as psu_pending_untouched
+  from profiles where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+\echo ''
+\echo '=== 35. a club lead CANNOT change a role, even at their own school ==='
+update profiles set role = 'admin'
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+\echo ''
+\echo '=== 36. a club lead CANNOT suspend an approved member at their own school ==='
+update profiles set status = 'suspended'
+ where id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== 37. a club lead CANNOT move someone to another school while deciding ==='
+update profiles set status = 'rejected', school_id = null
+ where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+\echo ''
+\echo '=== 38. a club lead CAN log their own decision, but not another school''s ==='
+insert into admin_actions (actor_id, target_id, action, previous_status)
+values ('11111111-1111-1111-1111-111111111111',
+        'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'approved', 'pending');
+select count(*) as own_school_entries_visible_to_lead from admin_actions;
+insert into admin_actions (actor_id, target_id, action)
+values ('11111111-1111-1111-1111-111111111111',
+        'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'approved');
+
+\echo ''
+\echo '=== 39. an admin still reaches every school ==='
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set status = 'approved', approved_at = now(), approved_by = auth.uid()
+ where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+select status as psu_pending_after_admin_approval
+  from profiles where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+select count(*) as all_log_entries_visible_to_admin from admin_actions;
+reset role;

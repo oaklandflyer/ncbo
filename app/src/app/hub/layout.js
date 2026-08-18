@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
+import { canReview, canManageRoles } from '@/lib/review';
 import SignOut from './sign-out';
 import AccountStatus from './status';
 
@@ -42,7 +43,9 @@ export default async function HubLayout({ children }) {
             <Link href="/hub">Home</Link>
             <Link href="/hub/topics">Topics</Link>
             <Link href="/hub/qa">Q&amp;A</Link>
-            {profile.role === 'admin' && <Link href="/hub/admin">Admin</Link>}
+            {canReview(profile) && (
+              <Link href="/hub/admin">{canManageRoles(profile) ? 'Admin' : 'Review'}</Link>
+            )}
             <SignOut />
           </nav>
         </div>

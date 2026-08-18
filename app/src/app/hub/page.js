@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
+import { canReview, reviewScope } from '@/lib/review';
 
 /**
  * Club home — where a member lands after signing in.
@@ -18,6 +19,7 @@ export default async function Hub() {
   if (!profile) redirect('/login');
 
   const canAnswer = profile.role === 'advisor' || profile.role === 'admin';
+  const scope = reviewScope(profile);
 
   const [clubmates, openQuestions, pendingCount] = await Promise.all([
     profile.club_id
@@ -29,8 +31,12 @@ export default async function Hub() {
     canAnswer
       ? supabase.from('question_feed').select('*', { count: 'exact', head: true }).eq('answered', false)
       : Promise.resolve({ count: 0 }),
-    profile.role === 'admin'
-      ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+    canReview(profile)
+      ? (scope.kind === 'school'
+          ? supabase.from('profiles').select('*', { count: 'exact', head: true })
+              .eq('status', 'pending').eq('school_id', scope.schoolId)
+          : supabase.from('profiles').select('*', { count: 'exact', head: true })
+              .eq('status', 'pending'))
       : Promise.resolve({ count: 0 }),
   ]);
 
@@ -48,7 +54,7 @@ export default async function Hub() {
         </p>
       </div>
 
-      {profile.role === 'admin' && pendingCount.count > 0 && (
+      {canReview(profile) && pendingCount.count > 0 && (
         <div className="notice" style={{ marginBottom: '1.2rem' }}>
           <b>{pendingCount.count} account{pendingCount.count === 1 ? '' : 's'} waiting for approval.</b>{' '}
           <Link href="/hub/admin" style={{ color: 'var(--steel-light)', textDecoration: 'underline' }}>
