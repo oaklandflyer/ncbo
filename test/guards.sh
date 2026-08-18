@@ -135,17 +135,43 @@ else
 fi
 
 # ── 6. secrets ──────────────────────────────────────────────────────────────
+# Prose *about* the service_role key is fine, and is exactly what
+# assets/supabase-config.js and app/README.md contain — both warn against it.
+# What must never appear is key material: a `sb_secret_…` key, or a JWT whose
+# payload says `"role":"service_role"`. Match those shapes, not the word.
 echo
 echo "secrets"
-# Prose about the service_role key is fine and is exactly what app/README.md
-# contains; a service_role key shipped in something a browser loads is not.
-leaked=$(git ls-files -z '*.js' '*.html' '*.json' '*.yml' | grep -zv '^app/' \
-         | xargs -0 grep -lI 'service_role' 2>/dev/null || true)
+shipped=$(git ls-files '*.js' '*.html' '*.json' '*.yml' '*.css' | grep -v '^app/')
+leaked=""
+
+for file in $shipped; do
+  if grep -qE 'sb_secret_[A-Za-z0-9_-]{10,}' "$file"; then
+    leaked="$leaked$file (sb_secret_ key)"$'\n'
+    continue
+  fi
+  # Any JWT-shaped literal in the file: decode each payload and look at the role.
+  if grep -qE 'eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.' "$file" &&
+     node -e '
+       const fs = require("fs");
+       const text = fs.readFileSync(process.argv[1], "utf8");
+       const jwts = text.match(/eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*/g) || [];
+       const bad = jwts.some(function (jwt) {
+         try {
+           return /service_role/.test(
+             Buffer.from(jwt.split(".")[1], "base64url").toString("utf8"));
+         } catch (e) { return false; }
+       });
+       process.exit(bad ? 0 : 1);
+     ' "$file"; then
+    leaked="$leaked$file (service_role JWT)"$'\n'
+  fi
+done
+
 if [ -n "$leaked" ]; then
   printf '        %s\n' "$leaked"
-  fail "a service_role key is referenced in a file the browser loads"
+  fail "a Supabase secret key is committed in a file the browser loads"
 else
-  ok "no service_role key in the shipped site"
+  ok "no Supabase secret key in the shipped site"
 fi
 
 # ── 7. the Supabase project values ──────────────────────────────────────────
