@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHeader, CardLink, Empty, Pill } from '../ui';
+import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge } from '../ui';
 
 export default async function Topics() {
   const supabase = await createClient();
@@ -17,34 +17,49 @@ export default async function Topics() {
     }),
   );
   const byId = Object.fromEntries(counts);
+  const total = Object.values(byId).reduce((a, b) => a + b, 0);
 
   return (
     <Page>
-      <PageHeader eyebrow="The board" title="Topics.">
-        Channels are league-wide. Posts are short by design — say one thing well.
-      </PageHeader>
+      <PageHero
+        eyebrow="The board"
+        title="Topics."
+        lead="Channels are league-wide. Posts are short by design — say one thing well."
+      />
 
-      {channels?.length ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {channels.map((c) => (
-            <CardLink key={c.id} href={`/hub/topics/${c.slug}`} Component={Link} className="flex flex-col">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="font-display text-lg font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
+      <Section>
+        <SectionTitle count={total > 0 ? `${total} post${total === 1 ? '' : 's'}` : null}>
+          Channels
+        </SectionTitle>
+
+        {channels?.length ? (
+          /* auto-fill, matching .clubs-grid — the row doesn't leave a hole
+             when there are four channels instead of six. */
+          <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
+            {channels.map((c) => (
+              <CardLink key={c.id} href={`/hub/topics/${c.slug}`} Component={Link} className="flex flex-col">
+                <h3 className="font-display text-[1.45rem] font-extrabold uppercase leading-[1.05] text-ink transition group-hover:text-brand">
                   {c.name}
                 </h3>
-                <Pill tone={byId[c.id] > 0 ? 'open' : 'quiet'}>
-                  {byId[c.id]} post{byId[c.id] === 1 ? '' : 's'}
-                </Pill>
-              </div>
-              <p className="mt-2 grow text-[0.9rem] leading-relaxed text-silver-dim">
-                {c.description}
-              </p>
-            </CardLink>
-          ))}
-        </div>
-      ) : (
-        <Empty>No channels yet.</Empty>
-      )}
+                <p className="mt-2 grow text-[0.96rem] leading-relaxed text-body">{c.description}</p>
+                <div className="mt-5 flex items-center justify-between border-t border-edge pt-4">
+                  <Badge tone={byId[c.id] > 0 ? 'active' : 'forming'}>
+                    {byId[c.id]} post{byId[c.id] === 1 ? '' : 's'}
+                  </Badge>
+                  <span
+                    aria-hidden
+                    className="font-display text-[0.82rem] font-bold uppercase tracking-[0.12em] text-brand transition group-hover:translate-x-[4px]"
+                  >
+                    Open →
+                  </span>
+                </div>
+              </CardLink>
+            ))}
+          </div>
+        ) : (
+          <Empty>No channels yet.</Empty>
+        )}
+      </Section>
     </Page>
   );
 }

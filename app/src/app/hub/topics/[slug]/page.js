@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHeader, SectionTitle, Empty, Pill, Meta } from '../../ui';
+import { Page, PageHero, Section, SectionTitle, Empty, Badge, Meta, BackLink } from '../../ui';
 import Composer from '../composer';
 
 function when(ts) {
@@ -32,48 +32,52 @@ export default async function Channel({ params }) {
 
   return (
     <Page>
-      <Link
-        href="/hub/topics"
-        className="mb-6 inline-flex items-center gap-2 font-display text-[0.74rem] font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-steel-light"
-      >
-        ← All channels
-      </Link>
+      <PageHero eyebrow="Channel" title={`#${channel.name}`} lead={channel.description}>
+        <div className="mt-6">
+          <BackLink href="/hub/topics" Component={Link}>All channels</BackLink>
+        </div>
+      </PageHero>
 
-      <PageHeader eyebrow="Channel" title={`#${channel.name}`}>
-        {channel.description}
-      </PageHeader>
-
-      <section className="mb-10">
-        <SectionTitle count={posts?.length || null}>Posts</SectionTitle>
+      <Section>
+        <SectionTitle count={posts?.length ? `${posts.length} post${posts.length === 1 ? '' : 's'}` : null}>
+          Posts
+        </SectionTitle>
 
         {posts?.length ? (
-          <ul className="grid list-none gap-3">
+          <ul className="grid list-none gap-4">
             {posts.map((p) => (
               <li key={p.id}>
                 {/* Anonymous posts are visibly different — a reader should be
                     able to tell at a glance whether a name stands behind it. */}
                 <article
-                  className={`rounded-xl border bg-navy-1 p-5 ${
-                    p.anonymous ? 'border-dashed border-line' : 'border-line'
+                  className={`rounded-[8px] border bg-surface p-6 sm:p-7 ${
+                    p.anonymous ? 'border-dashed border-edge' : 'border-edge'
                   }`}
                 >
-                  <Meta className="mb-2">
-                    <span className={p.anonymous ? 'italic text-muted' : 'font-medium text-silver'}>
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
+                    <span
+                      className={
+                        p.anonymous
+                          ? 'text-[0.95rem] italic text-meta'
+                          : 'font-display text-[1.05rem] font-extrabold uppercase tracking-[0.02em] text-ink'
+                      }
+                    >
                       {p.author_name}
                     </span>
                     {p.author_role && p.author_role !== 'member' && (
-                      <Pill tone="role">{p.author_role.replace('_', ' ')}</Pill>
+                      <Badge tone="active">{p.author_role.replace('_', ' ')}</Badge>
                     )}
+                  </div>
+                  <p className="text-[1.05rem] leading-relaxed text-ink">{p.body}</p>
+                  <Meta className="mt-4 border-t border-edge pt-3">
                     {p.author_school && (
                       <>
-                        <span aria-hidden className="text-muted-2">·</span>
                         <span>{p.author_school}</span>
+                        <span aria-hidden className="text-fine">·</span>
                       </>
                     )}
-                    <span aria-hidden className="text-muted-2">·</span>
                     <time dateTime={p.created_at}>{when(p.created_at)}</time>
                   </Meta>
-                  <p className="text-[1.02rem] leading-relaxed text-ink">{p.body}</p>
                 </article>
               </li>
             ))}
@@ -81,9 +85,11 @@ export default async function Channel({ params }) {
         ) : (
           <Empty>Nothing here yet. Start it off.</Empty>
         )}
-      </section>
+      </Section>
 
-      <Composer slug={channel.slug} />
+      <Section band>
+        <Composer slug={channel.slug} channelName={channel.name} />
+      </Section>
     </Page>
   );
 }

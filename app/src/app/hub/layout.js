@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HubNav from './nav';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
@@ -34,55 +35,23 @@ export default async function HubLayout({ children }) {
   }
 
   return (
-    <>
-      {/* Sticky so the nav is reachable from the bottom of a long board, and
-          horizontally scrollable rather than wrapping into two rows on a
-          narrow phone. Nothing above this line was touched: the guards decide
-          who gets here, this only draws the chrome. */}
-      <header className="sticky top-0 z-30 border-b border-line bg-navy/95 backdrop-blur supports-[backdrop-filter]:bg-navy/80">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-5 py-3 sm:px-8">
-          <Link
-            href="/hub"
-            className="font-display text-lg font-extrabold uppercase tracking-[0.2em] text-ink transition hover:text-steel-light"
-          >
-            NCBO
-          </Link>
-          <span className="hidden shrink-0 rounded-full border border-steel-deep/50 bg-steel-deep/20 px-2.5 py-0.5 font-display text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-steel-light sm:inline-flex">
-            {profile.role.replace('_', ' ')}
-          </span>
+    /* The light ground, the grain, and the 72px nav offset are all the public
+       site's — see assets/styles.css. Scoped to the hub shell rather than the
+       body so the sign-in and onboarding routes, which this pass doesn't
+       cover, keep rendering from the old stylesheet untouched. */
+    <div className="relative min-h-screen bg-page font-body text-[17px] leading-relaxed text-ink antialiased">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-[1] opacity-[0.018]"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+        }}
+      />
 
-          {/* The links scroll on a narrow phone; sign-out sits outside the
-              scroller so it never ends up off the right edge. */}
-          <nav
-            aria-label="Member hub"
-            className="ml-auto flex min-w-0 items-center gap-0.5 overflow-x-auto font-display text-[0.76rem] font-semibold uppercase tracking-[0.1em] [scrollbar-width:none] sm:gap-1 sm:text-[0.78rem] sm:tracking-[0.14em] [&::-webkit-scrollbar]:hidden"
-          >
-            {[
-              ['/hub', 'Home'],
-              ['/hub/topics', 'Topics'],
-              ['/hub/qa', 'Q&A'],
-            ].map(([href, label]) => (
-              <Link
-                key={href}
-                href={href}
-                className="whitespace-nowrap rounded-md px-2 py-1.5 text-silver-dim transition hover:bg-navy-2 hover:text-ink sm:px-2.5"
-              >
-                {label}
-              </Link>
-            ))}
-            {canReview(profile) && (
-              <Link
-                href="/hub/admin"
-                className="whitespace-nowrap rounded-md px-2 py-1.5 text-steel transition hover:bg-navy-2 hover:text-steel-light sm:px-2.5"
-              >
-                {canManageRoles(profile) ? 'Admin' : 'Review'}
-              </Link>
-            )}
-          </nav>
-          <SignOut />
-        </div>
-      </header>
-      {children}
-    </>
+      <HubNav canReview={canReview(profile)} manages={canManageRoles(profile)} />
+
+      <div className="relative z-[2] pt-nav">{children}</div>
+    </div>
   );
 }

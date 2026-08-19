@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { canReview, canManageRoles, reviewScope } from '@/lib/review';
+import { Page, PageHero, Section, SectionTitle, Empty } from '../ui';
 import MemberRow from './member-row';
 import PendingRow from './pending-row';
 
@@ -36,52 +37,70 @@ export default async function Admin() {
   ]);
 
   return (
-    <main className="page wrap">
-      <div className="page-head">
-        <p className="eyebrow">{manages ? 'Admin' : 'Club lead'}</p>
-        <h1>{manages ? <>Members &amp; roles.</> : <>Your school&rsquo;s queue.</>}</h1>
-        <p>
-          {manages
+    <Page>
+      <PageHero
+        eyebrow={manages ? 'Admin' : 'Club lead'}
+        title={manages ? 'Members & roles.' : 'Your school’s queue.'}
+        lead={
+          manages
             ? 'Club leads review their own school. Advisors and admins answer questions on the Q&A board. Admins can do everything, including this page.'
-            : 'People waiting to join at your school. Approving someone lets them into the board; declining tells them the answer. Roles and clubs are set by an NCBO admin.'}
-        </p>
-      </div>
+            : 'People waiting to join at your school. Approving someone lets them into the board; declining tells them the answer. Roles and clubs are set by an NCBO admin.'
+        }
+      />
 
-      <div className="notice" style={{ marginBottom: '1.4rem' }}>
-        Email addresses aren&rsquo;t shown here — they live in the auth system, not the member
-        directory, so they can&rsquo;t leak through the app. Look one up in the Supabase dashboard
-        if you need it.
-      </div>
+      <Section>
+        <SectionTitle count={waiting?.length ? `${waiting.length} waiting` : null}>
+          Waiting for approval
+        </SectionTitle>
 
-      {waiting?.length > 0 ? (
-        <>
-          <h2 style={{ marginBottom: '0.9rem' }}>Waiting for approval</h2>
-          <p className="lead" style={{ fontSize: '0.94rem', marginBottom: '1rem' }}>
-            School emails at clubs we already run are approved automatically — these are the
-            ones that need a person: advisors, exec, and students at schools not yet in NCBO.
-          </p>
-          <div className="tablewrap" style={{ marginBottom: '2.4rem' }}>
-            <table>
-              <thead><tr><th>Name</th><th>School</th><th>Decision</th></tr></thead>
-              <tbody>
-                {waiting.map((m) => <PendingRow key={m.id} member={m} />)}
-              </tbody>
-            </table>
-          </div>
-        </>
-      ) : (
-        <p className="lead" style={{ fontSize: '0.94rem', marginBottom: '2rem' }}>
-          Nobody is waiting{scope.kind === 'school' ? ' at your school' : ''} right now.
-        </p>
-      )}
+        {waiting?.length ? (
+          <>
+            <p className="mb-6 max-w-[620px] text-[0.98rem] text-body">
+              School emails at clubs we already run are approved automatically — these are the
+              ones that need a person: advisors, exec, and students at schools not yet in NCBO.
+            </p>
+            <div className="overflow-hidden rounded-[8px] border border-edge bg-surface">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-edge bg-band/60">
+                    {['Name', 'School', 'Decision'].map((h) => (
+                      <th key={h} className="px-6 py-3 font-display text-[0.74rem] font-semibold uppercase tracking-[0.18em] text-meta">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {waiting.map((m) => <PendingRow key={m.id} member={m} />)}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <Empty>
+            Nobody is waiting{scope.kind === 'school' ? ' at your school' : ''} right now.
+          </Empty>
+        )}
+      </Section>
 
       {manages && (
-        <>
-          <h2 style={{ marginBottom: '0.9rem' }}>Approved members</h2>
-          <div className="tablewrap">
-            <table>
+        <Section band>
+          <SectionTitle count={members?.length || null}>Approved members</SectionTitle>
+          <div className="mb-6 max-w-[620px] text-[0.98rem] text-body">
+            Email addresses aren’t shown here — they live in the auth system, not the member
+            directory, so they can’t leak through the app. Look one up in the Supabase
+            dashboard if you need it.
+          </div>
+          <div className="overflow-hidden rounded-[8px] border border-edge bg-surface">
+            <table className="w-full border-collapse text-left">
               <thead>
-                <tr><th>Member</th><th>School</th><th>Role &amp; club</th></tr>
+                <tr className="border-b border-edge bg-band/60">
+                  {['Member', 'School', 'Role & club'].map((h) => (
+                    <th key={h} className="px-6 py-3 font-display text-[0.74rem] font-semibold uppercase tracking-[0.18em] text-meta">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
               </thead>
               <tbody>
                 {(members || []).map((m) => (
@@ -90,8 +109,8 @@ export default async function Admin() {
               </tbody>
             </table>
           </div>
-        </>
+        </Section>
       )}
-    </main>
+    </Page>
   );
 }

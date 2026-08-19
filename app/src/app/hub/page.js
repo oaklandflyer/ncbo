@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { canReview, reviewScope } from '@/lib/review';
-import { Page, PageHeader, SectionTitle, Card, CardLink, Empty, Pill, Meta } from './ui';
+import {
+  Page, PageHero, Section, SectionTitle, DarkTile,
+  Stat, Stats, Badge, Empty, Meta, btnGhost, btnSmall,
+} from './ui';
 
 /**
  * Club home — where a member lands after signing in.
@@ -43,146 +46,126 @@ export default async function Hub() {
 
   const roster = clubmates.data || [];
   const roleLabel = (role) => (role === 'member' ? 'Member' : role.replace('_', ' '));
+  const firstName = String(profile.display_name || 'member').split(/\s+/)[0];
 
   return (
     <Page>
-      <PageHeader
+      <PageHero
         eyebrow={profile.schools?.name || 'NCBO'}
-        title={profile.clubs?.name || `Welcome back, ${profile.display_name || 'member'}.`}
+        title={profile.clubs?.name || `Welcome back, ${firstName}.`}
+        lead={
+          profile.clubs?.name
+            ? 'Your club, then the league. Everything the network is talking about is a click away.'
+            : 'You’re not attached to a club yet — the league board is open to you all the same.'
+        }
+        actions={
+          canReview(profile) && pendingCount.count > 0 ? (
+            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/admin">
+              {pendingCount.count} waiting
+            </Link>
+          ) : null
+        }
       >
-        {profile.clubs?.name
-          ? `${profile.schools?.name} · ${roster.length} member${roster.length === 1 ? '' : 's'}`
-          : 'You’re not attached to a club yet — the league board is open to you all the same.'}
-      </PageHeader>
-
-      {/* Things waiting on this person, if any. Nothing renders when there is
-          nothing to do, rather than a row of zeroes. */}
-      {(pendingCount.count > 0 || openQuestions.count > 0) && (
-        <div className="mb-9 grid gap-3 sm:grid-cols-2">
-          {canReview(profile) && pendingCount.count > 0 && (
-            <CardLink href="/hub/admin" Component={Link} className="flex items-center justify-between gap-4">
-              <span>
-                <span className="block font-display text-2xl font-extrabold leading-none text-ink">
-                  {pendingCount.count}
-                </span>
-                <span className="mt-1 block text-[0.9rem] text-silver">
-                  account{pendingCount.count === 1 ? '' : 's'} waiting for approval
-                </span>
-              </span>
-              <span className="font-display text-sm uppercase tracking-[0.12em] text-steel transition group-hover:text-steel-light">
-                Review →
-              </span>
-            </CardLink>
-          )}
-
-          {canAnswer && openQuestions.count > 0 && (
-            <CardLink href="/hub/qa" Component={Link} className="flex items-center justify-between gap-4">
-              <span>
-                <span className="block font-display text-2xl font-extrabold leading-none text-ink">
-                  {openQuestions.count}
-                </span>
-                <span className="mt-1 block text-[0.9rem] text-silver">
-                  question{openQuestions.count === 1 ? '' : 's'} waiting for an answer
-                </span>
-              </span>
-              <span className="font-display text-sm uppercase tracking-[0.12em] text-steel transition group-hover:text-steel-light">
-                Open →
-              </span>
-            </CardLink>
-          )}
-        </div>
-      )}
-
-      {roster.length > 0 && (
-        <section className="mb-10">
-          <SectionTitle count={`${roster.length} member${roster.length === 1 ? '' : 's'}`}>
-            Your club
-          </SectionTitle>
-
-          {/* A table on a phone either overflows or squeezes to nothing, so it
-              becomes a list of cards below sm. Same data, twice, one visible. */}
-          <div className="hidden overflow-hidden rounded-xl border border-line sm:block">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-navy-2/60">
-                  {['Member', 'Role', 'Division'].map((h) => (
-                    <th key={h} className="px-5 py-3 font-display text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {roster.map((m) => (
-                  <tr key={m.id} className="border-t border-line/70 transition hover:bg-navy-1">
-                    <td className="px-5 py-3 text-[0.95rem] text-ink">
-                      {m.display_name || <span className="text-muted">No name yet</span>}
-                    </td>
-                    <td className="px-5 py-3">
-                      {m.role === 'member'
-                        ? <span className="text-[0.9rem] text-muted">Member</span>
-                        : <Pill tone="role">{roleLabel(m.role)}</Pill>}
-                    </td>
-                    <td className="px-5 py-3 text-[0.9rem] text-silver-dim">{m.division || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* The site's stat treatment: a steel rule, a display numeral, a small
+            label. Only facts we actually have — no zero-filled dashboard. */}
+        {(roster.length > 0 || pendingCount.count > 0 || openQuestions.count > 0) && (
+          <div className="mt-9 max-w-2xl">
+            <Stats>
+              {roster.length > 0 && (
+                <Stat value={roster.length} label={roster.length === 1 ? 'Club member' : 'Club members'} />
+              )}
+              {canAnswer && openQuestions.count > 0 && (
+                <Stat value={openQuestions.count} label="Questions open" />
+              )}
+              {canReview(profile) && pendingCount.count > 0 && (
+                <Stat value={pendingCount.count} label="Awaiting approval" />
+              )}
+            </Stats>
           </div>
+        )}
+      </PageHero>
 
-          <ul className="grid list-none gap-2 sm:hidden">
-            {roster.map((m) => (
-              <li key={m.id} className="rounded-lg border border-line bg-navy-1 px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="truncate text-[0.95rem] text-ink">
-                    {m.display_name || <span className="text-muted">No name yet</span>}
-                  </span>
-                  {m.role !== 'member' && <Pill tone="role">{roleLabel(m.role)}</Pill>}
-                </div>
-                {m.division && <Meta className="mt-1">{m.division}</Meta>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section>
+      {/* The league sits on the band, the way alternating sections do on the
+          public site, with the two boards as the dark photo-tile surfaces. */}
+      <Section band>
         <SectionTitle>The league</SectionTitle>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <CardLink href="/hub/topics" Component={Link}>
-            <h3 className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
-              Topics
-            </h3>
-            <p className="mt-2 text-[0.92rem] leading-relaxed text-silver-dim">
-              Channels across every club. Short posts, named or anonymous.
-            </p>
-            <span className="mt-4 inline-block font-display text-[0.78rem] uppercase tracking-[0.14em] text-steel">
-              Go to topics →
-            </span>
-          </CardLink>
-
-          <CardLink href="/hub/qa" Component={Link}>
-            <h3 className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
-              Q&amp;A
-            </h3>
-            <p className="mt-2 text-[0.92rem] leading-relaxed text-silver-dim">
-              Ask the advisors and exec team. Answers stay on the board.
-            </p>
-            <span className="mt-4 inline-block font-display text-[0.78rem] uppercase tracking-[0.14em] text-steel">
-              Go to Q&amp;A →
-            </span>
-          </CardLink>
+        <div className="grid gap-5 md:grid-cols-2">
+          <DarkTile href="/hub/topics" Component={Link} kicker="Channels" title="Topics">
+            Every club in one room. Short posts, named or anonymous.
+          </DarkTile>
+          <DarkTile href="/hub/qa" Component={Link} kicker="Ask the network" title="Q&A">
+            Advisors and the exec team answer. Answers stay on the board.
+          </DarkTile>
         </div>
-      </section>
+      </Section>
 
-      {roster.length === 0 && !profile.club_id && (
-        <div className="mt-6">
-          <Empty>
-            No club on your account yet. An NCBO admin attaches you to one — the league
-            board above is open in the meantime.
-          </Empty>
-        </div>
-      )}
+      <Section>
+        {roster.length > 0 ? (
+          <>
+            <SectionTitle count={`${roster.length} member${roster.length === 1 ? '' : 's'}`}>
+              Your club
+            </SectionTitle>
+
+            {/* Table on desktop, cards below sm — a three-column table on a
+                phone either overflows or squeezes to nothing. */}
+            <div className="hidden overflow-hidden rounded-[8px] border border-edge bg-surface sm:block">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-edge bg-band/60">
+                    {['Member', 'Role', 'Division'].map((h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-3 font-display text-[0.74rem] font-semibold uppercase tracking-[0.18em] text-meta"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {roster.map((m) => (
+                    <tr key={m.id} className="border-b border-edge/70 last:border-0 transition hover:bg-band/50">
+                      <td className="px-6 py-4 font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink">
+                        {m.display_name || <span className="font-body normal-case text-fine">No name yet</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        {m.role === 'member'
+                          ? <span className="text-[0.92rem] text-meta">Member</span>
+                          : <Badge tone="active">{roleLabel(m.role)}</Badge>}
+                      </td>
+                      <td className="px-6 py-4 text-[0.92rem] text-body">
+                        {m.division || <span className="text-fine">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <ul className="grid list-none gap-3 sm:hidden">
+              {roster.map((m) => (
+                <li key={m.id} className="rounded-[8px] border border-edge bg-surface px-5 py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="truncate font-display text-[1.05rem] font-bold uppercase text-ink">
+                      {m.display_name || <span className="font-body normal-case text-fine">No name yet</span>}
+                    </span>
+                    {m.role !== 'member' && <Badge tone="active">{roleLabel(m.role)}</Badge>}
+                  </div>
+                  {m.division && <Meta className="mt-1">{m.division}</Meta>}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <>
+            <SectionTitle>Your club</SectionTitle>
+            <Empty>
+              No club on your account yet. An NCBO admin attaches you to one — the league
+              board is open in the meantime.
+            </Empty>
+          </>
+        )}
+      </Section>
     </Page>
   );
 }

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHeader, SectionTitle, CardLink, Empty, Pill, Meta } from '../ui';
+import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge, Meta } from '../ui';
 import Ask from './ask';
 
 export default async function QA() {
@@ -18,36 +18,44 @@ export default async function QA() {
 
   return (
     <Page>
-      <PageHeader eyebrow="The board" title="Q&A.">
-        Questions go to the advisors and exec team. Answers stay on the board so the next
-        person doesn’t have to ask.
-      </PageHeader>
+      <PageHero
+        eyebrow="The board"
+        title="Q&A."
+        lead="Questions go to the advisors and exec team. Answers stay on the board so the next person doesn’t have to ask."
+      />
 
-      <section className="mb-10">
+      <Section>
         <SectionTitle count={open > 0 ? `${open} open` : null}>Questions</SectionTitle>
 
         {questions?.length ? (
-          <ul className="grid list-none gap-3">
+          <ul className="grid list-none gap-4">
             {questions.map((q) => (
               <li key={q.id}>
                 <CardLink href={`/hub/qa/${q.id}`} Component={Link}>
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Clamped rather than truncated with a slice: the full text
-                        stays in the DOM for search and screen readers. */}
-                    <p className="line-clamp-3 text-[1.02rem] leading-snug text-ink transition group-hover:text-steel-light">
+                  {/* Below sm the badge drops under the question: side by
+                      side, it squeezes a long question into a column two
+                      words wide. The question is sentence case on purpose —
+                      the site shouts its headings, but shouting someone's
+                      question back at them reads as an accusation. */}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
+                    {/* Clamped rather than sliced: the full text stays in the
+                        DOM for search and screen readers. */}
+                    <p className="line-clamp-3 font-display text-[1.35rem] font-bold leading-[1.2] text-ink transition group-hover:text-brand">
                       {q.body}
                     </p>
-                    <Pill tone={q.answered ? 'done' : 'open'}>
-                      {q.answered
-                        ? `${q.answer_count} answer${q.answer_count === 1 ? '' : 's'}`
-                        : 'Open'}
-                    </Pill>
+                    <div className="shrink-0">
+                      <Badge tone={q.answered ? 'forming' : 'active'}>
+                        {q.answered
+                          ? `${q.answer_count} answer${q.answer_count === 1 ? '' : 's'}`
+                          : 'Open'}
+                      </Badge>
+                    </div>
                   </div>
-                  <Meta className="mt-3">
-                    <span className="text-silver-dim">{q.author_name}</span>
+                  <Meta className="mt-4 border-t border-edge pt-3">
+                    <span className="text-body">{q.author_name}</span>
                     {q.author_school && (
                       <>
-                        <span aria-hidden className="text-muted-2">·</span>
+                        <span aria-hidden className="text-fine">·</span>
                         <span>{q.author_school}</span>
                       </>
                     )}
@@ -59,9 +67,11 @@ export default async function QA() {
         ) : (
           <Empty>No questions yet. Ask the first one.</Empty>
         )}
-      </section>
+      </Section>
 
-      <Ask channels={channels || []} />
+      <Section band>
+        <Ask channels={channels || []} />
+      </Section>
     </Page>
   );
 }

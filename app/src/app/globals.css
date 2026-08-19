@@ -28,27 +28,45 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @theme {
-  --color-navy-deep:  #060B1A;
-  --color-navy:       #0A1228;
-  --color-navy-1:     #0E1830;
-  --color-navy-2:     #14213F;
-  --color-line:       #1E2C4F;
+  /* ── Extracted from assets/styles.css — the marketing site's own values ──
+     Surfaces run light: page ground, alternating band, white card, raised
+     well. The one inverted surface is the hero, which is how thencbo.org
+     works too: a light site with deep navy photo blocks as the accent.     */
+  --color-page:    #F4F8FD;   /* page background      (--navy)      */
+  --color-band:    #E8F0FA;   /* alternating band     (--navy-deep) */
+  --color-surface: #FFFFFF;   /* card                 (--navy-1)    */
+  --color-raised:  #DEE9F7;   /* raised / empty well  (--navy-2)    */
+  --color-edge:    #D2E0F0;   /* hairline             (--line)      */
 
-  --color-steel:       #5B86C4;
-  --color-steel-light: #8FB0DD;
-  --color-steel-deep:  #3C5E96;
-  --color-silver:      #C9CDD1;
-  --color-silver-dim:  #8A94A8;
+  --color-brand:       #2F5FA8;              /* --steel, 6.4:1 on the ground */
+  --color-brand-light: #3A6BB8;              /* --steel-light, hover         */
+  --color-brand-deep:  #1E4478;              /* --steel-deep                 */
+  --color-brand-wash:  rgba(47, 95, 168, 0.08);
 
-  --color-ink:     #EEF1F7;
-  --color-muted:   #8590A8;
-  --color-muted-2: #5A647E;
-  --color-danger:  #E8A0A0;
+  --color-ink:  #0E1A2F;   /* primary text  (--white)      */
+  --color-body: #3E4E68;   /* body copy     (--silver)     */
+  --color-dim:  #5C6B85;   /* --silver-dim                 */
+  --color-meta: #566580;   /* meta, 4.9:1   (--muted)      */
+  --color-fine: #77839A;   /* fine print    (--muted-2)    */
+
+  /* The inverted surfaces: hero blocks and photo tiles. */
+  --color-scrim:      #0A1424;
+  --color-scrim-mid:  #0E1A2F;
+  --color-scrim-high: #14264A;
+  --color-onphoto:      #FFFFFF;
+  --color-onphoto-soft: #D8E3F2;
+  --color-onphoto-accent: #8FB0DD;
+
+  --color-danger: #B4324A;
 
   --font-display: 'Barlow Condensed', system-ui, sans-serif;
   --font-body:    'Barlow', system-ui, sans-serif;
 
-  --shadow-panel: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
+  --radius-brand: 8px;                                        /* --r      */
+  --shadow-brand:    0 18px 40px -24px rgba(14, 26, 47, 0.30);
+  --shadow-brand-sm: 0 2px 10px -4px rgba(14, 26, 47, 0.16);
+
+  --spacing-nav: 72px;   /* --navh: fixed nav height, sticky bars park below */
 }
 
 @layer legacy {

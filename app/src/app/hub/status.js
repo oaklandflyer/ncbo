@@ -49,18 +49,25 @@ export default function AccountStatus({ status, profile }) {
   const name = profile?.display_name || profile?.full_name || '';
 
   return (
-    <main className="login-page">
-      <div className="login-card">
-        <p className="eyebrow" style={{ justifyContent: 'center' }}>{screen.eyebrow}</p>
-        <h1>{screen.title[0]}<br />{screen.title[1]}</h1>
-        <p className="lead" style={{ marginTop: '1rem', fontSize: '0.98rem' }}>
-          {screen.lead(name)}
+    <main className="mx-auto w-full max-w-[720px] px-5 py-16 sm:px-8 sm:py-24">
+      <div className="rounded-[8px] border border-edge bg-surface p-8 shadow-brand sm:p-12">
+        <p className="flex items-center gap-3 font-display text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-brand">
+          <span aria-hidden className="h-px w-[26px] bg-brand" />
+          {screen.eyebrow}
         </p>
-        <div className="notice" style={{ marginTop: '1.4rem', textAlign: 'left' }}>
+        <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.2rem)] font-extrabold uppercase leading-[0.94] text-ink">
+          {screen.title[0]}<br />{screen.title[1]}
+        </h1>
+        <p className="mt-5 text-[1.05rem] leading-relaxed text-body">{screen.lead(name)}</p>
+        <div className="mt-8 rounded-[8px] border border-edge bg-band px-6 py-5 text-[0.96rem] leading-relaxed text-body">
           {screen.note}
         </div>
-        <p className="fineprint">
-          {screen.fineprint} Email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+        <p className="mt-8 text-[0.88rem] text-meta">
+          {screen.fineprint}{' '}
+          Email{' '}
+          <a className="font-semibold text-brand underline underline-offset-2 hover:text-brand-light" href={`mailto:${EMAIL}`}>
+            {EMAIL}
+          </a>.
         </p>
       </div>
     </main>

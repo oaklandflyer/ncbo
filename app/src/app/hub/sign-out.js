@@ -16,7 +16,7 @@ export default function SignOut() {
     <a
       href="/login"
       onClick={(e) => { e.preventDefault(); onClick(); }}
-      className="ml-1 shrink-0 whitespace-nowrap rounded-md border border-line px-2 py-1.5 font-display text-[0.76rem] font-semibold uppercase tracking-[0.1em] text-muted transition hover:border-steel/60 hover:text-ink sm:px-2.5 sm:text-[0.78rem]"
+      className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[8px] bg-brand px-[1.3rem] py-[0.6rem] font-display text-[0.86rem] font-bold uppercase tracking-[0.12em] text-white transition duration-200 hover:-translate-y-px hover:bg-brand-light focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-brand-light"
     >
       Sign out
     </a>

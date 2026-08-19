@@ -2,10 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { askQuestion } from './actions';
-import {
-  composerShell, composerLabel, composerField, composerBar,
-  checkline, btnPrimary, selectField, FormMessage,
-} from '../ui';
+import { Eyebrow, field, fieldLabel, checkline, btnPrimary, FormMessage } from '../ui';
 
 export default function Ask({ channels }) {
   const [state, action, pending] = useActionState(askQuestion, {});
@@ -14,21 +11,33 @@ export default function Ask({ channels }) {
   useEffect(() => { if (state?.ok) formRef.current?.reset(); }, [state]);
 
   return (
-    <form className={composerShell} action={action} ref={formRef}>
-      <label className={composerLabel} htmlFor="q">Ask the network</label>
-      <textarea
-        id="q" name="body" maxLength={1000} rows={3}
-        className={composerField}
-        placeholder="What do you want to know?"
-      />
-      <div className={composerBar}>
-        <div className="flex flex-wrap items-center gap-3">
-          <select name="slug" aria-label="Channel" className={selectField} defaultValue="">
+    <form className="rounded-[8px] border border-edge bg-surface p-6 sm:p-8" action={action} ref={formRef}>
+      <Eyebrow>Ask the network</Eyebrow>
+      <h2 className="mt-3 font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-extrabold uppercase leading-none text-ink">
+        Put it to the panel.
+      </h2>
+      <p className="mt-3 max-w-[560px] text-[0.98rem] text-body">
+        Advisors and the exec team see every question here. Ask anonymously if you’d rather
+        your name weren’t on it.
+      </p>
+
+      <div className="mt-6">
+        <label className={fieldLabel} htmlFor="q">Your question</label>
+        <textarea
+          id="q" name="body" maxLength={1000} rows={4}
+          className={`${field} resize-y`}
+          placeholder="What do you want to know?"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <select name="slug" aria-label="Channel" defaultValue="" className={`${field} w-auto py-2`}>
             <option value="">No channel</option>
             {channels.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
           </select>
           <label className={checkline}>
-            <input type="checkbox" name="anonymous" className="h-4 w-4 accent-steel" />
+            <input type="checkbox" name="anonymous" className="h-4 w-4 accent-[#2F5FA8]" />
             <span>Ask anonymously</span>
           </label>
         </div>
@@ -36,6 +45,7 @@ export default function Ask({ channels }) {
           {pending ? 'Sending…' : 'Ask'}
         </button>
       </div>
+
       <FormMessage error={state?.error} ok={state?.ok && 'Posted. Advisors see it on the board now.'} />
     </form>
   );
