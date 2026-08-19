@@ -43,7 +43,13 @@ export async function middleware(request) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+
+    // Carry over anything setAll wrote (a refreshed session, or the cleared
+    // cookies of an expired one). A bare NextResponse.redirect would drop
+    // them, so the next request would repeat the same refresh.
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
   }
 
   return response;
