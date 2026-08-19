@@ -2,6 +2,9 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { answerQuestion } from './actions';
+import {
+  composerShell, composerLabel, composerField, composerBar, btnPrimary, FormMessage,
+} from '../ui';
 
 export default function AnswerForm({ questionId }) {
   const [state, action, pending] = useActionState(answerQuestion, {});
@@ -10,16 +13,20 @@ export default function AnswerForm({ questionId }) {
   useEffect(() => { if (state?.ok) formRef.current?.reset(); }, [state]);
 
   return (
-    <form className="composer" action={action} ref={formRef}>
+    <form className={composerShell} action={action} ref={formRef}>
       <input type="hidden" name="question_id" value={questionId} />
-      <label htmlFor="a">Your answer</label>
-      <textarea id="a" name="body" maxLength={4000} placeholder="Answer for the whole network…" />
-      <div className="composer-bar">
-        <button className="btn btn-primary btn-sm" type="submit" disabled={pending}>
+      <label className={composerLabel} htmlFor="a">Your answer</label>
+      <textarea
+        id="a" name="body" maxLength={4000} rows={5}
+        className={composerField}
+        placeholder="Answer for the whole network…"
+      />
+      <div className={`${composerBar} justify-end`}>
+        <button className={btnPrimary} type="submit" disabled={pending}>
           {pending ? 'Posting…' : 'Post answer'}
         </button>
       </div>
-      {state?.error && <p className="msg err">{state.error}</p>}
+      <FormMessage error={state?.error} />
     </form>
   );
 }

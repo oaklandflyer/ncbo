@@ -35,19 +35,51 @@ export default async function HubLayout({ children }) {
 
   return (
     <>
-      <header className="appbar">
-        <div className="appbar-inner">
-          <Link className="brand" href="/hub">NCBO</Link>
-          <span className={`rolechip ${profile.role}`}>{profile.role.replace('_', ' ')}</span>
-          <nav className="appnav">
-            <Link href="/hub">Home</Link>
-            <Link href="/hub/topics">Topics</Link>
-            <Link href="/hub/qa">Q&amp;A</Link>
+      {/* Sticky so the nav is reachable from the bottom of a long board, and
+          horizontally scrollable rather than wrapping into two rows on a
+          narrow phone. Nothing above this line was touched: the guards decide
+          who gets here, this only draws the chrome. */}
+      <header className="sticky top-0 z-30 border-b border-line bg-navy/95 backdrop-blur supports-[backdrop-filter]:bg-navy/80">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-5 py-3 sm:px-8">
+          <Link
+            href="/hub"
+            className="font-display text-lg font-extrabold uppercase tracking-[0.2em] text-ink transition hover:text-steel-light"
+          >
+            NCBO
+          </Link>
+          <span className="hidden shrink-0 rounded-full border border-steel-deep/50 bg-steel-deep/20 px-2.5 py-0.5 font-display text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-steel-light sm:inline-flex">
+            {profile.role.replace('_', ' ')}
+          </span>
+
+          {/* The links scroll on a narrow phone; sign-out sits outside the
+              scroller so it never ends up off the right edge. */}
+          <nav
+            aria-label="Member hub"
+            className="ml-auto flex min-w-0 items-center gap-0.5 overflow-x-auto font-display text-[0.76rem] font-semibold uppercase tracking-[0.1em] [scrollbar-width:none] sm:gap-1 sm:text-[0.78rem] sm:tracking-[0.14em] [&::-webkit-scrollbar]:hidden"
+          >
+            {[
+              ['/hub', 'Home'],
+              ['/hub/topics', 'Topics'],
+              ['/hub/qa', 'Q&A'],
+            ].map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                className="whitespace-nowrap rounded-md px-2 py-1.5 text-silver-dim transition hover:bg-navy-2 hover:text-ink sm:px-2.5"
+              >
+                {label}
+              </Link>
+            ))}
             {canReview(profile) && (
-              <Link href="/hub/admin">{canManageRoles(profile) ? 'Admin' : 'Review'}</Link>
+              <Link
+                href="/hub/admin"
+                className="whitespace-nowrap rounded-md px-2 py-1.5 text-steel transition hover:bg-navy-2 hover:text-steel-light sm:px-2.5"
+              >
+                {canManageRoles(profile) ? 'Admin' : 'Review'}
+              </Link>
             )}
-            <SignOut />
           </nav>
+          <SignOut />
         </div>
       </header>
       {children}

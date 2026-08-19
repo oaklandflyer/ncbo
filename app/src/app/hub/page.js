@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { canReview, reviewScope } from '@/lib/review';
+import { Page, PageHeader, SectionTitle, Card, CardLink, Empty, Pill, Meta } from './ui';
 
 /**
  * Club home — where a member lands after signing in.
@@ -41,82 +42,147 @@ export default async function Hub() {
   ]);
 
   const roster = clubmates.data || [];
+  const roleLabel = (role) => (role === 'member' ? 'Member' : role.replace('_', ' '));
 
   return (
-    <main className="page wrap">
-      <div className="page-head">
-        <p className="eyebrow">{profile.schools?.name || 'NCBO'}</p>
-        <h1>{profile.clubs?.name || `Welcome back, ${profile.display_name || 'member'}.`}</h1>
-        <p>
-          {profile.clubs?.name
-            ? `${profile.schools?.name} · ${roster.length} member${roster.length === 1 ? '' : 's'}`
-            : 'You’re not attached to a club yet — the league board is open to you all the same.'}
-        </p>
-      </div>
+    <Page>
+      <PageHeader
+        eyebrow={profile.schools?.name || 'NCBO'}
+        title={profile.clubs?.name || `Welcome back, ${profile.display_name || 'member'}.`}
+      >
+        {profile.clubs?.name
+          ? `${profile.schools?.name} · ${roster.length} member${roster.length === 1 ? '' : 's'}`
+          : 'You’re not attached to a club yet — the league board is open to you all the same.'}
+      </PageHeader>
 
-      {canReview(profile) && pendingCount.count > 0 && (
-        <div className="notice" style={{ marginBottom: '1.2rem' }}>
-          <b>{pendingCount.count} account{pendingCount.count === 1 ? '' : 's'} waiting for approval.</b>{' '}
-          <Link href="/hub/admin" style={{ color: 'var(--steel-light)', textDecoration: 'underline' }}>
-            Review them →
-          </Link>
-        </div>
-      )}
+      {/* Things waiting on this person, if any. Nothing renders when there is
+          nothing to do, rather than a row of zeroes. */}
+      {(pendingCount.count > 0 || openQuestions.count > 0) && (
+        <div className="mb-9 grid gap-3 sm:grid-cols-2">
+          {canReview(profile) && pendingCount.count > 0 && (
+            <CardLink href="/hub/admin" Component={Link} className="flex items-center justify-between gap-4">
+              <span>
+                <span className="block font-display text-2xl font-extrabold leading-none text-ink">
+                  {pendingCount.count}
+                </span>
+                <span className="mt-1 block text-[0.9rem] text-silver">
+                  account{pendingCount.count === 1 ? '' : 's'} waiting for approval
+                </span>
+              </span>
+              <span className="font-display text-sm uppercase tracking-[0.12em] text-steel transition group-hover:text-steel-light">
+                Review →
+              </span>
+            </CardLink>
+          )}
 
-      {canAnswer && openQuestions.count > 0 && (
-        <div className="notice" style={{ marginBottom: '1.2rem' }}>
-          <b>{openQuestions.count} question{openQuestions.count === 1 ? '' : 's'} waiting for an answer.</b>{' '}
-          <Link href="/hub/qa" style={{ color: 'var(--steel-light)', textDecoration: 'underline' }}>
-            Open the board →
-          </Link>
+          {canAnswer && openQuestions.count > 0 && (
+            <CardLink href="/hub/qa" Component={Link} className="flex items-center justify-between gap-4">
+              <span>
+                <span className="block font-display text-2xl font-extrabold leading-none text-ink">
+                  {openQuestions.count}
+                </span>
+                <span className="mt-1 block text-[0.9rem] text-silver">
+                  question{openQuestions.count === 1 ? '' : 's'} waiting for an answer
+                </span>
+              </span>
+              <span className="font-display text-sm uppercase tracking-[0.12em] text-steel transition group-hover:text-steel-light">
+                Open →
+              </span>
+            </CardLink>
+          )}
         </div>
       )}
 
       {roster.length > 0 && (
-        <>
-          <p className="eyebrow" style={{ marginBottom: '0.9rem' }}>Your club</p>
-          <div className="tablewrap" style={{ marginBottom: '2rem' }}>
-            <table>
-              <thead><tr><th>Member</th><th>Role</th><th>Division</th></tr></thead>
+        <section className="mb-10">
+          <SectionTitle count={`${roster.length} member${roster.length === 1 ? '' : 's'}`}>
+            Your club
+          </SectionTitle>
+
+          {/* A table on a phone either overflows or squeezes to nothing, so it
+              becomes a list of cards below sm. Same data, twice, one visible. */}
+          <div className="hidden overflow-hidden rounded-xl border border-line sm:block">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-navy-2/60">
+                  {['Member', 'Role', 'Division'].map((h) => (
+                    <th key={h} className="px-5 py-3 font-display text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
               <tbody>
                 {roster.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.display_name || <span className="muted">No name yet</span>}</td>
-                    <td>
-                      {m.role === 'member'
-                        ? <span className="muted">Member</span>
-                        : <span className="rolechip">{m.role.replace('_', ' ')}</span>}
+                  <tr key={m.id} className="border-t border-line/70 transition hover:bg-navy-1">
+                    <td className="px-5 py-3 text-[0.95rem] text-ink">
+                      {m.display_name || <span className="text-muted">No name yet</span>}
                     </td>
-                    <td>{m.division || <span className="muted">—</span>}</td>
+                    <td className="px-5 py-3">
+                      {m.role === 'member'
+                        ? <span className="text-[0.9rem] text-muted">Member</span>
+                        : <Pill tone="role">{roleLabel(m.role)}</Pill>}
+                    </td>
+                    <td className="px-5 py-3 text-[0.9rem] text-silver-dim">{m.division || '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </>
+
+          <ul className="grid list-none gap-2 sm:hidden">
+            {roster.map((m) => (
+              <li key={m.id} className="rounded-lg border border-line bg-navy-1 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate text-[0.95rem] text-ink">
+                    {m.display_name || <span className="text-muted">No name yet</span>}
+                  </span>
+                  {m.role !== 'member' && <Pill tone="role">{roleLabel(m.role)}</Pill>}
+                </div>
+                {m.division && <Meta className="mt-1">{m.division}</Meta>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
-      <p className="eyebrow" style={{ marginBottom: '0.9rem' }}>The league</p>
-      <div className="stack">
-        <div className="card">
-          <h3>Topics</h3>
-          <p className="lead" style={{ fontSize: '0.95rem', marginTop: '0.3rem' }}>
-            Channels across every club. Short posts, named or anonymous.
-          </p>
-          <Link className="btn btn-ghost btn-sm" href="/hub/topics" style={{ marginTop: '0.9rem' }}>
-            Go to topics
-          </Link>
+      <section>
+        <SectionTitle>The league</SectionTitle>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <CardLink href="/hub/topics" Component={Link}>
+            <h3 className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
+              Topics
+            </h3>
+            <p className="mt-2 text-[0.92rem] leading-relaxed text-silver-dim">
+              Channels across every club. Short posts, named or anonymous.
+            </p>
+            <span className="mt-4 inline-block font-display text-[0.78rem] uppercase tracking-[0.14em] text-steel">
+              Go to topics →
+            </span>
+          </CardLink>
+
+          <CardLink href="/hub/qa" Component={Link}>
+            <h3 className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
+              Q&amp;A
+            </h3>
+            <p className="mt-2 text-[0.92rem] leading-relaxed text-silver-dim">
+              Ask the advisors and exec team. Answers stay on the board.
+            </p>
+            <span className="mt-4 inline-block font-display text-[0.78rem] uppercase tracking-[0.14em] text-steel">
+              Go to Q&amp;A →
+            </span>
+          </CardLink>
         </div>
-        <div className="card">
-          <h3>Q&amp;A</h3>
-          <p className="lead" style={{ fontSize: '0.95rem', marginTop: '0.3rem' }}>
-            Ask the advisors and exec team. Answers stay on the board.
-          </p>
-          <Link className="btn btn-ghost btn-sm" href="/hub/qa" style={{ marginTop: '0.9rem' }}>
-            Go to Q&amp;A
-          </Link>
+      </section>
+
+      {roster.length === 0 && !profile.club_id && (
+        <div className="mt-6">
+          <Empty>
+            No club on your account yet. An NCBO admin attaches you to one — the league
+            board above is open in the meantime.
+          </Empty>
         </div>
-      </div>
-    </main>
+      )}
+    </Page>
   );
 }

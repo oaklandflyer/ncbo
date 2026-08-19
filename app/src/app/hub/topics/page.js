@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { Page, PageHeader, CardLink, Empty, Pill } from '../ui';
 
 export default async function Topics() {
   const supabase = await createClient();
@@ -18,22 +19,32 @@ export default async function Topics() {
   const byId = Object.fromEntries(counts);
 
   return (
-    <main className="page wrap">
-      <div className="page-head">
-        <p className="eyebrow">The board</p>
-        <h1>Topics.</h1>
-        <p>Channels are league-wide. Posts are short by design — say one thing well.</p>
-      </div>
+    <Page>
+      <PageHeader eyebrow="The board" title="Topics.">
+        Channels are league-wide. Posts are short by design — say one thing well.
+      </PageHeader>
 
-      <div className="chan-grid">
-        {(channels || []).map((c) => (
-          <Link className="chan" key={c.id} href={`/hub/topics/${c.slug}`}>
-            <h3>{c.name}</h3>
-            <p>{c.description}</p>
-            <span className="count">{byId[c.id]} post{byId[c.id] === 1 ? '' : 's'}</span>
-          </Link>
-        ))}
-      </div>
-    </main>
+      {channels?.length ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {channels.map((c) => (
+            <CardLink key={c.id} href={`/hub/topics/${c.slug}`} Component={Link} className="flex flex-col">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-display text-lg font-bold uppercase tracking-[0.06em] text-ink transition group-hover:text-steel-light">
+                  {c.name}
+                </h3>
+                <Pill tone={byId[c.id] > 0 ? 'open' : 'quiet'}>
+                  {byId[c.id]} post{byId[c.id] === 1 ? '' : 's'}
+                </Pill>
+              </div>
+              <p className="mt-2 grow text-[0.9rem] leading-relaxed text-silver-dim">
+                {c.description}
+              </p>
+            </CardLink>
+          ))}
+        </div>
+      ) : (
+        <Empty>No channels yet.</Empty>
+      )}
+    </Page>
   );
 }
