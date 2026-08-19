@@ -265,3 +265,64 @@ export function FormMessage({ error, ok }) {
     </p>
   );
 }
+
+/* ── signed-out pages ─────────────────────────────────────────────────── */
+
+/**
+ * The shell for /login and /onboarding: the site's light ground, a centred
+ * white card on the band, the crest above it. These are the first screens
+ * anyone sees, so they carry the brand rather than looking like a form.
+ */
+export function AuthPage({ children, wide = false }) {
+  return (
+    <main className="relative flex min-h-screen flex-col items-center justify-center bg-page px-5 py-14 font-body text-[17px] leading-relaxed text-ink antialiased sm:px-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(47,95,168,0.10), transparent 65%)',
+        }}
+      />
+      <div className={`relative z-10 w-full ${wide ? 'max-w-[680px]' : 'max-w-[480px]'}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/ncbo-crest.webp"
+          alt="NCBO"
+          width={64}
+          height={64}
+          className="mx-auto mb-7 h-16 w-16"
+        />
+        <div className="rounded-[8px] border border-edge bg-surface p-7 shadow-brand sm:p-10">
+          {children}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+/** Centred eyebrow + display headline, for the auth cards. */
+export function AuthHeading({ eyebrow, children }) {
+  return (
+    <>
+      {eyebrow && (
+        <p className="flex items-center justify-center gap-3 font-display text-[0.78rem] font-semibold uppercase tracking-[0.3em] text-brand">
+          <span aria-hidden className="h-px w-[26px] bg-brand" />
+          {eyebrow}
+        </p>
+      )}
+      <h1 className="mt-5 text-center font-display text-[clamp(1.9rem,5vw,2.7rem)] font-extrabold uppercase leading-[0.94] text-ink">
+        {children}
+      </h1>
+    </>
+  );
+}
+
+export const fineprint = 'text-[0.86rem] leading-relaxed text-meta';
+
+/**
+ * Tailwind's preflight is deliberately not loaded (see globals.css), so a bare
+ * <button> keeps the browser's grey box and border. Anything that should look
+ * like text or an icon has to say so.
+ */
+export const buttonReset = 'cursor-pointer appearance-none border-0 bg-transparent p-0';

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { createPost } from './actions';
-import { Eyebrow, field, fieldLabel, checkline, btnPrimary, FormMessage } from '../ui';
+import { Eyebrow, field, fieldLabel, checkline, btnPrimary, FormMessage } from '@/app/ui';
 
 const LIMIT = 240;
 

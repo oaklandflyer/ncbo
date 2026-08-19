@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta, BackLink } from '../../ui';
+import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta, BackLink } from '@/app/ui';
 import AnswerForm from '../answer';
 
 export default async function Question({ params }) {

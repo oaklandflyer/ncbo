@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge, Meta } from '../ui';
+import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge, Meta } from '@/app/ui';
 import Ask from './ask';
 
 export default async function QA() {

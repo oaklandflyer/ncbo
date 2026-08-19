@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
+import { AuthPage, AuthHeading } from '@/app/ui';
 import OnboardingForm from './form';
 
 export const metadata = {
@@ -26,18 +27,17 @@ export default async function Onboarding() {
   if (isOnboarded(profile)) redirect('/hub');
 
   return (
-    <main className="login-page">
-      <div className="login-card">
-        <p className="eyebrow" style={{ justifyContent: 'center' }}>One last thing</p>
-        <h1>Tell us<br />who you are.</h1>
-        <p className="lead" style={{ marginTop: '1rem', fontSize: '0.98rem' }}>
-          Your email got you in the door. This is what your club and the NCBO exec
-          team actually see — it takes a minute and you only do it once.
-        </p>
-        <div style={{ marginTop: '1.6rem', textAlign: 'left' }}>
-          <OnboardingForm email={profile.email} defaultName={profile.full_name} />
-        </div>
+    <AuthPage wide>
+      <AuthHeading eyebrow="One last thing">Tell us<br />who you are.</AuthHeading>
+
+      <p className="mx-auto mt-6 max-w-[520px] text-center text-[1.02rem] leading-relaxed text-body">
+        Your email got you in the door. This is what your club and the NCBO exec team
+        actually see — it takes a minute and you only do it once.
+      </p>
+
+      <div className="mt-9">
+        <OnboardingForm email={profile.email} defaultName={profile.full_name} />
       </div>
-    </main>
+    </AuthPage>
   );
 }

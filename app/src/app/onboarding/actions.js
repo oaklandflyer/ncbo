@@ -3,15 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-
-export const CLASS_YEARS = [
-  'Freshman', 'Sophomore', 'Junior', 'Senior', 'Fifth year or beyond',
-  'Graduate student', 'Not a student',
-];
-
-export const EXPERIENCE = [
-  'Under a year', '1–2 years', '3–5 years', '5+ years',
-];
+import { CLASS_YEARS, EXPERIENCE } from './options';
 
 /**
  * Save the onboarding form.

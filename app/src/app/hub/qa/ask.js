@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { askQuestion } from './actions';
-import { Eyebrow, field, fieldLabel, checkline, btnPrimary, FormMessage } from '../ui';
+import { Eyebrow, field, fieldLabel, checkline, btnPrimary, FormMessage } from '@/app/ui';
 
 export default function Ask({ channels }) {
   const [state, action, pending] = useActionState(askQuestion, {});

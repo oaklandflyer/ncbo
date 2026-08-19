@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { answerQuestion } from './actions';
-import { Eyebrow, field, fieldLabel, btnPrimary, FormMessage } from '../ui';
+import { Eyebrow, field, fieldLabel, btnPrimary, FormMessage } from '@/app/ui';
 
 export default function AnswerForm({ questionId }) {
   const [state, action, pending] = useActionState(answerQuestion, {});

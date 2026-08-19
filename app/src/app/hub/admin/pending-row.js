@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { setStatus } from './actions';
-import { btnPrimary, btnGhost, btnSmall } from '../ui';
+import { btnPrimary, btnGhost, btnSmall } from '@/app/ui';
 
 export default function PendingRow({ member }) {
   const [state, action, pending] = useActionState(setStatus, {});

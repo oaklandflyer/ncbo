@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge } from '../ui';
+import { Page, PageHero, Section, SectionTitle, CardLink, Empty, Badge } from '@/app/ui';
 
 export default async function Topics() {
   const supabase = await createClient();

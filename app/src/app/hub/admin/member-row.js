@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { updateMember } from './actions';
-import { btnGhost, btnSmall, field } from '../ui';
+import { btnGhost, btnSmall, field } from '@/app/ui';
 
 export default function MemberRow({ member, clubs }) {
   const [state, action, pending] = useActionState(updateMember, {});

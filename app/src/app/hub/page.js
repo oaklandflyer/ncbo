@@ -5,7 +5,7 @@ import { canReview, reviewScope } from '@/lib/review';
 import {
   Page, PageHero, Section, SectionTitle, DarkTile,
   Stat, Stats, Badge, Empty, Meta, btnGhost, btnSmall,
-} from './ui';
+} from '@/app/ui';
 
 /**
  * Club home — where a member lands after signing in.

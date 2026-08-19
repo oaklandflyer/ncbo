@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SignOut from './sign-out';
+import { buttonReset } from '@/app/ui';
 
 /**
  * The hub's top bar, built to match nav.site-nav on thencbo.org: fixed, a
@@ -88,7 +89,7 @@ export default function HubNav({ canReview, manages }) {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="hub-mobile-menu"
-          className="relative z-[210] ml-auto h-[42px] w-[42px] md:hidden"
+          className={`${buttonReset} relative z-[210] ml-auto h-[42px] w-[42px] md:hidden`}
         >
           <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
           <span

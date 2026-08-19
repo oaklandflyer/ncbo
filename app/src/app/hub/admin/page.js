@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { canReview, canManageRoles, reviewScope } from '@/lib/review';
-import { Page, PageHero, Section, SectionTitle, Empty } from '../ui';
+import { Page, PageHero, Section, SectionTitle, Empty } from '@/app/ui';
 import MemberRow from './member-row';
 import PendingRow from './pending-row';
 

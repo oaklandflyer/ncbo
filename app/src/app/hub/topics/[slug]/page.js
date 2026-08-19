@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, Empty, Badge, Meta, BackLink } from '../../ui';
+import { Page, PageHero, Section, SectionTitle, Empty, Badge, Meta, BackLink } from '@/app/ui';
 import Composer from '../composer';
 
 function when(ts) {
