@@ -94,3 +94,38 @@ export async function moderateQuestion(prev, formData) {
   revalidatePath('/hub/qa');
   return { ok: true };
 }
+
+/**
+ * Toggle the caller's "this helped" vote on a question.
+ *
+ * The insert names `user_id: user.id` and the RLS CHECK requires it to equal
+ * auth.uid(), so a forged vote is refused by Postgres rather than by this
+ * function. Voting twice is refused by the composite primary key, which is
+ * why a duplicate is treated as success: the desired state is already true.
+ */
+export async function toggleVote(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('question_id') || '');
+  const voted = formData.get('voted') === 'true';
+  if (!id) return { error: 'Unknown question.' };
+
+  const { error } = voted
+    ? await supabase.from('question_votes').delete()
+        .eq('question_id', id).eq('user_id', user.id)
+    : await supabase.from('question_votes')
+        .insert({ question_id: id, user_id: user.id });
+
+  /* 23505 is the unique violation: somebody double-tapped, and the vote they
+     wanted is already recorded. Nothing to report. */
+  if (error && error.code !== '23505') {
+    return { error: error.message.includes('row-level security')
+      ? 'Only approved members can vote.'
+      : 'That vote didn’t save. Try again.' };
+  }
+
+  revalidatePath('/hub/qa');
+  return { ok: true };
+}

@@ -357,3 +357,54 @@ select count(*) as same_row_via_base_table
 select count(*) as anonymous_authors_dana_can_read
   from questions where anonymous;
 reset role;
+
+\echo ''
+\echo '=== 47. a member CANNOT vote as somebody else, and CANNOT vote twice ==='
+set role authenticated;
+set test.uid = '11111111-1111-1111-1111-111111111111';
+insert into question_votes (question_id, user_id)
+values ((select id from questions where status='approved' order by created_at limit 1),
+        '33333333-3333-3333-3333-333333333333');
+insert into question_votes (question_id, user_id)
+values ((select id from questions where status='approved' order by created_at limit 1),
+        '11111111-1111-1111-1111-111111111111')
+on conflict do nothing;
+insert into question_votes (question_id, user_id)
+values ((select id from questions where status='approved' order by created_at limit 1),
+        '11111111-1111-1111-1111-111111111111');
+
+\echo ''
+\echo '=== 48. a member CANNOT delete somebody else''s vote ==='
+delete from question_votes where user_id = '33333333-3333-3333-3333-333333333333';
+select count(*) as other_members_votes_intact
+  from question_votes where user_id = '33333333-3333-3333-3333-333333333333';
+
+\echo ''
+\echo '=== 49. a member CANNOT add a resource; a moderator CAN ==='
+insert into resources (title, category, type, external_url)
+values ('Member-added resource', 'General', 'article', 'https://example.com/x');
+set test.uid = '33333333-3333-3333-3333-333333333333';
+insert into resources (title, category, type, external_url)
+values ('Advisor-added resource', 'General', 'article', 'https://example.com/x');
+select title from resources where title like '%-added resource';
+
+\echo ''
+\echo '=== 50. a resource URL must be https, and cannot be a script ==='
+insert into resources (title, category, type, external_url)
+values ('Script link', 'General', 'article', 'javascript:alert(1)');
+insert into resources (title, category, type, external_url)
+values ('Plain http link', 'General', 'article', 'http://example.com/x');
+
+\echo ''
+\echo '=== 51. a member CAN set their own social handles, but not a URL ==='
+set test.uid = '11111111-1111-1111-1111-111111111111';
+update profiles set instagram_handle = 'alex.lifts'
+ where id = '11111111-1111-1111-1111-111111111111';
+select instagram_handle from profiles where id = '11111111-1111-1111-1111-111111111111';
+update profiles set instagram_handle = 'https://instagram.com/someone'
+ where id = '11111111-1111-1111-1111-111111111111';
+update profiles set instagram_handle = 'hacked'
+ where id = '33333333-3333-3333-3333-333333333333';
+select instagram_handle as advisor_handle_untouched
+  from profiles where id = '33333333-3333-3333-3333-333333333333';
+reset role;

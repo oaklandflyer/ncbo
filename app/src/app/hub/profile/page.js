@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
+import Link from 'next/link';
 import {
   Page, PageHero, Section, SectionTitle, Card, Stat, Stats, Badge, Meta,
-  VettedSeal, Credentials, fineprint,
+  VettedSeal, Credentials, SocialLinks, fineprint, btnGhost, btnSmall,
 } from '@/app/ui';
 import SignOut from '../sign-out';
 
@@ -34,6 +35,8 @@ export default async function Profile() {
     ['Club', profile.clubs?.name],
     ['Email', profile.email],
     ['Home region', profile.home_region],
+    ['Instagram', profile.instagram_handle && `@${profile.instagram_handle}`],
+    ['TikTok', profile.tiktok_handle && `@${profile.tiktok_handle}`],
     ['Division', profile.division],
     ['Class year', profile.class_year],
   ].filter(([, value]) => value);
@@ -59,6 +62,12 @@ export default async function Profile() {
             {profile.credentials?.length > 0 && (
               <div className="mt-3"><Credentials items={profile.credentials} /></div>
             )}
+
+            <SocialLinks
+              className="mt-3"
+              instagram={profile.instagram_handle}
+              tiktok={profile.tiktok_handle}
+            />
           </div>
         </div>
 
@@ -73,7 +82,15 @@ export default async function Profile() {
       </PageHero>
 
       <Section>
-        <SectionTitle>Your details</SectionTitle>
+        <SectionTitle
+          action={
+            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/profile/edit">
+              Edit profile
+            </Link>
+          }
+        >
+          Your details
+        </SectionTitle>
 
         {/* Stacked rows rather than a table: two columns of short values read
             the same at every width and never need a horizontal scroll. */}
