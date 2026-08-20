@@ -129,3 +129,41 @@ export async function toggleVote(prev, formData) {
   revalidatePath('/hub/qa');
   return { ok: true };
 }
+
+/**
+ * Remove a question from the board. Advisors and admins only.
+ *
+ * A soft delete: `deleted_at` is stamped and every read path filters it out.
+ * A hard DELETE would cascade — `answers.question_id` and
+ * `question_votes.question_id` are both ON DELETE CASCADE — so a moderator
+ * tidying one question would silently destroy every answer written under it,
+ * with nothing left to review if the call is questioned. The row stays on
+ * disk; only its visibility changes.
+ *
+ * The guarantee is `guard_question_status()`, which refuses a `deleted_at`
+ * change from anyone who is not a moderator. This function's check is for the
+ * error message.
+ */
+export async function removeQuestion(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('question_id') || '');
+  if (!id) return { error: 'Unknown question.' };
+
+  const { error } = await supabase
+    .from('questions')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: user.id })
+    .eq('id', id);
+
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      || error.message.includes('row-level security')
+      ? 'Only advisors and the exec team can remove a question.'
+      : 'That didn’t save. The question is still on the board.' };
+  }
+
+  revalidatePath('/hub/qa');
+  return { ok: true };
+}

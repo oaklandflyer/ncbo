@@ -5,6 +5,7 @@ import Board from './board';
 import { isModerator } from '@/lib/review';
 import Ask from './ask';
 import Moderate from './moderate';
+import Remove from './remove';
 
 /** The board only ever shows approved questions; the rest are states, not posts. */
 const PILL = {
@@ -38,7 +39,7 @@ export default async function QA() {
   const moderates = isModerator(profile);
   const { data: queue } = moderates
     ? await supabase.from('question_feed')
-        .select('id, body, status, created_at, author_name, author_school')
+        .select('id, body, status, created_at, author_name, author_school, answer_count')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
     : { data: null };
@@ -107,8 +108,13 @@ export default async function QA() {
                     </>
                   )}
                 </Meta>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap items-center gap-4">
                   <Moderate questionId={q.id} />
+                  <Remove
+                    questionId={q.id}
+                    title={q.body}
+                    answerCount={q.answer_count || 0}
+                  />
                 </div>
               </Card>
             ))}

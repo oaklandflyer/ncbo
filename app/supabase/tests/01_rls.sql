@@ -408,3 +408,42 @@ update profiles set instagram_handle = 'hacked'
 select instagram_handle as advisor_handle_untouched
   from profiles where id = '33333333-3333-3333-3333-333333333333';
 reset role;
+
+\echo ''
+\echo '=== 52. the widened board policy: approved+named readable, anonymous NOT ==='
+set role authenticated;
+set test.uid = '11111111-1111-1111-1111-111111111111';
+insert into questions (id, author_id, body, status, anonymous) values
+  ('aaaa0000-0000-0000-0000-00000000000a', '11111111-1111-1111-1111-111111111111',
+   'V1 approved named', 'approved', false),
+  ('bbbb0000-0000-0000-0000-00000000000b', '11111111-1111-1111-1111-111111111111',
+   'V1 approved anonymous', 'approved', true);
+set test.uid = '22222222-2222-2222-2222-222222222222';   -- a plain member
+select body as base_table_rows_dana_can_read
+  from questions where body like 'V1 %' order by body;
+select body, author_id is null as author_hidden
+  from question_feed where body like 'V1 %' order by body;
+
+\echo ''
+\echo '=== 53. a member CANNOT soft-delete another member''s question ==='
+update questions set deleted_at = now() where id = 'aaaa0000-0000-0000-0000-00000000000a';
+select count(*) as still_live
+  from questions where id = 'aaaa0000-0000-0000-0000-00000000000a' and deleted_at is null;
+
+\echo ''
+\echo '=== 54. an advisor CAN, and the answers survive the removal ==='
+set test.uid = '33333333-3333-3333-3333-333333333333';
+insert into answers (question_id, author_id, body)
+values ('aaaa0000-0000-0000-0000-00000000000a', '33333333-3333-3333-3333-333333333333', 'Kept.');
+update questions set deleted_at = now(), deleted_by = auth.uid()
+ where id = 'aaaa0000-0000-0000-0000-00000000000a';
+select count(*) as removed_from_feed
+  from question_feed where id = 'aaaa0000-0000-0000-0000-00000000000a';
+select count(*) as answer_still_recoverable
+  from answers where question_id = 'aaaa0000-0000-0000-0000-00000000000a';
+
+\echo ''
+\echo '=== 55. the roster is one club per school, pipelines included ==='
+select status, count(*) from club_directory group by status order by status;
+select count(*) as clubs_with_leads from club_directory where array_length(leads, 1) > 0;
+reset role;
