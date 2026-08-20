@@ -32,7 +32,7 @@ Change the text between the quotes, save, refresh the page.
 | `news.html` | News & Updates |
 | `clubs.html`, `start-a-club.html`, `about.html`, `faqs.html` | Redirect stubs → the matching `index.html#` section (old links keep working) |
 | `assets/data.js` | **All site content. Edit this.** |
-| `admin/` | Website content manager — a **local** tool, not published. See `admin/README.md` |
+| `admin/` | Website content manager at `/admin/`, behind a passphrase. See `admin/README.md` |
 | `app/` | **The member hub — Next.js + Supabase.** Everything behind sign-in. |
 | `SECURITY-NOTES.md` | **What protects the member area, and what doesn't. Read it.** |
 | `assets/usmap.js` | Reusable US club map (state outlines + campus pins) |

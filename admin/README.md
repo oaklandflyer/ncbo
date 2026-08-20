@@ -1,57 +1,77 @@
-# Website content manager — a local tool
+# Website content manager
 
-This edits the public site's content (`assets/data.js`) from a browser form
-instead of by hand. It is **not published**: `_config.yml` excludes `admin/`
-from the GitHub Pages build, so there is no `thencbo.org/admin/` to find.
+Edits the public site's content (`assets/data.js`) through a browser form
+instead of by hand. Published at **https://thencbo.org/admin/**, behind a
+passphrase.
 
-That is deliberate. This repository is public, so serving the tool only
-advertised that it existed — the URL was never the thing protecting anything.
-What actually guards the live site is the **GitHub personal access token** you
-paste into the Content page: without a token that has write access to this
-repo, the tool can display the site's content but cannot change a byte of it.
+Nothing here uses Supabase, Vercel, or any other paid service. The page is a
+static file on GitHub Pages and talks to exactly one host: `api.github.com`,
+with your token, from your browser.
 
-## Running it
+## Two locks, doing different jobs
 
-From your own copy of the repo:
+**The passphrase** (`gate.js`) decides who sees the editor. It is checked in
+the browser with WebCrypto — PBKDF2-SHA256, 310,000 iterations — against a salt
+and hash committed in `gate.js`.
 
-```bash
-git clone https://github.com/oaklandflyer/ncbo.git   # or: git pull
-cd ncbo
-python3 -m http.server 8000
+Be clear about what that is: this repository is public, so those values are
+readable by anyone and can be attacked offline. The passphrase is 16 random
+characters for that reason. It keeps casual visitors and crawlers out of the
+editor UI, and that is its whole job.
+
+**The GitHub token** is what actually protects the live site. Saving requires a
+fine-grained personal access token with write access to this repo, typed into
+the Content page. Without one, this tool can display the site's content and
+change nothing at all. Someone who guessed the passphrase would find a form
+they cannot save from.
+
+## Changing the passphrase
+
+In any browser console, with your new passphrase:
+
+```js
+const pass = 'your-new-passphrase';
+const salt = crypto.getRandomValues(new Uint8Array(16));
+const hex  = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+const key  = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+const bits = await crypto.subtle.deriveBits(
+  { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' }, key, 256);
+console.log('SALT =', hex(salt), '\nHASH =', hex(bits));
 ```
 
-Then open **http://localhost:8000/admin/** and pick a tool.
-
-Use a local server rather than double-clicking the file: opening it as
-`file://` gives the page a `null` origin, which the GitHub API rejects, so
-saving would fail.
+Paste the two values over `SALT` and `HASH` at the top of `gate.js`, bump the
+`?v=` on the `<script src="gate.js?v=...">` line in both admin pages so nobody
+keeps a cached copy of the old one, and commit.
 
 ## The token
 
-Create a **fine-grained** personal access token at
+Create a **fine-grained** token at
 <https://github.com/settings/personal-access-tokens/new>, scoped to this one
-repository, with **Contents: Read and write** and nothing else. Paste it into
-the Content page when you save.
+repository, **Contents: Read and write**, nothing else.
 
-- It is sent from your browser straight to `api.github.com`. It is never sent
-  anywhere else, and nothing in this repository stores it server-side.
-- "Remember token on this device" keeps it in this browser's local storage.
-  Don't tick that on a shared machine.
-- Revoke it from the same settings page the moment you no longer need it.
+- It goes from your browser straight to `api.github.com` and nowhere else.
+  Nothing in this repository stores it server-side.
+- "Remember token on this device" keeps it in that browser's local storage.
+  Don't tick it on a shared machine.
+- Revoke it from the same settings page when you no longer need it.
 
-## What each page does
+## Running it locally
 
-| Page | What it edits |
-|---|---|
-| `photos.html` | Site content and photos — `assets/data.js`, committed straight to `main` |
-| `index.html` | The menu of tools |
+Not required — it works at the URL above — but useful for testing changes:
 
-Saving commits to `main`, which redeploys GitHub Pages. There is no staging
-step: what you save is what the site shows a minute later.
+```bash
+python3 -m http.server 8000     # from the repo root
+# then http://localhost:8000/admin/
+```
+
+Use a server rather than double-clicking the file: a `file://` page has a
+`null` origin, which the GitHub API rejects, and WebCrypto is unavailable
+outside a secure context so the passphrase could not be checked either.
 
 ## This is not the member hub
 
 The member hub — accounts, the approval queue, the board — is the Next.js app
-in `app/`, deployed separately and signed into with a magic link. It has its
-own admin page at `/hub/admin` for approving members. The two are unrelated:
-this tool edits the marketing site's content, that one manages people.
+in `app/`, deployed separately at hub.thencbo.org and signed into with a magic
+link. It has its own admin page at `/hub/admin` for approving members. The two
+share nothing: this tool edits the marketing site's content, that one manages
+people.

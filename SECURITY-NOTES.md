@@ -48,9 +48,8 @@ this repository is served to anyone who asks for it**, including:
 - `assets/data.js` — everything on the public marketing site
 - every page the Pages build publishes
 
-`admin/` is excluded from that build, so the content manager is not served at
-all. It is still readable in this public repository — that is the point of the
-next section: its URL was never what protected anything.
+- `admin/` — the content manager, including the salt and hash its passphrase is
+  checked against
 
 The anon key being public is fine and intended: it identifies the project, not
 the person, and grants nothing on its own. The **`service_role` key is the
@@ -109,10 +108,16 @@ changes who can reach what.
 
 ## Admin pages
 
-The content manager under `admin/` is **not published**: `_config.yml` excludes
-it from the Pages build, and it is meant to be run from a local checkout
-(`python3 -m http.server`, then `localhost:8000/admin/`). It has no sign-in,
-because a login on a static page that anyone can download is theatre. Anything else — no session, a member session, a script
+The content manager under `admin/` is published at `/admin/` behind a
+passphrase (`admin/gate.js`): PBKDF2-SHA256 at 310,000 iterations, checked in
+the browser, no service involved. It hides the body before anything renders and
+fails closed.
+
+Its salt and hash are committed, and this repository is public, so treat that
+gate as a speed bump — it keeps casual visitors and crawlers out of the editor
+UI. **The GitHub personal access token is what protects the live site**:
+without one carrying write access to this repo, the tool displays content and
+changes nothing. Anything else — no session, a member session, a script
 failing to load, a query throwing — leaves the body hidden behind an overlay. It
 fails closed.
 
