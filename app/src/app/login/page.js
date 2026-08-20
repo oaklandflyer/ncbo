@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
-  AuthPage, AuthHeading, field, fieldLabel, btnPrimary, fineprint, buttonReset,
+  AuthPage, AuthHeading, field, fieldLabel, btnPrimary, btnGhost, fineprint, buttonReset,
 } from '@/app/ui';
 
 /**
@@ -18,12 +18,32 @@ import {
 const EDU = /^[^@\s]+@([a-z0-9-]+\.)*[a-z0-9-]+\.edu$/i;
 
 /**
+ * Where sign-in comes back to. Read at call time rather than at module scope:
+ * NEXT_PUBLIC_SITE_URL is inlined at build, but window.location.origin is the
+ * only thing that is right on a preview deployment that has neither.
+ */
+function callbackUrl() {
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+  const next = new URLSearchParams(window.location.search).get('next') || '/hub';
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+}
+
+/** Messages for the reasons /auth/callback can send someone back here. */
+const RETURNED_ERRORS = {
+  link: 'That link didn’t work — it may have been used already or expired. Send yourself a fresh one.',
+  oauth: 'Google sign-in didn’t go through. Try again, or use a sign-in link instead.',
+};
+
+/**
  * Supabase's errors are written for developers. Say the useful part, and
  * never say whether an address has an account — that would turn this form
  * into an account-enumeration oracle.
  */
 function readableError(error) {
   const raw = String(error?.message || '').toLowerCase();
+  if (raw.includes('provider is not enabled')) {
+    return 'Google sign-in isn’t switched on for this site yet. Use a sign-in link for now.';
+  }
   if (raw.includes('rate limit') || raw.includes('too many') || error?.status === 429) {
     return 'That’s a lot of links in a short time. Wait a minute, then try again.';
   }
@@ -36,11 +56,32 @@ function readableError(error) {
   return 'Something went wrong sending that link. Try again in a moment.';
 }
 
+/** Google's mark, at the size the button's display text sits on. */
+function GoogleMark() {
+  return (
+    <svg aria-hidden width="17" height="17" viewBox="0 0 48 48">
+      <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z" />
+      <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z" />
+      <path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.5C2.9 17.2 2 20.5 2 24s.9 6.8 2.5 9.9l7.3-5.7z" />
+      <path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z" />
+    </svg>
+  );
+}
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [sentTo, setSentTo] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [google, setGoogle] = useState(false);
+
+  /* Read on the client rather than with useSearchParams: this page is
+     otherwise statically rendered, and that hook would force it behind a
+     Suspense boundary for the sake of one message. */
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get('error');
+    if (reason && RETURNED_ERRORS[reason]) setError(RETURNED_ERRORS[reason]);
+  }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -55,19 +96,35 @@ export default function Login() {
     setError('');
 
     const supabase = createClient();
-    const next = new URLSearchParams(window.location.search).get('next') || '/hub';
     const { error: sendError } = await supabase.auth.signInWithOtp({
       email: addr,
-      options: {
-        emailRedirectTo:
-          `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}` +
-          `/auth/callback?next=${encodeURIComponent(next)}`,
-      },
+      options: { emailRedirectTo: callbackUrl() },
     });
 
     setBusy(false);
     if (sendError) setError(readableError(sendError));
     else setSentTo(addr);
+  }
+
+  /**
+   * Google sign-in. On success this never returns — the browser leaves for
+   * Google — so the busy state is deliberately left on: clearing it would
+   * flash the button back to life during the redirect.
+   */
+  async function onGoogle() {
+    setGoogle(true);
+    setError('');
+
+    const supabase = createClient();
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: callbackUrl() },
+    });
+
+    if (oauthError) {
+      setGoogle(false);
+      setError(readableError(oauthError));
+    }
   }
 
   /* Sent: the form is replaced rather than annotated. A confirmation under a
@@ -138,6 +195,24 @@ export default function Login() {
           {busy ? 'Sending…' : 'Email me a link'}
         </button>
       </form>
+
+      <div className="mt-7 flex items-center gap-4" aria-hidden>
+        <span className="h-px flex-1 bg-edge" />
+        <span className="font-display text-[0.74rem] font-semibold uppercase tracking-[0.2em] text-meta">
+          or
+        </span>
+        <span className="h-px flex-1 bg-edge" />
+      </div>
+
+      <button
+        type="button"
+        onClick={onGoogle}
+        disabled={google || busy}
+        className={`${btnGhost} mt-6 w-full`}
+      >
+        <GoogleMark />
+        {google ? 'Redirecting…' : 'Sign in with Google'}
+      </button>
 
       <p className={`mt-7 border-t border-edge pt-6 text-center ${fineprint}`}>
         A school address ties you to your school and club automatically. Either way your
