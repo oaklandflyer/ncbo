@@ -86,7 +86,7 @@ export default function Board({ questions, channels }) {
                   type="button"
                   aria-pressed={active}
                   onClick={() => setChannel(slug)}
-                  className={`min-h-[44px] whitespace-nowrap rounded-full border px-4 font-display text-[0.76rem] font-bold uppercase tracking-[0.1em] transition ${
+                  className={`cursor-pointer appearance-none min-h-[44px] whitespace-nowrap rounded-full border px-4 font-display text-[0.76rem] font-bold uppercase tracking-[0.1em] transition ${
                     active
                       ? 'border-brand bg-brand text-white'
                       : 'border-edge bg-surface text-meta hover:border-brand hover:text-brand'

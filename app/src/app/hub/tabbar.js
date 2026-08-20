@@ -27,6 +27,7 @@ import { usePathname } from 'next/navigation';
 const ICONS = {
   home: 'M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5',
   topics: 'M4 5.5h16M4 12h16M4 18.5h10',
+  network: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c2.5 2.4 3.9 5.6 3.9 9s-1.4 6.6-3.9 9c-2.5-2.4-3.9-5.6-3.9-9s1.4-6.6 3.9-9ZM3.4 9.4h17.2M3.4 14.6h17.2',
   qa: 'M12 16.5v-2.2c1.9 0 3.2-1.1 3.2-2.8S13.9 8.7 12 8.7 8.8 9.8 8.8 11.5M12 19.4h.01',
   profile: 'M12 12.4a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4ZM4.8 20.2c.6-3.3 3.6-5.2 7.2-5.2s6.6 1.9 7.2 5.2',
   review: 'm12 3 7.4 2.9v5.3c0 4.2-3 7.5-7.4 9.3-4.4-1.8-7.4-5.1-7.4-9.3V5.9L12 3Z',
@@ -37,7 +38,10 @@ export default function TabBar({ canModerate }) {
 
   const tabs = [
     ['/hub', 'Home', 'home'],
-    ['/hub/topics', 'Discussion', 'topics'],
+    ['/hub/network', 'Network', 'network'],
+    /* Discussion is deliberately not a tab: it is the other half of the Q&A
+       segmented control, and six tabs across a 390px screen leaves each one
+       narrower than a fingertip. */
     ['/hub/qa', 'Q&A', 'qa'],
     ...(canModerate ? [['/hub/admin', 'Review', 'review']] : []),
     ['/hub/profile', 'Profile', 'profile'],

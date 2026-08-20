@@ -21,6 +21,7 @@ import SignOut from './sign-out';
  */
 const LINKS = [
   ['/hub', 'Home'],
+  ['/hub/network', 'Network'],
   ['/hub/topics', 'Topics'],
   ['/hub/qa', 'Q&A'],
 ];
