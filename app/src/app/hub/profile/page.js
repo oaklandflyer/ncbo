@@ -1,0 +1,109 @@
+import { redirect } from 'next/navigation';
+import { createClient, getProfile } from '@/lib/supabase/server';
+import {
+  Page, PageHero, Section, SectionTitle, Card, Stat, Stats, Badge, Meta,
+  VettedSeal, Credentials, fineprint,
+} from '@/app/ui';
+import SignOut from '../sign-out';
+
+/**
+ * The member's own record — the fifth destination on the phone's tab bar, and
+ * reachable from the avatar in the header.
+ *
+ * Every field below is one the database actually holds. The prototype's
+ * profile screen also carries a rank, a check-in count and a preferences
+ * switch; none of those exist in the schema, and inventing a zero to fill the
+ * space would be worse than leaving it out. See the PR for what each would
+ * need.
+ */
+export default async function Profile() {
+  const supabase = await createClient();
+  const profile = await getProfile(supabase);
+  if (!profile) redirect('/login');
+
+  const initials = String(profile.display_name || 'M')
+    .split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]).join('').toUpperCase() || 'M';
+
+  const roleLabel = profile.role === 'member' ? 'Member' : profile.role.replace('_', ' ');
+
+  /* A key-value table, not a form: nothing here is editable yet. Onboarding
+     collected it, and an admin moves anyone between schools or clubs. */
+  const facts = [
+    ['College', profile.schools?.name],
+    ['Club', profile.clubs?.name],
+    ['Email', profile.email],
+    ['Home region', profile.home_region],
+    ['Division', profile.division],
+    ['Class year', profile.class_year],
+  ].filter(([, value]) => value);
+
+  return (
+    <Page>
+      <PageHero eyebrow={profile.schools?.name || 'NCBO'} title="Your profile.">
+        <div className="mt-7 flex flex-wrap items-center gap-5">
+          <span
+            aria-hidden
+            className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-edge bg-surface font-display text-[1.6rem] font-extrabold tracking-[0.04em] text-brand-deep shadow-brand-sm"
+          >
+            {initials}
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-[1.5rem] font-extrabold uppercase leading-none text-ink">
+              {profile.display_name}
+            </p>
+            <Meta className="mt-2">
+              <Badge tone="active">{roleLabel}</Badge>
+              {profile.verified && <VettedSeal />}
+            </Meta>
+            {profile.credentials?.length > 0 && (
+              <div className="mt-3"><Credentials items={profile.credentials} /></div>
+            )}
+          </div>
+        </div>
+
+        {(profile.class_year || profile.division) && (
+          <div className="mt-8 max-w-lg">
+            <Stats>
+              {profile.division && <Stat value={profile.division} label="Division" isText />}
+              {profile.class_year && <Stat value={profile.class_year} label="Class year" isText />}
+            </Stats>
+          </div>
+        )}
+      </PageHero>
+
+      <Section>
+        <SectionTitle>Your details</SectionTitle>
+
+        {/* Stacked rows rather than a table: two columns of short values read
+            the same at every width and never need a horizontal scroll. */}
+        <Card className="p-0 sm:p-0">
+          <dl className="m-0">
+            {facts.map(([label, value], i) => (
+              <div
+                key={label}
+                className={`flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-6 py-4 ${
+                  i > 0 ? 'border-t border-edge' : ''
+                }`}
+              >
+                <dt className="font-display text-[0.74rem] font-semibold uppercase tracking-[0.18em] text-meta">
+                  {label}
+                </dt>
+                <dd className="min-w-0 text-right text-[1rem] text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+
+        <p className={`mt-4 ${fineprint}`}>
+          Your email is never shown to other members. Ask an admin to change your school,
+          club or role.
+        </p>
+
+        <div className="mt-8 md:hidden">
+          <SignOut />
+        </div>
+      </Section>
+    </Page>
+  );
+}

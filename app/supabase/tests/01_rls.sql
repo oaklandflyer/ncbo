@@ -336,3 +336,24 @@ update profiles set verified = true, verified_at = now(), verified_by = auth.uid
  where id = '33333333-3333-3333-3333-333333333333';
 select verified, credentials from profiles where id = '33333333-3333-3333-3333-333333333333';
 reset role;
+
+\echo ''
+\echo '=== 46. a member reads OTHER members'' approved questions through the feed ==='
+-- The read path for the board is question_feed, not the base table. This is
+-- what makes widening `questions_read_own` unnecessary — and unsafe: the base
+-- table carries author_id, so exposing approved rows there would hand out the
+-- author of every anonymous question.
+set role authenticated;
+set test.uid = '11111111-1111-1111-1111-111111111111';   -- Alex asks
+insert into questions (author_id, body, anonymous)
+values ('11111111-1111-1111-1111-111111111111', 'Feed visibility check', false);
+set test.uid = '33333333-3333-3333-3333-333333333333';   -- advisor approves
+update questions set status = 'approved' where body = 'Feed visibility check';
+
+set test.uid = '22222222-2222-2222-2222-222222222222';   -- Dana, a plain member
+select body, author_name from question_feed where body = 'Feed visibility check';
+select count(*) as same_row_via_base_table
+  from questions where body = 'Feed visibility check';
+select count(*) as anonymous_authors_dana_can_read
+  from questions where anonymous;
+reset role;

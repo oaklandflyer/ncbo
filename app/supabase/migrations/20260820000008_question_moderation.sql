@@ -12,18 +12,41 @@
 -- a trigger that stops the subject of a decision from making it themselves.
 -- ============================================================================
 
-create type public.question_status as enum ('pending', 'approved', 'rejected');
+-- Every step here is guarded so the file can be applied twice — by `db push`
+-- and then again by hand in the SQL editor, or re-run after failing partway —
+-- without erroring out or, worse, half-applying. An unguarded `create type`
+-- aborts the whole transaction on the second run.
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'question_status') then
+    create type public.question_status as enum ('pending', 'approved', 'rejected');
+  end if;
+end $$;
 
-alter table public.questions
-  add column status       public.question_status not null default 'pending',
-  add column moderated_at timestamptz,
-  add column moderated_by uuid references public.profiles(id) on delete set null;
+-- The backfill sits inside the same guard as the column, so it runs exactly
+-- once — on the run that adds the column. Left outside, a second application
+-- would silently approve whatever was legitimately pending in the queue.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'questions' and column_name = 'status'
+  ) then
+    alter table public.questions
+      add column status       public.question_status not null default 'pending',
+      add column moderated_at timestamptz,
+      add column moderated_by uuid references public.profiles(id) on delete set null;
 
-create index on public.questions (status, created_at desc);
+    -- Everything asked before this migration was already on the board.
+    -- Leaving it to default would retroactively unpublish the whole history:
+    -- real members would watch their own questions vanish, which is a worse
+    -- first impression of moderation than an empty queue.
+    update public.questions set status = 'approved', moderated_at = now();
+  end if;
+end $$;
 
--- Everything asked before this migration was already on the board. Leaving it
--- to default would retroactively unpublish the whole history.
-update public.questions set status = 'approved', moderated_at = now();
+create index if not exists questions_status_created_idx
+  on public.questions (status, created_at desc);
 
 -- ── write guard ─────────────────────────────────────────────────────────────
 -- `questions_update` allows the author to edit their own row, which without
@@ -50,6 +73,7 @@ begin
 end;
 $$;
 
+drop trigger if exists guard_question_status_trg on public.questions;
 create trigger guard_question_status_trg
   before update on public.questions
   for each row execute function public.guard_question_status();
@@ -66,7 +90,7 @@ create trigger guard_question_status_trg
 -- Dropped rather than replaced: `create or replace view` cannot insert a
 -- column into the middle of the projection, and `status` belongs beside the
 -- other question facts rather than tacked on the end.
-drop view public.question_feed;
+drop view if exists public.question_feed;
 
 create view public.question_feed as
 select
@@ -96,18 +120,23 @@ grant select on public.question_feed to authenticated;
 -- trust problem waiting to happen. Adding a federation is a migration, which
 -- is the right amount of friction.
 -- ============================================================================
-create type public.credential as enum (
-  'IFBB Pro', 'NPC', 'OCB', 'OCB Wellness', 'WNBF', 'NANBF',
-  'NASM CPT', 'ISSA CPT', 'NSCA CSCS', 'Precision Nutrition L1'
-);
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'credential') then
+    create type public.credential as enum (
+      'IFBB Pro', 'NPC', 'OCB', 'OCB Wellness', 'WNBF', 'NANBF',
+      'NASM CPT', 'ISSA CPT', 'NSCA CSCS', 'Precision Nutrition L1'
+    );
+  end if;
+end $$;
 
 alter table public.profiles
-  add column verified     boolean not null default false,
-  add column verified_at  timestamptz,
-  add column verified_by  uuid references public.profiles(id) on delete set null,
-  add column credentials  public.credential[] not null default '{}';
+  add column if not exists verified     boolean not null default false,
+  add column if not exists verified_at  timestamptz,
+  add column if not exists verified_by  uuid references public.profiles(id) on delete set null,
+  add column if not exists credentials  public.credential[] not null default '{}';
 
-create index on public.profiles (verified) where verified;
+create index if not exists profiles_verified_idx on public.profiles (verified) where verified;
 
 -- ── privilege guard, extended ───────────────────────────────────────────────
 -- Same function as 20260818000007, with the two new columns added to the list
