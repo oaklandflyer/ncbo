@@ -189,11 +189,11 @@ export default function Login() {
       <AuthHeading eyebrow="Members only">The member<br />locker room.</AuthHeading>
 
       <p className="mt-6 text-center text-[1.02rem] leading-relaxed text-body">
-        No passwords here. Students, sign in with the Microsoft account your school gave
-        you. Advisors, exec and everyone else: Google, or a link to your own inbox.
+        Students: use Microsoft to sign in with your school email. Coaches and advisors:
+        use Google.
       </p>
 
-      <div className="mt-8 grid gap-3">
+      <div className="mt-7 grid gap-3">
         <button
           type="button"
           onClick={() => onOAuth('azure')}
@@ -215,10 +215,6 @@ export default function Login() {
         </button>
       </div>
 
-      <p className={`mt-3 text-center ${fineprint}`}>
-        Microsoft for school accounts · Google for personal ones
-      </p>
-
       <div className="mt-7 flex items-center gap-4" aria-hidden>
         <span className="h-px flex-1 bg-edge" />
         <span className="font-display text-[0.74rem] font-semibold uppercase tracking-[0.2em] text-meta">
@@ -227,8 +223,12 @@ export default function Login() {
         <span className="h-px flex-1 bg-edge" />
       </div>
 
-      <form className="mt-7" onSubmit={onSubmit} noValidate>
-        <label className={fieldLabel} htmlFor="email">Personal email</label>
+      <p className={`mt-6 text-center ${fineprint}`}>
+        Neither of those? We’ll email you a link instead.
+      </p>
+
+      <form className="mt-5" onSubmit={onSubmit} noValidate>
+        <label className={fieldLabel} htmlFor="email">Alternative email</label>
         <input
           id="email" type="email" autoComplete="email" required
           className={field}
