@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta } from '@/app/ui';
 import Board from './board';
-import { canReview } from '@/lib/review';
+import { isModerator } from '@/lib/review';
 import Ask from './ask';
 import Moderate from './moderate';
 
@@ -35,7 +35,7 @@ export default async function QA() {
 
   /* Advisors and admins work the queue from the same view, which hands them
      the unapproved rows the members' query above filters out. */
-  const moderates = canReview(profile) && (profile.role === 'advisor' || profile.role === 'admin');
+  const moderates = isModerator(profile);
   const { data: queue } = moderates
     ? await supabase.from('question_feed')
         .select('id, body, status, created_at, author_name, author_school')
@@ -82,7 +82,7 @@ export default async function QA() {
       />
 
       {moderates && (
-        <Section band>
+        <Section band id="queue" className="scroll-mt-[72px]">
           <SectionTitle count={queue?.length ? `${queue.length} waiting` : null}>
             Awaiting review
           </SectionTitle>

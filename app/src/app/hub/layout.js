@@ -4,7 +4,7 @@ import TabBar from './tabbar';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
-import { canReview, canManageRoles } from '@/lib/review';
+import { canReview, canManageRoles, isModerator } from '@/lib/review';
 import SignOut from './sign-out';
 import AccountStatus from './status';
 
@@ -35,6 +35,19 @@ export default async function HubLayout({ children }) {
     return <AccountStatus status="pending" profile={profile} />;
   }
 
+  /* The pending count, for the badge on the Profile tab. Issued only for the
+     two roles that can act on it — for everyone else the query would be a
+     round trip per page render returning an RLS-empty result. A failure here
+     is not worth a broken hub: the badge just doesn't appear. */
+  let pendingQuestions = 0;
+  if (isModerator(profile)) {
+    const { count, error } = await supabase
+      .from('question_feed')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    pendingQuestions = error ? 0 : (count || 0);
+  }
+
   return (
     /* The light ground, the grain, and the 72px nav offset are all the public
        site's — see assets/styles.css. Scoped to the hub shell rather than the
@@ -62,7 +75,7 @@ export default async function HubLayout({ children }) {
           than hiding under it; the bar adds the safe-area inset on top. */}
       <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
 
-      <TabBar canModerate={canReview(profile)} />
+      <TabBar pendingCount={pendingQuestions} />
     </div>
   );
 }
