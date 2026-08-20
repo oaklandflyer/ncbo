@@ -96,10 +96,10 @@ The static member hub that used to live at `members.html` is gone. It was a
 prototype, and everything it did — sign-in, the approval queue, the board — is
 now the Next.js app. See `app/README.md` and `docs/SUPABASE-SETUP.md`.
 
-> **The "Members" link is currently missing from the public nav.** It pointed
-> at `members.html`, which no longer exists, and a nav item that 404s is worse
-> than one that is absent. Add it back in `assets/data.js` (and the footer list
-> in `assets/site.js`) with the app's URL once it is deployed.
+> **The public nav links to the hub at `https://hub.thencbo.org/login`.** It is
+> defined once in `assets/data.js` (`nav`) and rendered onto every page by
+> `assets/site.js`, with a matching entry in the footer's Explore column — no
+> page has its own nav markup, so that one entry is the whole change.
 
 ---
 

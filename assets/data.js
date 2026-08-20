@@ -49,6 +49,10 @@ window.NCBO_DATA = {
       "href": "index.html"
     },
     {
+      "label": "Member Login",
+      "href": "https://hub.thencbo.org/login"
+    },
+    {
       "label": "Join NCBO",
       "href": "join.html",
       "cta": true
