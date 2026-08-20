@@ -7,8 +7,12 @@ import {
 } from '@/app/ui';
 
 /**
- * Sign-in by magic link. Signing in and signing up are the same action — a
- * first-time address gets an account.
+ * Two ways in, both the same action — signing in and signing up are one and
+ * the same, and a first-time address gets an account.
+ *
+ * Google leads: schools on Google Workspace hand students an account that
+ * already proves who they are, and it skips the wait for an email entirely.
+ * The magic link stays for everyone Google can't speak for.
  *
  * Anyone may sign up; whether the account is live straight away is decided in
  * the database. A .edu address at a school NCBO already runs is approved on
@@ -162,16 +166,34 @@ export default function Login() {
       <AuthHeading eyebrow="Members only">The member<br />locker room.</AuthHeading>
 
       <p className="mt-6 text-center text-[1.02rem] leading-relaxed text-body">
-        Students: use your school email. Advisors and exec: use your own. No password —
-        we’ll send you a link, and you’ll stay signed in on this device.
+        Sign in with your Google account, including university Google accounts. For
+        personal or non-Google emails, request a sign-in link below.
       </p>
 
-      <form className="mt-8" onSubmit={onSubmit} noValidate>
+      <button
+        type="button"
+        onClick={onGoogle}
+        disabled={google || busy}
+        className={`${btnPrimary} mt-7 w-full`}
+      >
+        <GoogleMark />
+        {google ? 'Redirecting…' : 'Sign in with Google'}
+      </button>
+
+      <div className="mt-7 flex items-center gap-4" aria-hidden>
+        <span className="h-px flex-1 bg-edge" />
+        <span className="font-display text-[0.74rem] font-semibold uppercase tracking-[0.2em] text-meta">
+          or
+        </span>
+        <span className="h-px flex-1 bg-edge" />
+      </div>
+
+      <form className="mt-7" onSubmit={onSubmit} noValidate>
         <label className={fieldLabel} htmlFor="email">Email address</label>
         <input
           id="email" type="email" autoComplete="email" required
           className={field}
-          placeholder="you@yourschool.edu"
+          placeholder="you@example.com"
           value={email}
           onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
           aria-invalid={error ? true : undefined}
@@ -191,28 +213,10 @@ export default function Login() {
           </p>
         )}
 
-        <button className={`${btnPrimary} mt-6 w-full`} type="submit" disabled={busy}>
+        <button className={`${btnGhost} mt-6 w-full`} type="submit" disabled={busy || google}>
           {busy ? 'Sending…' : 'Email me a link'}
         </button>
       </form>
-
-      <div className="mt-7 flex items-center gap-4" aria-hidden>
-        <span className="h-px flex-1 bg-edge" />
-        <span className="font-display text-[0.74rem] font-semibold uppercase tracking-[0.2em] text-meta">
-          or
-        </span>
-        <span className="h-px flex-1 bg-edge" />
-      </div>
-
-      <button
-        type="button"
-        onClick={onGoogle}
-        disabled={google || busy}
-        className={`${btnGhost} mt-6 w-full`}
-      >
-        <GoogleMark />
-        {google ? 'Redirecting…' : 'Sign in with Google'}
-      </button>
 
       <p className={`mt-7 border-t border-edge pt-6 text-center ${fineprint}`}>
         A school address ties you to your school and club automatically. Either way your
