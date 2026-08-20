@@ -26,3 +26,21 @@ export function reviewScope(profile) {
 export function canManageRoles(profile) {
   return !!profile && profile.status === 'approved' && profile.role === 'admin';
 }
+
+/**
+ * Who moderates questions and curates the vault.
+ *
+ * Mirrors `public.is_moderator()` — `my_role() in ('advisor','admin')` — and
+ * nothing else. A club lead reviews *accounts* at their own school
+ * (`canReview` above); that is a different job on a different table, and the
+ * database has never conflated the two.
+ *
+ * Read from the profile row the server fetched, which is the same
+ * `profiles.role` `my_role()` reads. This decides what to draw; RLS decides
+ * what a request may do.
+ */
+export function isModerator(profile) {
+  return !!profile
+    && profile.status === 'approved'
+    && (profile.role === 'advisor' || profile.role === 'admin');
+}

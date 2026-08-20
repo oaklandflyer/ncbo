@@ -35,10 +35,10 @@ const ICONS = {
 };
 
 /* Review is deliberately not a sixth tab: six across a 390px screen leaves
-   each one narrower than a fingertip, and moderators reach the queue from the
-   button on Home and from the desktop nav. The prop stays in the signature so
-   the layout doesn't have to change when that decision does. */
-export default function TabBar({ canModerate }) {
+   each one narrower than a fingertip. Moderators reach the queue from their
+   Profile tab, and `pendingCount` puts a badge on that tab's icon so they can
+   see something is waiting without a destination being spent on it. */
+export default function TabBar({ pendingCount = 0 }) {
   const pathname = usePathname() || '';
 
   const tabs = [
@@ -76,10 +76,22 @@ export default function TabBar({ canModerate }) {
                 {/* The active tab gets a filled wash behind the icon rather
                     than a second icon set: one shape, two states. */}
                 <span
-                  className={`flex h-[26px] w-[34px] items-center justify-center rounded-full transition-colors ${
+                  className={`relative flex h-[26px] w-[34px] items-center justify-center rounded-full transition-colors ${
                     current ? 'bg-brand-wash' : ''
                   }`}
                 >
+                  {/* The count rides the icon rather than sitting beside the
+                      label: positioned absolutely so it adds nothing to the
+                      tab's box, and `pointer-events-none` so it can never
+                      shrink the 56px target underneath it. */}
+                  {icon === 'profile' && pendingCount > 0 && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute -right-[3px] -top-[5px] grid h-[17px] min-w-[17px] place-items-center rounded-full border border-white bg-brand px-[3px] font-display text-[0.6rem] font-bold leading-none text-white"
+                    >
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
                   <svg
                     aria-hidden width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth={current ? 2.1 : 1.7}
@@ -91,6 +103,13 @@ export default function TabBar({ canModerate }) {
                 <span className="font-display text-[0.66rem] font-semibold uppercase tracking-[0.1em]">
                   {label}
                 </span>
+                {/* The badge is decorative on the icon; the count reaches a
+                    screen reader here, once, in words. */}
+                {icon === 'profile' && pendingCount > 0 && (
+                  <span className="sr-only">
+                    {pendingCount} question{pendingCount === 1 ? '' : 's'} awaiting review
+                  </span>
+                )}
               </Link>
             </li>
           );

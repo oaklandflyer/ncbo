@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
+import { isModerator } from '@/lib/review';
 import Link from 'next/link';
 import {
   Page, PageHero, Section, SectionTitle, Card, Stat, Stats, Badge, Meta,
@@ -27,6 +28,23 @@ export default async function Profile() {
     .map((w) => w[0]).join('').toUpperCase() || 'M';
 
   const roleLabel = profile.role === 'member' ? 'Member' : profile.role.replace('_', ' ');
+
+  /* The moderation queue's one entry point. Advisors and admins only —
+     matching `is_moderator()`, which is what the database checks; a club lead
+     reviews accounts, which is a different queue on a different table.
+     
+     The count is only asked for by someone who can act on it, and a failed
+     count renders the entry point without a number rather than taking the
+     profile page down with it. */
+  const moderates = isModerator(profile);
+  let pending = null;
+  if (moderates) {
+    const { count, error } = await supabase
+      .from('question_feed')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    pending = error ? null : (count || 0);
+  }
 
   /* A key-value table, not a form: nothing here is editable yet. Onboarding
      collected it, and an admin moves anyone between schools or clubs. */
@@ -80,6 +98,37 @@ export default async function Profile() {
           </div>
         )}
       </PageHero>
+
+      {moderates && (
+        <Section>
+          <SectionTitle>Moderation</SectionTitle>
+          <Link
+            href="/hub/qa#queue"
+            className="group flex items-center justify-between gap-4 rounded-[8px] border border-edge bg-surface p-5 transition duration-200 hover:-translate-y-[3px] hover:border-brand-deep hover:shadow-brand focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-brand-light sm:p-6"
+          >
+            <span className="min-w-0">
+              <span className="block font-display text-[1.15rem] font-extrabold uppercase leading-none text-ink transition group-hover:text-brand">
+                Moderation Queue
+              </span>
+              <span className={`mt-2 block ${fineprint}`}>
+                {pending === null
+                  ? 'Questions waiting on an advisor before they reach the board.'
+                  : pending > 0
+                    ? `${pending} question${pending === 1 ? '' : 's'} waiting to be approved or rejected.`
+                    : 'Nothing waiting. New questions land here before they reach the board.'}
+              </span>
+            </span>
+
+            {/* The same pill the rest of the app uses for a count, not a
+                second badge component. Absent at zero — a "0" is a number
+                nobody needs to read. */}
+            <span className="flex shrink-0 items-center gap-3">
+              {pending > 0 && <Badge tone="active">{pending} waiting</Badge>}
+              <span aria-hidden className="text-meta transition group-hover:translate-x-[3px] group-hover:text-brand">→</span>
+            </span>
+          </Link>
+        </Section>
+      )}
 
       <Section>
         <SectionTitle
