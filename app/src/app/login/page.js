@@ -7,13 +7,18 @@ import {
 } from '@/app/ui';
 
 /**
- * Sign-in by magic link. Signing in and signing up are the same action — a
- * first-time address gets an account.
+ * Three ways in, all the same action — signing in and signing up are one and
+ * the same, and a first-time address gets an account.
  *
- * Anyone may sign up; whether the account is live straight away is decided in
- * the database. A .edu address at a school NCBO already runs is approved on
- * the spot; everything else waits for an admin. The hint below just sets the
- * expectation — it decides nothing.
+ * Students go through Microsoft: schools hand out Microsoft accounts, so that
+ * is the door that already knows who they are. Everyone else uses Google or a
+ * link to whatever address is theirs. The magic-link field is deliberately
+ * pointed at personal addresses now — school mail systems quarantine the
+ * links often enough that students were left waiting on mail that never came.
+ *
+ * Whether an account is live straight away is still decided in the database,
+ * not here: a .edu address at a school NCBO already runs is approved on the
+ * spot; everything else waits for an admin.
  */
 const EDU = /^[^@\s]+@([a-z0-9-]+\.)*[a-z0-9-]+\.edu$/i;
 
@@ -31,7 +36,7 @@ function callbackUrl() {
 /** Messages for the reasons /auth/callback can send someone back here. */
 const RETURNED_ERRORS = {
   link: 'That link didn’t work — it may have been used already or expired. Send yourself a fresh one.',
-  oauth: 'Google sign-in didn’t go through. Try again, or use a sign-in link instead.',
+  oauth: 'That sign-in didn’t go through. Try again, or email yourself a link instead.',
 };
 
 /**
@@ -42,7 +47,7 @@ const RETURNED_ERRORS = {
 function readableError(error) {
   const raw = String(error?.message || '').toLowerCase();
   if (raw.includes('provider is not enabled')) {
-    return 'Google sign-in isn’t switched on for this site yet. Use a sign-in link for now.';
+    return 'That sign-in method isn’t switched on for this site yet. Use a sign-in link for now.';
   }
   if (raw.includes('rate limit') || raw.includes('too many') || error?.status === 429) {
     return 'That’s a lot of links in a short time. Wait a minute, then try again.';
@@ -54,6 +59,18 @@ function readableError(error) {
     return 'We couldn’t reach the sign-in service. Check your connection and try again.';
   }
   return 'Something went wrong sending that link. Try again in a moment.';
+}
+
+/** Microsoft's mark, at the size the button's display text sits on. */
+function MicrosoftMark() {
+  return (
+    <svg aria-hidden width="17" height="17" viewBox="0 0 48 48">
+      <path fill="#F25022" d="M6 6h16.5v16.5H6z" />
+      <path fill="#7FBA00" d="M25.5 6H42v16.5H25.5z" />
+      <path fill="#00A4EF" d="M6 25.5h16.5V42H6z" />
+      <path fill="#FFB900" d="M25.5 25.5H42V42H25.5z" />
+    </svg>
+  );
 }
 
 /** Google's mark, at the size the button's display text sits on. */
@@ -73,7 +90,9 @@ export default function Login() {
   const [sentTo, setSentTo] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [google, setGoogle] = useState(false);
+  /* Which provider we are handing the browser off to, if any — one at a time,
+     so the other button greys out rather than racing it. */
+  const [provider, setProvider] = useState('');
 
   /* Read on the client rather than with useSearchParams: this page is
      otherwise statically rendered, and that hook would force it behind a
@@ -107,22 +126,30 @@ export default function Login() {
   }
 
   /**
-   * Google sign-in. On success this never returns — the browser leaves for
-   * Google — so the busy state is deliberately left on: clearing it would
+   * Hand off to Google or Microsoft ('azure' is Supabase's name for Microsoft
+   * Entra). On success this never returns — the browser leaves for the
+   * provider — so the busy state is deliberately left on: clearing it would
    * flash the button back to life during the redirect.
+   *
+   * Microsoft asks for `email` explicitly. Entra's default scopes don't
+   * include it, and without an address the profile row has nothing to tie a
+   * member to their school.
    */
-  async function onGoogle() {
-    setGoogle(true);
+  async function onOAuth(name) {
+    setProvider(name);
     setError('');
 
     const supabase = createClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: callbackUrl() },
+      provider: name,
+      options: {
+        redirectTo: callbackUrl(),
+        ...(name === 'azure' ? { scopes: 'email' } : null),
+      },
     });
 
     if (oauthError) {
-      setGoogle(false);
+      setProvider('');
       setError(readableError(oauthError));
     }
   }
@@ -162,39 +189,35 @@ export default function Login() {
       <AuthHeading eyebrow="Members only">The member<br />locker room.</AuthHeading>
 
       <p className="mt-6 text-center text-[1.02rem] leading-relaxed text-body">
-        Students: use your school email. Advisors and exec: use your own. No password —
-        we’ll send you a link, and you’ll stay signed in on this device.
+        No passwords here. Students, sign in with the Microsoft account your school gave
+        you. Advisors, exec and everyone else: Google, or a link to your own inbox.
       </p>
 
-      <form className="mt-8" onSubmit={onSubmit} noValidate>
-        <label className={fieldLabel} htmlFor="email">Email address</label>
-        <input
-          id="email" type="email" autoComplete="email" required
-          className={field}
-          placeholder="you@yourschool.edu"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? 'login-error' : undefined}
-        />
-
-        {email.includes('@') && !EDU.test(email.trim()) && (
-          <p className={`mt-3 ${fineprint}`}>
-            Not a school address — that’s fine, an admin will approve your account before
-            it goes live.
-          </p>
-        )}
-
-        {error && (
-          <p id="login-error" role="alert" className="mt-3 text-[0.9rem] text-danger">
-            {error}
-          </p>
-        )}
-
-        <button className={`${btnPrimary} mt-6 w-full`} type="submit" disabled={busy}>
-          {busy ? 'Sending…' : 'Email me a link'}
+      <div className="mt-8 grid gap-3">
+        <button
+          type="button"
+          onClick={() => onOAuth('azure')}
+          disabled={busy || !!provider}
+          className={`${btnGhost} w-full`}
+        >
+          <MicrosoftMark />
+          {provider === 'azure' ? 'Redirecting…' : 'Sign in with Microsoft'}
         </button>
-      </form>
+
+        <button
+          type="button"
+          onClick={() => onOAuth('google')}
+          disabled={busy || !!provider}
+          className={`${btnGhost} w-full`}
+        >
+          <GoogleMark />
+          {provider === 'google' ? 'Redirecting…' : 'Sign in with Google'}
+        </button>
+      </div>
+
+      <p className={`mt-3 text-center ${fineprint}`}>
+        Microsoft for school accounts · Google for personal ones
+      </p>
 
       <div className="mt-7 flex items-center gap-4" aria-hidden>
         <span className="h-px flex-1 bg-edge" />
@@ -204,19 +227,48 @@ export default function Login() {
         <span className="h-px flex-1 bg-edge" />
       </div>
 
-      <button
-        type="button"
-        onClick={onGoogle}
-        disabled={google || busy}
-        className={`${btnGhost} mt-6 w-full`}
-      >
-        <GoogleMark />
-        {google ? 'Redirecting…' : 'Sign in with Google'}
-      </button>
+      <form className="mt-7" onSubmit={onSubmit} noValidate>
+        <label className={fieldLabel} htmlFor="email">Personal email</label>
+        <input
+          id="email" type="email" autoComplete="email" required
+          className={field}
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'login-error' : undefined}
+        />
+
+        {/* School addresses are the case this field is *not* for: their mail
+            systems hold the links, and the Microsoft button gets students in
+            without any of that. Say so rather than letting them wait. */}
+        {EDU.test(email.trim()) ? (
+          <p className={`mt-3 ${fineprint}`}>
+            That’s a school address — school mail often holds these links. Sign in with
+            Microsoft above instead and you’ll be straight in.
+          </p>
+        ) : email.includes('@') && (
+          <p className={`mt-3 ${fineprint}`}>
+            An admin will approve your account before it goes live, unless your school is
+            already with NCBO.
+          </p>
+        )}
+
+        {error && (
+          <p id="login-error" role="alert" className="mt-3 text-[0.9rem] text-danger">
+            {error}
+          </p>
+        )}
+
+        <button className={`${btnPrimary} mt-6 w-full`} type="submit" disabled={busy || !!provider}>
+          {busy ? 'Sending…' : 'Email me a link'}
+        </button>
+      </form>
 
       <p className={`mt-7 border-t border-edge pt-6 text-center ${fineprint}`}>
-        A school address ties you to your school and club automatically. Either way your
-        email stays private — other members never see it.
+        Signing in with your school account ties you to your school and club
+        automatically. However you get in, your email stays private — other members never
+        see it.
       </p>
     </AuthPage>
   );
