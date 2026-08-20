@@ -287,3 +287,52 @@ select status as psu_pending_after_admin_approval
   from profiles where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 select count(*) as all_log_entries_visible_to_admin from admin_actions;
 reset role;
+
+\echo ''
+\echo '=== 40. a new question is pending, and pending questions are NOT on the feed ==='
+set role authenticated;
+set test.uid = '11111111-1111-1111-1111-111111111111';
+insert into questions (author_id, body, anonymous)
+values ('11111111-1111-1111-1111-111111111111', 'Pending named question', false),
+       ('11111111-1111-1111-1111-111111111111', 'Pending anonymous question', true);
+select body, status from questions
+ where body like 'Pending%' order by body;
+select count(*) as pending_rows_on_member_feed
+  from question_feed where body like 'Pending%';
+
+\echo ''
+\echo '=== 41. the author CANNOT approve their own question ==='
+update questions set status = 'approved' where body = 'Pending named question';
+select body, status as still_pending from questions where body = 'Pending named question';
+
+\echo ''
+\echo '=== 42. an advisor sees the queue and CAN approve ==='
+set test.uid = '33333333-3333-3333-3333-333333333333';
+select count(*) as pending_rows_visible_to_moderator
+  from question_feed where status = 'pending';
+update questions set status = 'approved', moderated_at = now(), moderated_by = auth.uid()
+ where body = 'Pending named question';
+select body, status as approved_by_advisor from questions where body = 'Pending named question';
+
+\echo ''
+\echo '=== 43. once approved it reaches the member, and the anonymous one still does not ==='
+set test.uid = '22222222-2222-2222-2222-222222222222';
+select body, author_name, author_id is null as author_hidden
+  from question_feed where body like 'Pending%' order by body;
+
+\echo ''
+\echo '=== 44. a member CANNOT vet themselves or award themselves a credential ==='
+set test.uid = '11111111-1111-1111-1111-111111111111';
+update profiles set verified = true where id = '11111111-1111-1111-1111-111111111111';
+update profiles set credentials = '{"IFBB Pro"}' where id = '11111111-1111-1111-1111-111111111111';
+select verified as self_vetted, credentials as self_awarded
+  from profiles where id = '11111111-1111-1111-1111-111111111111';
+
+\echo ''
+\echo '=== 45. an admin CAN vet a coach ==='
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set verified = true, verified_at = now(), verified_by = auth.uid(),
+                    credentials = '{"IFBB Pro","OCB Wellness"}'
+ where id = '33333333-3333-3333-3333-333333333333';
+select verified, credentials from profiles where id = '33333333-3333-3333-3333-333333333333';
+reset role;

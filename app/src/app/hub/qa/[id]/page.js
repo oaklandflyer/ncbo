@@ -1,24 +1,28 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta, BackLink } from '@/app/ui';
+import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta, BackLink, VettedSeal, Credentials } from '@/app/ui';
 import AnswerForm from '../answer';
+import Moderate from '../moderate';
 
 export default async function Question({ params }) {
   const { id } = await params;
   const supabase = await createClient();
   const profile = await getProfile(supabase);
 
+  /* The view hands a member only approved rows, so an unapproved question is
+     genuinely not found for everyone except a moderator — no separate guard to
+     keep in step here. */
   const { data: q } = await supabase
     .from('question_feed')
-    .select('id, body, anonymous, answered, created_at, author_name, author_school')
+    .select('id, body, anonymous, answered, status, created_at, author_name, author_school')
     .eq('id', id)
     .single();
   if (!q) notFound();
 
   const { data: answers } = await supabase
     .from('answer_feed')
-    .select('id, body, created_at, author_name, author_role')
+    .select('id, body, created_at, author_name, author_role, author_verified, author_credentials')
     .eq('question_id', id)
     .order('created_at');
 
@@ -36,7 +40,11 @@ export default async function Question({ params }) {
             {q.body}
           </span>
         }
-        actions={<Badge tone={count > 0 ? 'forming' : 'active'}>{count > 0 ? `${count} answer${count === 1 ? '' : 's'}` : 'Open'}</Badge>}
+        actions={
+          q.status === 'approved'
+            ? <Badge tone={count > 0 ? 'forming' : 'active'}>{count > 0 ? `${count} answer${count === 1 ? '' : 's'}` : 'Open'}</Badge>
+            : <Badge tone="pending">{q.status === 'pending' ? 'Pending Approval' : 'Not published'}</Badge>
+        }
       >
         <Meta className="mt-5">
           <span>Asked by</span>
@@ -48,6 +56,17 @@ export default async function Question({ params }) {
             </>
           )}
         </Meta>
+        {/* A moderator reaching a pending question decides it here rather than
+            going back to the queue to find it again. */}
+        {canAnswer && q.status !== 'approved' && (
+          <div className="mt-6 rounded-[8px] border border-edge bg-surface p-5">
+            <p className="mb-3 text-[0.95rem] text-body">
+              This question isn’t on the board yet. Only you and its author can see it.
+            </p>
+            <Moderate questionId={q.id} />
+          </div>
+        )}
+
         <div className="mt-6">
           <BackLink href="/hub/qa" Component={Link}>Back to the board</BackLink>
         </div>
@@ -62,11 +81,16 @@ export default async function Question({ params }) {
           <div className="grid gap-4">
             {answers.map((a) => (
               <Card key={a.id} className="border-l-2 border-l-brand">
-                <div className="mb-3 flex flex-wrap items-center gap-3">
+                {/* Role, then what the organisation vouches for, then what the
+                    federations say — each one data-driven, so an unvetted
+                    advisor carries no seal. */}
+                <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="font-display text-[1.15rem] font-extrabold uppercase tracking-[0.02em] text-ink">
                     {a.author_name}
                   </span>
                   <Badge tone="active">{a.author_role === 'admin' ? 'NCBO exec' : 'Advisor'}</Badge>
+                  {a.author_verified && <VettedSeal />}
+                  <Credentials items={a.author_credentials} />
                 </div>
                 {/* Answers run long and are written as prose — keep the
                     author's line breaks rather than collapsing them. */}

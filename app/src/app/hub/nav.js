@@ -27,7 +27,63 @@ const LINKS = [
   ['/hub/qa', 'Q&A'],
 ];
 
-export default function HubNav({ canReview, manages }) {
+/**
+ * The signed-in member's institution, next to NCBO's own mark.
+ *
+ * The crest is a container, not an image: university crests and wordmarks are
+ * trademarks, and we don't have permission to reproduce any of them yet. It
+ * holds the final dimensions and shows the school's initials until a licensed
+ * file exists, so swapping one in is a src, not a layout change.
+ *
+ * Nothing here loads client-side — the layout already has the profile, so the
+ * bar renders complete on the server and has no intermediate state to flicker
+ * through. A member with no school (staff on `allowed_emails`, or a .edu we
+ * don't recognise yet) renders no divider and no gap at all.
+ */
+function Institution({ school }) {
+  if (!school) return null;
+
+  /* "University of Pittsburgh" → PI, "Penn State University" → PS. Two
+     characters either way, so the box never has to resize around its
+     contents — this is a placeholder standing in for a crest, not a
+     wordmark of its own. */
+  const words = school
+    .replace(/^(the)\s+/i, '')
+    .replace(/\b(university|college|of|at|state)\b/gi, ' ')
+    .split(/\s+/)
+    .filter((w) => /^[A-Za-z]/.test(w));
+  const named = words.length ? words : school.split(/\s+/).filter(Boolean);
+  const initials = (named.length > 1
+    ? named.slice(0, 2).map((w) => w[0]).join('')
+    : (named[0] || school).slice(0, 2)
+  ).toUpperCase();
+
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <span aria-hidden className="h-7 w-px shrink-0 bg-edge" />
+
+      {/* Fixed 32px box whether or not it ends up holding an image, so the
+          bar's height and rhythm don't move when crests arrive. */}
+      <span
+        aria-hidden
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[6px] border border-edge bg-band font-display text-[0.72rem] font-bold tracking-[0.06em] text-brand-deep"
+      >
+        {initials}
+      </span>
+
+      {/* The name appears only at lg. Below that it either fights the links
+          for room (at md it truncates to "U..", which says nothing) or leaves
+          no room for the toggle. It still reaches a screen reader at every
+          width through the span below. */}
+      <span className="hidden min-w-0 truncate font-display text-[0.86rem] font-semibold uppercase tracking-[0.12em] text-meta lg:block">
+        {school}
+      </span>
+      <span className="sr-only lg:hidden">{school}</span>
+    </div>
+  );
+}
+
+export default function HubNav({ canReview, manages, school }) {
   const pathname = usePathname() || '';
   const [open, setOpen] = useState(false);
 
@@ -61,8 +117,10 @@ export default function HubNav({ canReview, manages }) {
           </span>
         </Link>
 
+        <Institution school={school} />
+
         {/* ── desktop ─────────────────────────────────────────────────── */}
-        <ul className="ml-auto hidden list-none items-center gap-[1.4rem] md:flex">
+        <ul className="ml-auto hidden shrink-0 list-none items-center gap-[1.4rem] md:flex">
           {links.map(([href, label]) => (
             <li key={href}>
               <Link

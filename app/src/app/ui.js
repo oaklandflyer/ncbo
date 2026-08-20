@@ -192,6 +192,12 @@ const BADGES = {
   active: 'bg-brand-wash text-brand-deep border-[rgba(47,95,168,0.35)]',
   forming: 'bg-[rgba(86,101,128,0.08)] text-dim border-edge',
   onDark: 'border-white/25 bg-white/10 text-onphoto-soft',
+  /* Waiting on a person. Reads as held rather than wrong, so it takes the
+     raised well rather than danger — a question in the queue is not an error. */
+  pending: 'bg-raised text-body border-edge',
+  /* A fact the organisation is asserting: the band ground and the deep steel
+     text, one step firmer than `active` without becoming a second brand. */
+  credential: 'bg-band text-brand-deep border-edge',
 };
 
 /** Matches .badge — pill, display face, tight tracking. */
@@ -202,6 +208,54 @@ export function Badge({ tone = 'forming', children }) {
     >
       {children}
     </span>
+  );
+}
+
+/**
+ * The NCBO Vetted seal.
+ *
+ * Deliberately the same pill geometry as Badge, with the shield ahead of the
+ * label: it has to read as part of the same family, not as a sticker. The
+ * caller decides whether a profile has earned it — this component draws it and
+ * nothing more, so a seal can never appear without the data behind it.
+ */
+export function VettedSeal({ label = 'NCBO Vetted' }) {
+  return (
+    <span
+      role="img"
+      aria-label={`${label} — verified by NCBO`}
+      className="inline-flex items-center gap-[0.4rem] whitespace-nowrap rounded-full border border-[rgba(47,95,168,0.35)] bg-brand-wash px-[0.65rem] py-[0.28rem] font-display text-[0.68rem] font-bold uppercase tracking-[0.1em] text-brand-deep"
+    >
+      <svg aria-hidden width="12" height="14" viewBox="0 0 24 28" fill="none">
+        <path
+          d="M12 1.5 22 5.2v8.3c0 6.1-4.1 11.3-10 13-5.9-1.7-10-6.9-10-13V5.2L12 1.5Z"
+          fill="currentColor" opacity="0.14"
+        />
+        <path
+          d="M12 1.5 22 5.2v8.3c0 6.1-4.1 11.3-10 13-5.9-1.7-10-6.9-10-13V5.2L12 1.5Z"
+          stroke="currentColor" strokeWidth="2" strokeLinejoin="round"
+        />
+        <path
+          d="m7.5 13.6 3.2 3.2 6-6.4"
+          stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+        />
+      </svg>
+      {label}
+    </span>
+  );
+}
+
+/**
+ * Federation credentials, straight from the profile's `credentials` column.
+ * The column is a Postgres enum array an admin controls, so there is no
+ * sanitising to do here — the vocabulary is the guarantee.
+ */
+export function Credentials({ items }) {
+  if (!items?.length) return null;
+  return (
+    <>
+      {items.map((c) => <Badge key={c} tone="credential">{c}</Badge>)}
+    </>
   );
 }
 
