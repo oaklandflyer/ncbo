@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="gate.js?v=2026-08-15"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -233,13 +232,11 @@
   const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'item';
 
-  /* Sign-out lives up in the header; gate.js has already decided we belong here. */
+  /* "Sign out" just leaves the tool — there is no session here. */
   const signOutLink = $('#adminSignOut');
   if (signOutLink) signOutLink.addEventListener('click', e => {
     e.preventDefault();
-    const client = window.NCBO_SUPABASE_CLIENT;
-    const go = () => { location.href = '../index.html'; };
-    if (client) client.auth.signOut().then(go, go); else go();
+    location.href = '../index.html';
   });
 
   const ORIG = window.NCBO_DATA || {};

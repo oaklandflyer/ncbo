@@ -38,6 +38,12 @@ exclude:
   # Readable in the repository, not published as pages on the public site.
   - docs/
 
+  # The website content manager. Deliberately NOT published: it is a local tool.
+  # The repository is public, so serving it only advertised its existence — and
+  # the thing that actually guards the site is the GitHub token an editor pastes
+  # in, never the URL. Run it locally instead; see admin/README.md.
+  - admin/
+
   # Build and data scripts.
   - scripts/
 

@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="gate.js?v=2026-08-15"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -52,12 +51,10 @@
   <img src="../assets/ncbo-logo.webp" alt="">
   <div>
     <h1>NCBO Admin</h1>
-    <p>Internal tools — not linked from the public site.</p>
+    <p>Local tool — not published with the site. Run it from your own copy of the repo.</p>
   </div>
   <div class="who">
-    <span id="who"></span>
-    
-    <button class="link" type="button" id="signout">Sign out</button>
+    <button class="link" type="button" id="signout">Close</button>
   </div>
 </header>
 
@@ -68,27 +65,21 @@
   </a>
 
   <div class="note">
-    <b>Two different keys.</b> Signing in here decides who sees these pages.
-    Saving changes still needs your own GitHub personal access token, entered on
-    the page itself — this sign-in doesn’t grant write access to the repo, and
-    admin accounts don’t share a token. See <code>SECURITY-NOTES.md</code>.
-  </div>
+    <b>One key, and it is yours.</b> This tool is not published — it runs from your
+    local copy of the repo, so there is no sign-in and no URL to find. What lets
+    anyone change the live site is a GitHub personal access token, entered on the
+    Content page and sent straight from your browser to GitHub. Nothing here stores
+    it. See <code>admin/README.md</code>.</div>
 </div>
 
 <script>
 (function(){
-  /* gate.js checks the Supabase session before this page is revealed, and
-     announces who it found. Listen rather than assume. */
-  function ready(s){
-    document.getElementById('who').textContent =
-      'Signed in as ' + (s.name || s.email || 'admin') + (s.role ? ' · ' + s.role : '');
-  }
-  document.addEventListener('ncbo-auth-ready', function(e){ ready(e.detail || {}); });
-
+  /* This tool is not published — it runs from a local copy of the repo, so
+     there is no session to read and nobody to greet. What guards the live site
+     is the GitHub token entered on the Content page, not this page. */
+  /* Nothing to sign out of; this just returns to the site. */
   document.getElementById('signout').addEventListener('click', function(){
-    var client = window.NCBO_SUPABASE_CLIENT;
-    var go = function(){ location.href = '../index.html'; };
-    if (client) client.auth.signOut().then(go, go); else go();
+    location.href = '../index.html';
   });
 })();
 </script>

@@ -33,7 +33,6 @@ they hold pre-rewrite commits until GitHub Support garbage-collects them.
 | `handle_new_user()` | Whether a new account is approved or pending | same |
 | `guard_profile_privileges()` | Who may change a role, a status, or the 18+ attestation | same |
 | `app/src/app/hub/layout.js` | Which screen a signed-in account is **shown** | `app/` |
-| `admin/gate.js` | Whether the static content manager is revealed | this repo |
 
 Only the first two are security. The other two are presentation: hiding a panel
 is not access control, because anyone can call the Supabase API directly with
@@ -47,8 +46,11 @@ This site is still static files on GitHub Pages, so **every file committed to
 this repository is served to anyone who asks for it**, including:
 
 - `assets/data.js` — everything on the public marketing site
-- `admin/index.html`, `admin/photos.html` — the content manager for that site
-- `admin/gate.js` — including the project URL and anon key it carries
+- every page the Pages build publishes
+
+`admin/` is excluded from that build, so the content manager is not served at
+all. It is still readable in this public repository — that is the point of the
+next section: its URL was never what protected anything.
 
 The anon key being public is fine and intended: it identifies the project, not
 the person, and grants nothing on its own. The **`service_role` key is the
@@ -107,18 +109,17 @@ changes who can reach what.
 
 ## Admin pages
 
-`admin/gate.js` is the first script in the `<head>` of every page under
-`admin/`. It hides the body before anything renders, loads Supabase, reads the
-session and that account's `profiles` row, and removes the hiding style only for
-an **approved admin**. It carries its own project URL and anon key, being the
-last static page that talks to Supabase. Anything else — no session, a member session, a script
+The content manager under `admin/` is **not published**: `_config.yml` excludes
+it from the Pages build, and it is meant to be run from a local checkout
+(`python3 -m http.server`, then `localhost:8000/admin/`). It has no sign-in,
+because a login on a static page that anyone can download is theatre. Anything else — no session, a member session, a script
 failing to load, a query throwing — leaves the body hidden behind an overlay. It
 fails closed.
 
-Per the section above, the admin HTML is still a static file anyone can fetch and
-read. **The thing that protects the live site is the GitHub personal access
-token**, which each admin enters on the page and which is never stored in this
-repo. Keep tokens fine-grained, scoped to this one repository,
+**The thing that protects the live site is the GitHub personal access token**,
+which the editor enters on the page and which is never stored in this repo.
+Without a token holding write access to this repository, the tool can display
+the site's content and change nothing. Keep tokens fine-grained, scoped to this one repository,
 `Contents: Read and write` and nothing else.
 
 ## Deliberate details, so nobody "simplifies" them away
@@ -146,7 +147,7 @@ repo. Keep tokens fine-grained, scoped to this one repository,
 - **Remove someone:** suspend them at `/hub/admin`. Their next request is
   refused by policy, and the decision lands in `admin_actions`.
 - **Rotate the project keys:** Supabase dashboard → Project Settings → API, then
-  update the app's `NEXT_PUBLIC_SUPABASE_*` environment variables and the two
-  constants at the top of `admin/gate.js`.
+  update the app's `NEXT_PUBLIC_SUPABASE_*` environment variables. Nothing static
+  in this repository holds them any more.
 - **A leaked `service_role` key** is an emergency: rotate it in the dashboard
   immediately. It is not repairable by editing this repository.

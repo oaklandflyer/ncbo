@@ -74,8 +74,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<the anon / publishable key>
 ```
 
-The static content manager under `admin/` needs the same two values in the
-constants at the top of `admin/gate.js`.
+Nothing else needs these values: the content manager under `admin/` no longer
+talks to Supabase, and is not published with the site.
 
 Both are public by design and safe to commit — the anon key grants nothing on
 its own, because RLS decides everything. **Never use the `service_role` key here**; it bypasses RLS entirely and has no
