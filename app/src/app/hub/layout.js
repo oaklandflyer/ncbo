@@ -49,7 +49,11 @@ export default async function HubLayout({ children }) {
         }}
       />
 
-      <HubNav canReview={canReview(profile)} manages={canManageRoles(profile)} />
+      <HubNav
+        canReview={canReview(profile)}
+        manages={canManageRoles(profile)}
+        school={profile.schools?.name || null}
+      />
 
       <div className="relative z-[2] pt-nav">{children}</div>
     </div>

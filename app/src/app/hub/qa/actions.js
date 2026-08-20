@@ -61,3 +61,36 @@ export async function answerQuestion(prev, formData) {
   revalidatePath('/hub/qa');
   return { ok: true };
 }
+
+/**
+ * Approve or reject a question. Advisors and admins only.
+ *
+ * As with answering, the check here is for the wording of the error. The
+ * guarantee is `guard_question_status()` in the database, which refuses the
+ * UPDATE for anyone who isn't a moderator — including the question's own
+ * author, whom the UPDATE policy otherwise lets edit their row.
+ */
+export async function moderateQuestion(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('question_id') || '');
+  const status = String(formData.get('status') || '');
+  if (!['approved', 'rejected'].includes(status)) return { error: 'Unknown decision.' };
+
+  const { error } = await supabase
+    .from('questions')
+    .update({ status, moderated_at: new Date().toISOString(), moderated_by: user.id })
+    .eq('id', id);
+
+  if (error) {
+    return { error: /row-level security|insufficient_privilege|Only an advisor/.test(error.message)
+      ? 'Only advisors and the exec team can approve or reject questions.'
+      : error.message };
+  }
+
+  revalidatePath(`/hub/qa/${id}`);
+  revalidatePath('/hub/qa');
+  return { ok: true };
+}
