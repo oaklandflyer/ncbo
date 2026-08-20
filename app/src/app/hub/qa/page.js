@@ -18,7 +18,7 @@ export default async function QA() {
 
   const [{ data: questions }, { data: channels }, { data: mine }] = await Promise.all([
     supabase.from('question_feed')
-      .select('id, channel_id, body, anonymous, answered, status, created_at, author_name, author_school, answer_count')
+      .select('id, channel_id, body, anonymous, answered, status, created_at, author_name, author_school, answer_count, helpful_count, voted_by_me')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(100),

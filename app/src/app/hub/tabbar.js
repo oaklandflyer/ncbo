@@ -31,8 +31,13 @@ const ICONS = {
   qa: 'M12 16.5v-2.2c1.9 0 3.2-1.1 3.2-2.8S13.9 8.7 12 8.7 8.8 9.8 8.8 11.5M12 19.4h.01',
   profile: 'M12 12.4a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4ZM4.8 20.2c.6-3.3 3.6-5.2 7.2-5.2s6.6 1.9 7.2 5.2',
   review: 'm12 3 7.4 2.9v5.3c0 4.2-3 7.5-7.4 9.3-4.4-1.8-7.4-5.1-7.4-9.3V5.9L12 3Z',
+  vault: 'M5 5.5h9.5l4.5 4.5v8.5H5v-13Zm0 4.7h14M9.5 5.5v4.7',
 };
 
+/* Review is deliberately not a sixth tab: six across a 390px screen leaves
+   each one narrower than a fingertip, and moderators reach the queue from the
+   button on Home and from the desktop nav. The prop stays in the signature so
+   the layout doesn't have to change when that decision does. */
 export default function TabBar({ canModerate }) {
   const pathname = usePathname() || '';
 
@@ -43,7 +48,7 @@ export default function TabBar({ canModerate }) {
        segmented control, and six tabs across a 390px screen leaves each one
        narrower than a fingertip. */
     ['/hub/qa', 'Q&A', 'qa'],
-    ...(canModerate ? [['/hub/admin', 'Review', 'review']] : []),
+    ['/hub/resources', 'Vault', 'vault'],
     ['/hub/profile', 'Profile', 'profile'],
   ];
 

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CardLink, Badge, Empty, Meta, VettedSeal, btnPrimary, field } from '@/app/ui';
+import Vote from './vote';
 
 /**
  * The board's controls and list.
@@ -21,12 +22,17 @@ export default function Board({ questions, channels }) {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return questions.filter((row) => {
-      if (channel && row.channel_slug !== channel) return false;
-      if (!q) return true;
-      return `${row.body} ${row.author_name || ''} ${row.author_school || ''}`
-        .toLowerCase().includes(q);
-    });
+    return questions
+      .filter((row) => {
+        if (channel && row.channel_slug !== channel) return false;
+        if (!q) return true;
+        return `${row.body} ${row.author_name || ''} ${row.author_school || ''}`
+          .toLowerCase().includes(q);
+      })
+      /* Most helpful first, newest as the tie-break — otherwise every
+         unvoted question sits in whatever order Postgres returned. */
+      .sort((a, b) => (b.helpful_count || 0) - (a.helpful_count || 0)
+        || new Date(b.created_at) - new Date(a.created_at));
   }, [questions, query, channel]);
 
   return (
@@ -101,7 +107,7 @@ export default function Board({ questions, channels }) {
       )}
 
       <p className="mt-6 font-display text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-meta">
-        Sorted by most recent
+        Sorted by most helpful
       </p>
 
       {shown.length ? (
@@ -127,6 +133,11 @@ export default function Board({ questions, channels }) {
                     prototype also shows a helpful count — nothing votes in
                     this schema, so there is no number to print. */}
                 <Meta className="mt-4 border-t border-edge pt-3">
+                  <Vote
+                    questionId={q.id}
+                    count={q.helpful_count || 0}
+                    voted={!!q.voted_by_me}
+                  />
                   <Badge tone={q.answered ? 'forming' : 'active'}>
                     {q.answered
                       ? `${q.answer_count} answer${q.answer_count === 1 ? '' : 's'}`

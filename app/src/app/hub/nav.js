@@ -24,6 +24,7 @@ const LINKS = [
   ['/hub/network', 'Network'],
   ['/hub/topics', 'Topics'],
   ['/hub/qa', 'Q&A'],
+  ['/hub/resources', 'Vault'],
 ];
 
 /**

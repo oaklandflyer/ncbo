@@ -380,3 +380,52 @@ export const fineprint = 'text-[0.86rem] leading-relaxed text-meta';
  * like text or an icon has to say so.
  */
 export const buttonReset = 'cursor-pointer appearance-none border-0 bg-transparent p-0';
+
+/**
+ * Instagram and TikTok, as icon links.
+ *
+ * The database stores a handle, never a URL, and the href is built here — so
+ * a profile can point at those two platforms and nowhere else. Each link
+ * carries the handle in its accessible name, because an icon on its own tells
+ * a screen reader nothing about whose account it opens.
+ */
+const SOCIALS = {
+  instagram: {
+    label: 'Instagram',
+    href: (h) => `https://instagram.com/${h}`,
+    path: 'M7 2.5h10A4.5 4.5 0 0 1 21.5 7v10a4.5 4.5 0 0 1-4.5 4.5H7A4.5 4.5 0 0 1 2.5 17V7A4.5 4.5 0 0 1 7 2.5Zm5 5.2a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6Zm5.4-1.3h.01',
+  },
+  tiktok: {
+    label: 'TikTok',
+    href: (h) => `https://tiktok.com/@${h}`,
+    path: 'M14.2 2.5v12.2a3.6 3.6 0 1 1-3-3.55M14.2 5.4c.7 1.6 2.2 2.7 4.3 2.9',
+  },
+};
+
+export function SocialLinks({ instagram, tiktok, className = '' }) {
+  const items = [['instagram', instagram], ['tiktok', tiktok]].filter(([, h]) => h);
+  if (!items.length) return null;
+
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      {items.map(([key, handle]) => {
+        const s = SOCIALS[key];
+        return (
+          <a
+            key={key}
+            href={s.href(handle)}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            aria-label={`${s.label}: @${handle}`}
+            className="grid h-9 w-9 place-items-center rounded-full border border-edge bg-surface text-meta transition hover:border-brand hover:text-brand"
+          >
+            <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d={s.path} />
+            </svg>
+          </a>
+        );
+      })}
+    </div>
+  );
+}

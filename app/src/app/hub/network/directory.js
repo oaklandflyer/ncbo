@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, Badge, Empty, Meta, VettedSeal, Credentials, field, buttonReset } from '@/app/ui';
+import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, field, buttonReset } from '@/app/ui';
 
 /**
  * The network, three ways: by club, by hometown region, and as a flat list of
@@ -66,6 +66,12 @@ function PersonCard({ person }) {
           {person.credentials?.length > 0 && (
             <div className="mt-3"><Credentials items={person.credentials} /></div>
           )}
+
+          <SocialLinks
+            className="mt-3"
+            instagram={person.instagram_handle}
+            tiktok={person.tiktok_handle}
+          />
         </div>
       </div>
     </Card>
