@@ -23,9 +23,9 @@ export function Page({ children }) {
 }
 
 /** Matches .section: generous vertical rhythm, not app-panel cramped. */
-export function Section({ children, band = false, className = '' }) {
+export function Section({ children, band = false, className = '', id }) {
   return (
-    <section className={`${band ? 'border-y border-edge bg-band' : ''} py-10 sm:py-14 ${className}`}>
+    <section id={id} className={`${band ? 'border-y border-edge bg-band' : ''} py-10 sm:py-14 ${className}`}>
       <div className={wrap}>{children}</div>
     </section>
   );

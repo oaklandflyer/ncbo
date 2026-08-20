@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import HubNav from './nav';
+import TabBar from './tabbar';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
@@ -53,9 +54,15 @@ export default async function HubLayout({ children }) {
         canReview={canReview(profile)}
         manages={canManageRoles(profile)}
         school={profile.schools?.name || null}
+        role={profile.role}
+        name={profile.display_name}
       />
 
-      <div className="relative z-[2] pt-nav">{children}</div>
+      {/* Bottom padding on a phone so the last card clears the tab bar rather
+          than hiding under it; the bar adds the safe-area inset on top. */}
+      <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
+
+      <TabBar canModerate={canReview(profile)} />
     </div>
   );
 }

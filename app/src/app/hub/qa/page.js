@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { Page, PageHero, Section, SectionTitle, CardLink, Card, Empty, Badge, Meta } from '@/app/ui';
+import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta } from '@/app/ui';
+import Board from './board';
 import { canReview } from '@/lib/review';
 import Ask from './ask';
 import Moderate from './moderate';
@@ -17,11 +18,11 @@ export default async function QA() {
 
   const [{ data: questions }, { data: channels }, { data: mine }] = await Promise.all([
     supabase.from('question_feed')
-      .select('id, body, anonymous, answered, status, created_at, author_name, author_school, answer_count')
+      .select('id, channel_id, body, anonymous, answered, status, created_at, author_name, author_school, answer_count')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(100),
-    supabase.from('channels').select('slug, name').order('sort'),
+    supabase.from('channels').select('id, slug, name').order('sort'),
     /* Straight off the base table, not the feed: `questions_read_own` is what
        lets an author see their own row before a moderator has looked at it,
        and it hands that row to nobody else. */
@@ -42,6 +43,33 @@ export default async function QA() {
         .order('created_at', { ascending: false })
     : { data: null };
 
+  /* Who settled each question, for the card footer. One query for the whole
+     page rather than one per card; the last answer wins, which is the one a
+     reader lands on. */
+  const ids = (questions || []).map((q) => q.id);
+  const { data: answers } = ids.length
+    ? await supabase.from('answer_feed')
+        .select('question_id, author_name, author_verified, created_at')
+        .in('question_id', ids)
+        .order('created_at')
+    : { data: null };
+
+  const settledBy = new Map();
+  (answers || []).forEach((a) => settledBy.set(a.question_id, a));
+
+  const byChannel = new Map((channels || []).map((c) => [c.id, c]));
+  const rows = (questions || []).map((q) => {
+    const channel = byChannel.get(q.channel_id);
+    const answer = settledBy.get(q.id);
+    return {
+      ...q,
+      channel_slug: channel?.slug || '',
+      channel_name: channel?.name || '',
+      answered_by: answer?.author_name || null,
+      answered_by_verified: !!answer?.author_verified,
+    };
+  });
+
   const open = (questions || []).filter((q) => !q.answered).length;
   const waiting = (mine || []).filter((q) => q.status !== 'approved');
 
@@ -53,9 +81,14 @@ export default async function QA() {
         lead="Questions go to the advisors and exec team. Answers stay on the board so the next person doesn’t have to ask."
       />
 
-      {moderates && queue?.length > 0 && (
+      {moderates && (
         <Section band>
-          <SectionTitle count={`${queue.length} waiting`}>Awaiting review</SectionTitle>
+          <SectionTitle count={queue?.length ? `${queue.length} waiting` : null}>
+            Awaiting review
+          </SectionTitle>
+          {!queue?.length && (
+            <Empty>Queue clear. New questions land here before they reach the board.</Empty>
+          )}
           <div className="grid gap-4">
             {queue.map((q) => (
               <Card key={q.id}>
@@ -85,47 +118,7 @@ export default async function QA() {
 
       <Section>
         <SectionTitle count={open > 0 ? `${open} open` : null}>Questions</SectionTitle>
-
-        {questions?.length ? (
-          <ul className="grid list-none gap-4">
-            {questions.map((q) => (
-              <li key={q.id}>
-                <CardLink href={`/hub/qa/${q.id}`} Component={Link}>
-                  {/* Below sm the badge drops under the question: side by
-                      side, it squeezes a long question into a column two
-                      words wide. The question is sentence case on purpose —
-                      the site shouts its headings, but shouting someone's
-                      question back at them reads as an accusation. */}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
-                    {/* Clamped rather than sliced: the full text stays in the
-                        DOM for search and screen readers. */}
-                    <p className="line-clamp-3 font-display text-[1.35rem] font-bold leading-[1.2] text-ink transition group-hover:text-brand">
-                      {q.body}
-                    </p>
-                    <div className="shrink-0">
-                      <Badge tone={q.answered ? 'forming' : 'active'}>
-                        {q.answered
-                          ? `${q.answer_count} answer${q.answer_count === 1 ? '' : 's'}`
-                          : 'Open'}
-                      </Badge>
-                    </div>
-                  </div>
-                  <Meta className="mt-4 border-t border-edge pt-3">
-                    <span className="text-body">{q.author_name}</span>
-                    {q.author_school && (
-                      <>
-                        <span aria-hidden className="text-fine">·</span>
-                        <span>{q.author_school}</span>
-                      </>
-                    )}
-                  </Meta>
-                </CardLink>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty>No questions yet. Ask the first one.</Empty>
-        )}
+        <Board questions={rows} channels={channels || []} />
       </Section>
 
       {mine?.length > 0 && (
@@ -160,7 +153,7 @@ export default async function QA() {
         </Section>
       )}
 
-      <Section band>
+      <Section band className="scroll-mt-[72px]" id="ask">
         <Ask channels={channels || []} />
       </Section>
     </Page>

@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SignOut from './sign-out';
-import { buttonReset } from '@/app/ui';
 
 /**
  * The hub's top bar, built to match nav.site-nav on thencbo.org: fixed, a
@@ -12,11 +10,11 @@ import { buttonReset } from '@/app/ui';
  * uppercase links, a steel underline under the current page, and a steel CTA
  * in the last slot.
  *
- * Below the desktop breakpoint it becomes the site's mobile menu — a toggle
- * and a full-screen panel of large display-face links. Four links, a wordmark
- * and a button do not fit across a 390px phone; the public site solved that
- * with a hamburger, so the app does too rather than inventing a third
- * pattern.
+ * Below the desktop breakpoint it compacts: the wordmark, the member's role
+ * and school on one small line, and their avatar. Navigation moves to the
+ * bottom tab bar, so the bar carries identity rather than links and the
+ * hamburger panel it used to open is gone — one destination per tap, and
+ * where you are stays visible.
  *
  * Client-side only so the current route can be underlined. It reads the
  * pathname and nothing else — the layout has already decided who gets here.
@@ -83,41 +81,54 @@ function Institution({ school }) {
   );
 }
 
-export default function HubNav({ canReview, manages, school }) {
+/** Role and school, the phone's one line of context: "MEMBER · PITT". */
+function Standing({ role, school }) {
+  const shortSchool = (school || '')
+    .replace(/^(the)\s+/i, '')
+    .replace(/\b(university|college|institute)\b/gi, '')
+    .replace(/\bof\b/gi, '')
+    .trim()
+    .split(/\s+/)[0];
+
+  const label = [role.replace('_', ' '), shortSchool].filter(Boolean).join(' · ');
+
+  return (
+    <span className="truncate font-display text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-meta">
+      {label}
+    </span>
+  );
+}
+
+export default function HubNav({ canReview, manages, school, role = 'member', name = '' }) {
   const pathname = usePathname() || '';
-  const [open, setOpen] = useState(false);
 
   const links = canReview ? [...LINKS, ['/hub/admin', manages ? 'Admin' : 'Review']] : LINKS;
   const isCurrent = (href) => (href === '/hub' ? pathname === '/hub' : pathname.startsWith(href));
 
-  // Close on navigation, and don't leave the page scrollable behind the panel.
-  useEffect(() => { setOpen(false); }, [pathname]);
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+  /* Initials, not a photo: there is no avatar upload in the schema, and a
+     generic silhouette says less than someone's own initials do. */
+  const initials = String(name || 'M')
+    .split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]).join('').toUpperCase() || 'M';
 
   return (
-    /* The panel is a sibling of <nav>, not a child, and that is load-bearing:
-       backdrop-filter makes an element the containing block for fixed-position
-       descendants, so inside the blurred bar `inset-0` resolves to the 72px
-       nav box rather than the viewport — the panel renders as a sliver and the
-       page shows through it. */
     <>
     <nav
       aria-label="Member hub"
       className="fixed inset-x-0 top-0 z-[200] border-b border-edge bg-white/90 shadow-brand-sm backdrop-blur-[12px]"
     >
-      <div className="mx-auto flex h-nav w-full max-w-[1180px] items-center gap-4 px-5 sm:px-8 lg:px-12">
-        <Link href="/hub" className="flex shrink-0 items-center gap-[0.65rem]">
+      <div className="mx-auto flex h-[60px] w-full max-w-[1180px] items-center gap-4 px-5 sm:px-8 md:h-nav lg:px-12">
+        {/* min-h on the phone: this is a navigation target too, and 32px of
+            wordmark is under the size a fingertip actually is. */}
+        <Link href="/hub" className="flex min-h-[44px] shrink-0 items-center gap-[0.65rem]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/ncbo-crest.webp" alt="" width={40} height={40} className="h-10 w-10" />
-          <span className="font-display text-[1.4rem] font-extrabold tracking-[0.16em] text-ink">
+          <img src="/ncbo-crest.webp" alt="" width={40} height={40} className="h-8 w-8 md:h-10 md:w-10" />
+          <span className="font-display text-[1.15rem] font-extrabold tracking-[0.16em] text-ink md:text-[1.4rem]">
             NCBO
           </span>
         </Link>
 
-        <Institution school={school} />
+        <span className="hidden md:contents"><Institution school={school} /></span>
 
         {/* ── desktop ─────────────────────────────────────────────────── */}
         <ul className="ml-auto hidden shrink-0 list-none items-center gap-[1.4rem] md:flex">
@@ -141,63 +152,29 @@ export default function HubNav({ canReview, manages, school }) {
           <SignOut />
         </div>
 
-        {/* ── mobile toggle ───────────────────────────────────────────── */}
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="hub-mobile-menu"
-          className={`${buttonReset} relative z-[210] ml-auto h-[42px] w-[42px] md:hidden`}
+        {/* ── mobile ──────────────────────────────────────────────────── */}
+        {/* The tab bar is the navigation down here, so this end of the bar is
+            identity: who you are, where you're from, and the way through to
+            your own profile. */}
+        <Link
+          href="/hub/profile"
+          className="ml-auto flex min-h-[44px] items-center gap-3 md:hidden"
+          aria-label="Your profile"
         >
-          <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+          <span className="flex min-w-0 flex-col items-end leading-tight">
+            <Standing role={role} school={school} />
+          </span>
           <span
             aria-hidden
-            className={`absolute left-[9px] right-[9px] h-[2px] bg-ink transition-transform duration-[250ms] ${
-              open ? 'top-[20px] rotate-45' : 'top-[14px]'
-            }`}
-          />
-          <span
-            aria-hidden
-            className={`absolute left-[9px] right-[9px] top-[20px] h-[2px] bg-ink transition-opacity duration-200 ${
-              open ? 'opacity-0' : 'opacity-100'
-            }`}
-          />
-          <span
-            aria-hidden
-            className={`absolute left-[9px] right-[9px] h-[2px] bg-ink transition-transform duration-[250ms] ${
-              open ? 'top-[20px] -rotate-45' : 'top-[26px]'
-            }`}
-          />
-        </button>
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-edge bg-band font-display text-[0.78rem] font-bold tracking-[0.04em] text-brand-deep"
+          >
+            {initials}
+          </span>
+        </Link>
       </div>
 
     </nav>
 
-      {/* ── mobile panel ──────────────────────────────────────────────── */}
-      {/* z below the bar, like the site's: the toggle stays above the panel
-          so the same button closes it. */}
-      <div
-        id="hub-mobile-menu"
-        className={`fixed inset-0 z-[150] flex flex-col justify-center gap-1 bg-page px-5 transition-transform duration-[350ms] md:hidden ${
-          open ? 'translate-y-0' : 'invisible -translate-y-full'
-        }`}
-      >
-        {links.map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={isCurrent(href) ? 'page' : undefined}
-            className={`border-b border-edge py-2 font-display text-[2rem] font-bold uppercase tracking-[0.04em] ${
-              isCurrent(href) ? 'text-brand' : 'text-ink'
-            }`}
-          >
-            {label}
-          </Link>
-        ))}
-        <div className="mt-4 [&>a]:w-full">
-          <SignOut />
-        </div>
-      </div>
     </>
   );
 }
