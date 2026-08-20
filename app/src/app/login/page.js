@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   AuthPage, AuthHeading, field, fieldLabel, btnPrimary, btnGhost, fineprint, buttonReset,
 } from '@/app/ui';
+import { TAGLINE, SUBTITLE } from '@/lib/copy';
 
 /**
  * Two ways in, both the same action — signing in and signing up are one and
@@ -163,9 +164,17 @@ export default function Login() {
 
   return (
     <AuthPage>
-      <AuthHeading eyebrow="Members only">The member<br />locker room.</AuthHeading>
+      <AuthHeading eyebrow={TAGLINE}>The member<br />locker room.</AuthHeading>
 
-      <p className="mt-6 text-center text-[1.02rem] leading-relaxed text-body">
+      {/* The one signed-out surface in this repo, so this is where NCBO says
+          what it is. The sign-in instructions follow it, not the other way
+          round — somebody who has landed here without an account should learn
+          what they are signing into. */}
+      <p className="mt-5 text-center text-[1.02rem] leading-relaxed text-body">
+        {SUBTITLE}
+      </p>
+
+      <p className={`mt-4 text-center ${fineprint}`}>
         Sign in with your Google account, including university Google accounts. For
         personal or non-Google emails, request a sign-in link below.
       </p>

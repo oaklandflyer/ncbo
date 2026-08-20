@@ -16,6 +16,16 @@ export default async function Network() {
   const profile = await getProfile(supabase);
   if (!profile) redirect('/login');
 
+  /* The roster comes from `clubs`, not from whoever has signed up. Before
+     this, a club with no members simply did not exist in the app — the "By
+     Club" list was built by grouping members, so seven of the nine official
+     clubs would have been invisible. Headcount is now a property of a club,
+     including zero. */
+  const { data: clubs } = await supabase
+    .from('club_directory')
+    .select('id, club_name, status, school_name, state, member_count, leads')
+    .order('club_name');
+
   const { data: members } = await supabase
     .from('member_directory')
     .select('id, display_name, role, division, home_region, verified, credentials, club_name, school_name, school_state, instagram_handle, tiktok_handle')
@@ -31,8 +41,8 @@ export default async function Network() {
       />
 
       <Section>
-        {members?.length ? (
-          <Directory members={members} />
+        {members?.length || clubs?.length ? (
+          <Directory members={members} clubs={clubs || []} />
         ) : (
           <Empty>
             The directory is empty. If that’s a surprise, the schema migration hasn’t been

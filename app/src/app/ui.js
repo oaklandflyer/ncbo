@@ -429,3 +429,10 @@ export function SocialLinks({ instagram, tiktok, className = '' }) {
     </div>
   );
 }
+
+/**
+ * The destructive action, in the same visual language as the rest — the
+ * danger colour is the site's `--color-danger`, not a new red.
+ */
+export const btnDanger =
+  'inline-flex items-center justify-center gap-2 rounded-[8px] border border-danger bg-danger px-[1.7rem] py-[0.85rem] font-display text-[0.92rem] font-bold uppercase tracking-[0.12em] text-white transition duration-200 hover:-translate-y-[2px] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-danger disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0';

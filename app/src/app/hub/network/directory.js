@@ -136,7 +136,7 @@ function RegionMap({ groups, active, onPick }) {
   );
 }
 
-export default function Directory({ members }) {
+export default function Directory({ members, clubs: roster = [] }) {
   const [view, setView] = useState('club');
   const [region, setRegion] = useState('');
   const [query, setQuery] = useState('');
@@ -154,7 +154,39 @@ export default function Directory({ members }) {
   };
 
   const regions = useMemo(() => group('home_region', 'Unlisted Region'), [members]);
-  const clubs = useMemo(() => group('club_name', 'No club yet'), [members]);
+
+  /* Every official club, with its members attached — not the other way round.
+     A club nobody has joined yet still belongs on this list; that is most of
+     the roster today. Members whose club isn't on the roster (or who have
+     none) fall into a trailing group rather than vanishing. */
+  const clubs = useMemo(() => {
+    const byName = new Map();
+    members.forEach((m) => {
+      const key = m.club_name || 'No club yet';
+      if (!byName.has(key)) byName.set(key, []);
+      byName.get(key).push(m);
+    });
+
+    const listed = roster.map((c) => ({
+      key: c.club_name,
+      people: byName.get(c.club_name) || [],
+      club: c,
+    }));
+
+    const claimed = new Set(roster.map((c) => c.club_name));
+    const unlisted = [...byName.entries()]
+      .filter(([key]) => !claimed.has(key))
+      .map(([key, people]) => ({ key, people, club: null }));
+
+    return [...listed, ...unlisted].sort((a, b) => {
+      /* Pipelines last — they are schools NCBO is talking to, not clubs
+         somebody can join today. */
+      const pipeline = (g) => (g.club?.status === 'Pipeline' ? 1 : 0);
+      return pipeline(a) - pipeline(b)
+        || b.people.length - a.people.length
+        || a.key.localeCompare(b.key);
+    });
+  }, [members, roster]);
 
   const people = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -231,17 +263,46 @@ export default function Directory({ members }) {
               .filter((g) => !region || view === 'club' || g.key === region)
               .map((g) => (
                 <li key={g.key}>
-                  <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-edge pb-2">
-                    <h3 className="font-display text-[1.15rem] font-extrabold uppercase leading-none text-ink">
-                      {g.key}
-                    </h3>
-                    <Badge tone="forming">
-                      {g.people.length} {g.people.length === 1 ? 'member' : 'members'}
-                    </Badge>
+                  <div className="mb-3 border-b border-edge pb-2">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h3 className="font-display text-[1.15rem] font-extrabold uppercase leading-none text-ink">
+                        {g.key}
+                      </h3>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {g.club?.status === 'Pipeline' && <Badge tone="forming">Pipeline</Badge>}
+                        {g.club?.status === 'Forming' && <Badge tone="forming">Forming</Badge>}
+                        {g.club?.status === 'Active' && <Badge tone="active">Active</Badge>}
+                        <Badge tone="forming">
+                          {g.people.length} {g.people.length === 1 ? 'member' : 'members'}
+                        </Badge>
+                      </span>
+                    </div>
+                    {(g.club?.school_name || g.club?.leads?.length > 0) && (
+                      <Meta className="mt-2">
+                        {g.club?.school_name && <span>{g.club.school_name}</span>}
+                        {g.club?.school_name && g.club?.leads?.length > 0 && (
+                          <span aria-hidden className="text-fine">·</span>
+                        )}
+                        {g.club?.leads?.length > 0 && (
+                          <span className="text-body">
+                            Led by {g.club.leads.join(', ')}
+                          </span>
+                        )}
+                      </Meta>
+                    )}
                   </div>
-                  <ul className="grid list-none gap-3 md:grid-cols-2">
-                    {g.people.map((m) => <li key={m.id}><PersonCard person={m} /></li>)}
-                  </ul>
+
+                  {g.people.length > 0 ? (
+                    <ul className="grid list-none gap-3 md:grid-cols-2">
+                      {g.people.map((m) => <li key={m.id}><PersonCard person={m} /></li>)}
+                    </ul>
+                  ) : (
+                    <Empty>
+                      {g.club?.status === 'Pipeline'
+                        ? 'A school NCBO is talking to. No club yet.'
+                        : 'No members signed up here yet.'}
+                    </Empty>
+                  )}
                 </li>
               ))}
           </ul>
