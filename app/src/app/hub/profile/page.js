@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isModerator } from '@/lib/review';
+import { phaseLabel } from '@/lib/membership';
 import { getViewerContext } from '@/lib/viewer';
 import Link from 'next/link';
 import {
@@ -58,6 +59,7 @@ export default async function Profile() {
     ['Instagram', profile.instagram_handle && `@${profile.instagram_handle}`],
     ['TikTok', profile.tiktok_handle && `@${profile.tiktok_handle}`],
     ['Division', profile.division],
+    ['Home screen', phaseLabel(profile.experience_phase)],
     ['Class year', profile.class_year],
   ].filter(([, value]) => value);
 
@@ -132,6 +134,35 @@ export default async function Profile() {
           </Link>
         </Section>
       )}
+
+      {/* The phone's tab bar holds five destinations and no more: six across a
+          390px screen leaves each one narrower than a fingertip. Rankings took
+          the slot Network had, because it is the surface people come back for.
+          Everything displaced is here, so nothing became unreachable on a
+          phone — the same reason the moderation queue lives on this page. */}
+      <Section>
+        <SectionTitle>Everywhere else</SectionTitle>
+        <ul className="grid list-none gap-2 sm:grid-cols-2">
+          {[
+            ['/hub/competitions', 'Calendar', 'Every show the network is entering'],
+            ['/hub/network', 'Network', 'Who else is in NCBO, by chapter and region'],
+            ['/hub/resources', 'Vault', 'Programs, posing guides, and reference material'],
+            ['/hub/topics', 'Topics', 'The league-wide channels'],
+          ].map(([href, label, blurb]) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="block rounded-[6px] border border-edge bg-surface px-5 py-4 hover:bg-band"
+              >
+                <span className="block font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
+                  {label}
+                </span>
+                <span className={`mt-1 block ${fineprint}`}>{blurb}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Section>
 
       <Section>
         <SectionTitle

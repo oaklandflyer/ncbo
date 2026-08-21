@@ -20,10 +20,16 @@ export async function loadPublicProfile(userId) {
   if (!userId) return { error: 'No profile asked for.' };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('get_public_profile', { target: userId });
+  /* Two RPCs rather than one: the history is a list and the profile is a row,
+     and folding a list into a returns-table row would mean either a join that
+     repeats the profile per result or a JSON column nobody can index. */
+  const [{ data, error }, { data: history }] = await Promise.all([
+    supabase.rpc('get_public_profile', { target: userId }),
+    supabase.rpc('get_competition_history', { target: userId }),
+  ]);
 
   if (error) return { error: 'That profile could not be loaded.' };
   if (!data?.length) return { error: 'That member is no longer on the network.' };
 
-  return { profile: data[0] };
+  return { profile: data[0], history: history || [] };
 }

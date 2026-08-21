@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import Link from 'next/link';
 import { saveProfile } from '../actions';
+import { EXPERIENCE_PHASES } from '@/lib/membership';
 import { field, fieldLabel, btnPrimary, btnGhost, checkline, fineprint, FormMessage } from '@/app/ui';
 
 /**
@@ -15,6 +16,43 @@ export default function EditProfileForm({ profile, divisions }) {
 
   return (
     <form action={action} className="max-w-[560px]">
+      {/* The same three options as signup, worded the same way, because a
+          member who changes this is answering the question they were asked
+          then and should recognise it. */}
+      <fieldset className="mb-7 rounded-[8px] border border-edge px-5 py-5">
+        <legend className="px-2 font-display text-[0.9rem] font-bold uppercase tracking-[0.04em] text-ink">
+          Your home screen
+        </legend>
+        <p className={`mt-1 ${fineprint}`}>
+          What you see first when you open the app. Change it whenever this stops
+          describing you.
+        </p>
+        <div className="mt-4 grid gap-3">
+          {EXPERIENCE_PHASES.map((phase) => (
+            <label
+              key={phase.value}
+              htmlFor={`phase-${phase.value}`}
+              className="flex cursor-pointer items-start gap-3 rounded-[6px] border border-edge bg-surface px-4 py-3 hover:bg-band"
+            >
+              <input
+                id={`phase-${phase.value}`}
+                type="radio"
+                name="experience_phase"
+                value={phase.value}
+                defaultChecked={profile.experience_phase === phase.value}
+                className="mt-1 h-4 w-4 shrink-0 accent-[#2F5FA8]"
+              />
+              <span className="min-w-0">
+                <span className="block font-display text-[0.95rem] font-semibold text-ink">
+                  {phase.label}
+                </span>
+                <span className={`mt-0.5 block ${fineprint}`}>{phase.blurb}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div>
         <label className={fieldLabel} htmlFor="home_region">Hometown region</label>
         <input

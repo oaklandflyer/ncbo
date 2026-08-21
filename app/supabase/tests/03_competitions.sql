@@ -113,10 +113,19 @@ select count(*) as scored_rows from public.scored_results;
 select count(*) as ranking_rows from public.national_rankings;
 
 \echo ''
-\echo '=== 5. MUST FAIL: another chapter''s lead confirming it ==='
+\echo '=== 5. another chapter''s lead confirming it changes nothing ==='
+-- No ERROR, and that is correct: the Iowa lead cannot see the row at all, so
+-- the UPDATE matches nothing rather than being raised on. The assertion is
+-- test 6, where the Pitt lead does it and the row moves.
 set role authenticated;
 set test.uid = '88880000-0000-0000-0000-000000008888';
 update public.competition_entries set status = 'confirmed'
+ where user_id = '22220000-0000-0000-0000-000000002222';
+-- Read back as superuser: to the Iowa lead the row does not exist, so their
+-- own SELECT would return nothing and prove nothing.
+reset role;
+set test.uid = '';
+select status as still_pending from public.competition_entries
  where user_id = '22220000-0000-0000-0000-000000002222';
 
 \echo ''

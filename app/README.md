@@ -9,10 +9,9 @@ organisation this size.
 
 **What's built so far:** magic-link sign-in, the membership model, a
 university picker that resolves to one chapter, the club lead's approval
-queue, the reusable profile popup, the four verification paths, a club home,
-the Topics channels, the Q&A board, and the resource vault. The competition
-calendar, national rankings, and the persona-driven Home layouts are not built
-yet, and are the next and highest-leverage thing to build.
+queue, the reusable profile popup, the four verification paths, the
+competition calendar, national rankings, three persona-driven Home layouts,
+the Topics channels, the Q&A board, and the resource vault.
 
 ---
 
@@ -235,3 +234,51 @@ members that, rather than implying anonymity is absolute.
 - Channel replies (`posts.parent_id`) exist in the schema but have no UI yet.
 - Per-channel post counts on `/hub/topics` are one query per channel. Fine at
   six channels; replace with a grouped view before it's sixty.
+
+## Rankings, and why they are scored the way they are
+
+The rankings are the only thing in this app that no single chapter could build
+for itself, which is why they were built before another forum surface.
+
+**A result becomes points through one function**, `placement_points()`. First
+is 100, second 85, third 72, then 61, 52, 44; seventh and below is 30, and
+competing without recording a placement is 20. The curve is steep at the top
+because the gap between first and second is real, and flat at the bottom
+because the gap between eighth and ninth is noise. That is then scaled by the
+show's level (regional 1.25, national 1.6), by class size up to 1.5, and by
+35 percent for an overall title.
+
+**Results are self-reported and confirmed by somebody else.** A member enters
+their own placement; their club lead or the exec board confirms it. Waiting for
+a central admin to transcribe everything means the table is permanently a month
+stale, and people who check once and see last season stop checking. An
+unconfirmed result scores zero and appears nowhere, which is what stops the
+leaderboard being self-service. Nobody confirms their own.
+
+**A chapter scores its best five members, not its total.** Summing everybody
+would measure recruitment and call it competitiveness: Pitt would win by
+existing. `competition_entries.club_id` is stamped from the entrant's active
+membership at entry time, so a graduating senior's results stay with the
+chapter they actually competed for.
+
+The whole model is one function and two views, so changing it is one diff and
+one review.
+
+## The Q&A starter library
+
+The board ships with 30 answered questions, seeded by
+`20260823000019_qa_starter_library.sql`. They exist because the Home layout for
+"already lifting, new to bodybuilding" leads with Q&A, and an empty board
+answers "what is this for" with "nothing".
+
+**They are attributed to an editorial account, not to a named advisor.** The
+coaching advisors' names are the reason a member trusts what that board says,
+and seeding answers under one of them would put words in a real person's mouth.
+Every seeded answer carries a `[starter]` marker, so once the advisors write
+their own the whole set clears in one statement:
+
+```sql
+delete from public.answers where body like '%[starter]%';
+```
+
+Treat these as drafts for the advisors to adopt, rewrite, or delete.

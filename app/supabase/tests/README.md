@@ -66,6 +66,24 @@ places a bug leaks data across chapters:
 | 31, 32 | Escalation past 72 hours fires once; the digest is one row per club per day |
 | 33–35 | The profile popup's projection carries no email, no dues, no handle, no legal name |
 
+### 03_competitions.sql
+
+The calendar, the scoring model, the rankings, and the Q&A starter library.
+Eighteen tests.
+
+| # | Behaviour |
+|---|---|
+| 1 | The scoring curve: steep at the top, flat at the bottom, and competing without a placement still scores |
+| 2 | An entry's chapter is stamped from the entrant's membership, never from the request |
+| 3, 5, 6 | **Nobody confirms their own result**, another chapter's lead cannot confirm it, and the entrant's own lead can |
+| 4, 7 | A pending result scores nothing and is on no leaderboard; a confirmed one scores |
+| 8 | A confirmed result's numbers are fixed |
+| 9 | **A chapter scores its best five**, not its total |
+| 10, 11 | The calendar is open to an account with no chapter; somebody else's pending result is not |
+| 12 | Competition history on the profile popup is confirmed results only |
+| 13, 14 | An ordinary member cannot add a show; a club lead can |
+| 15–18 | The Q&A starter library is 30 answered questions, attributed to the Coaching Desk rather than a named advisor, and clearable in one statement |
+
 ## A trap worth knowing about
 
 `restrict_columns()` in `20260822000015` takes away `authenticated`'s

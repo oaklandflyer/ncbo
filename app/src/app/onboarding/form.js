@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { saveOnboarding, searchChapterMembers } from './actions';
 import { CLASS_YEARS, EXPERIENCE, GRAD_YEARS, CHAT_PLATFORMS, FOUND_VIA } from './options';
 import UniversityPicker from './university-picker';
+import { EXPERIENCE_PHASES } from '@/lib/membership';
 import { field, fieldLabel, checkline, btnPrimary, fineprint, buttonReset } from '@/app/ui';
 
 /**
@@ -90,6 +91,45 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           />
         </div>
       </div>
+
+      {/* Asked after the university, and asked plainly, because the answer
+          decides what this person sees on Home for the rest of the year. It
+          is a question about what they want, not a skill assessment: "new to
+          lifting" is the most common answer and must not read as the bottom
+          of a ladder. */}
+      <fieldset className="mt-8 rounded-[8px] border border-edge px-5 py-5">
+        <legend className="px-2 font-display text-[0.95rem] font-bold uppercase tracking-[0.04em] text-ink">
+          Where are you starting from?
+        </legend>
+        <p className={`mt-1 ${fineprint}`}>
+          This sets up your home screen. You can change it any time.
+        </p>
+
+        <div className="mt-4 grid gap-3">
+          {EXPERIENCE_PHASES.map((phase, i) => (
+            <label
+              key={phase.value}
+              htmlFor={`phase-${phase.value}`}
+              className="flex cursor-pointer items-start gap-3 rounded-[6px] border border-edge bg-surface px-4 py-3 hover:bg-band"
+            >
+              <input
+                id={`phase-${phase.value}`}
+                type="radio"
+                name="experience_phase"
+                value={phase.value}
+                defaultChecked={i === 0}
+                className="mt-1 h-4 w-4 shrink-0 accent-[#2F5FA8]"
+              />
+              <span className="min-w-0">
+                <span className="block font-display text-[0.95rem] font-semibold text-ink">
+                  {phase.label}
+                </span>
+                <span className={`mt-0.5 block ${fineprint}`}>{phase.blurb}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {/* The verification block. Set apart from the run of fields, and
           labelled for what it is, because these answers are read by one
