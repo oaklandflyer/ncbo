@@ -146,3 +146,25 @@ select is_alumni_effective is not null as computed
 
 reset role;
 set test.uid = '';
+
+-- ── chapter_state, the three signup outcomes ────────────────────────────────
+\echo '=== 16. the three chapter states are distinguished ==='
+select chapter_state, count(*)
+  from public.university_picker
+ group by 1 order by 1;
+-- expect active 7 | none 125 | pipeline 2
+
+\echo '=== 17. a Pipeline school is NOT lumped in with having no chapter ==='
+/* The bug: has_chapter is false for a forming club, so somebody at Arizona
+   used to be told there was no chapter when one was on the way. */
+select u.short_name, p.has_chapter, p.chapter_state
+  from public.university_picker p
+  join public.universities u on u.id = p.id
+ where p.club_status = 'Pipeline'
+ order by u.short_name;
+-- expect has_chapter f, chapter_state pipeline
+
+\echo '=== 18. every active chapter resolves to exactly one club ==='
+select count(*) filter (where club_id is null) as active_without_club
+  from public.university_picker where chapter_state = 'active';
+-- expect 0
