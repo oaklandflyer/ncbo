@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta } from '@/app/ui';
 import Board from './board';
-import { isModerator } from '@/lib/review';
+import { getViewerContext } from '@/lib/viewer';
 import Ask from './ask';
 import Moderate from './moderate';
 import Remove from './remove';
+import RemovedList from './removed';
 
 /** The board only ever shows approved questions; the rest are states, not posts. */
 const PILL = {
@@ -15,7 +16,8 @@ const PILL = {
 
 export default async function QA() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
 
   const [{ data: questions }, { data: channels }, { data: mine }] = await Promise.all([
     supabase.from('question_feed')
@@ -36,7 +38,7 @@ export default async function QA() {
 
   /* Advisors and admins work the queue from the same view, which hands them
      the unapproved rows the members' query above filters out. */
-  const moderates = isModerator(profile);
+  const moderates = viewer.canModerateContent;
   const { data: queue } = moderates
     ? await supabase.from('question_feed')
         .select('id, body, status, created_at, author_name, author_school, answer_count')
@@ -70,6 +72,23 @@ export default async function QA() {
       answered_by_verified: !!answer?.author_verified,
     };
   });
+
+  /* The Removed list reads the base table, not the feed: the feed filters
+     `deleted_at is null` for everyone, which is the whole point of it. */
+  const { data: removed } = moderates
+    ? await supabase.from('questions')
+        .select('id, body, deleted_at, profiles!questions_author_id_fkey(display_name)')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false })
+        .limit(50)
+    : { data: null };
+
+  const removedRows = (removed || []).map((r) => ({
+    id: r.id,
+    body: r.body,
+    deleted_at: r.deleted_at,
+    author_name: r.profiles?.display_name || 'Member',
+  }));
 
   const open = (questions || []).filter((q) => !q.answered).length;
   const waiting = (mine || []).filter((q) => q.status !== 'approved');
@@ -119,6 +138,18 @@ export default async function QA() {
               </Card>
             ))}
           </div>
+        </Section>
+      )}
+
+      {moderates && removedRows.length > 0 && (
+        <Section>
+          <SectionTitle count={`${removedRows.length}`}>Removed</SectionTitle>
+          <p className="mb-5 max-w-[620px] text-[0.98rem] text-body">
+            Taken off the board. Nothing is destroyed — restoring one puts it back exactly
+            where it was, answers and votes included. Separate from the review queue above:
+            that decides what gets published, this undoes a removal.
+          </p>
+          <RemovedList questions={removedRows} />
         </Section>
       )}
 

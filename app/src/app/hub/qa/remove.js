@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { removeQuestion } from './actions';
+import { removeQuestion, removeAnswer } from './actions';
 import { btnGhost, btnDanger, btnSmall, buttonReset } from '@/app/ui';
 
 /**
@@ -19,8 +19,12 @@ import { btnGhost, btnDanger, btnSmall, buttonReset } from '@/app/ui';
  *     drops it from the list, so what the moderator sees next is the real
  *     state of the queue rather than an optimistic guess.
  */
-export default function Remove({ questionId, title, answerCount = 0 }) {
-  const [state, action, pending] = useActionState(removeQuestion, {});
+export default function Remove({
+  questionId, title, answerCount = 0, label = 'Remove', kind = 'question', answerId,
+}) {
+  const [state, action, pending] = useActionState(
+    kind === 'answer' ? removeAnswer : removeQuestion, {},
+  );
   const [open, setOpen] = useState(false);
   const confirmRef = useRef(null);
 
@@ -40,9 +44,14 @@ export default function Remove({ questionId, title, answerCount = 0 }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`${buttonReset} min-h-[44px] font-display text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-meta transition hover:text-danger`}
+        aria-label={`${label} — ${kind === 'answer' ? 'this answer' : 'this question'}`}
+        className={`${buttonReset} inline-flex min-h-[44px] items-center gap-2 rounded-full border border-danger/40 px-4 font-display text-[0.74rem] font-bold uppercase tracking-[0.1em] text-danger transition hover:border-danger hover:bg-danger hover:text-white`}
       >
-        Remove
+        <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 7h16M9.5 7V5.2h5V7M6.5 7l.9 12.3h9.2L17.5 7M10 10.5v6M14 10.5v6" />
+        </svg>
+        {label}
       </button>
 
       {state?.error && !open && (
@@ -70,7 +79,7 @@ export default function Remove({ questionId, title, answerCount = 0 }) {
               id={`remove-${questionId}-title`}
               className="font-display text-[1.3rem] font-extrabold uppercase leading-none text-ink"
             >
-              Remove this question?
+              {kind === 'answer' ? 'Remove this answer?' : 'Remove this question?'}
             </h2>
 
             <p className="mt-4 rounded-[8px] border border-edge bg-band px-4 py-3 text-[0.95rem] leading-relaxed text-body">
@@ -79,7 +88,7 @@ export default function Remove({ questionId, title, answerCount = 0 }) {
 
             <p className="mt-4 text-[0.95rem] leading-relaxed text-body">
               It comes off the board for everyone, including its author.
-              {answerCount > 0 && (
+              {kind !== 'answer' && answerCount > 0 && (
                 <>
                   {' '}The {answerCount} answer{answerCount === 1 ? '' : 's'} written under it
                   {answerCount === 1 ? ' goes' : ' go'} with it.
@@ -88,8 +97,8 @@ export default function Remove({ questionId, title, answerCount = 0 }) {
             </p>
 
             <p className="mt-3 text-[0.85rem] leading-relaxed text-meta">
-              Nothing is destroyed — the question and its answers stay in the database, and
-              an admin can put it back.
+              Nothing is destroyed — it stays in the database, and a moderator can put it
+              back from the Removed list.
             </p>
 
             {state?.error && (
@@ -99,13 +108,14 @@ export default function Remove({ questionId, title, answerCount = 0 }) {
             <div className="mt-6 flex flex-wrap gap-3">
               <form action={action}>
                 <input type="hidden" name="question_id" value={questionId} />
+                {kind === 'answer' && <input type="hidden" name="answer_id" value={answerId} />}
                 <button
                   ref={confirmRef}
                   type="submit"
                   disabled={pending}
                   className={`${btnDanger} ${btnSmall}`}
                 >
-                  {pending ? 'Removing…' : 'Remove question'}
+                  {pending ? 'Removing…' : kind === 'answer' ? 'Remove answer' : 'Remove question'}
                 </button>
               </form>
 

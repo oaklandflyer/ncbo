@@ -51,6 +51,9 @@ export async function getViewerContext(supabaseArg) {
     profile,
     ledClubIds,
     ledClubs: led.map((r) => ({ id: r.club_id, name: r.clubs?.name || 'Your club' })),
+    /* The schools behind those clubs — the approval queue's scope, since an
+       applicant has a school but no club yet. */
+    ledSchoolIds: [...new Set(led.map((r) => r.clubs?.school_id).filter(Boolean))],
     isAdmin,
     isClubLead,
     /* Advisors keep content moderation — that is what the role is for. */

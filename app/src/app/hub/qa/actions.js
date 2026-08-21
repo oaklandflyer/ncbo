@@ -167,3 +167,53 @@ export async function removeQuestion(prev, formData) {
   revalidatePath('/hub/qa');
   return { ok: true };
 }
+
+/** Put a removed question back on the board. Moderators only. */
+export async function restoreQuestion(prev, formData) {
+  const supabase = await createClient();
+  const id = String(formData.get('question_id') || '');
+
+  const { error } = await supabase
+    .from('questions').update({ deleted_at: null, deleted_by: null }).eq('id', id);
+
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      ? 'Only advisors and the exec team can restore a question.'
+      : 'That didn’t save.' };
+  }
+
+  revalidatePath('/hub/qa');
+  return { ok: true };
+}
+
+/**
+ * Remove one answer, leaving the question standing.
+ *
+ * Same soft-delete semantics as a question: `deleted_at` is stamped, the feed
+ * filters it, and `guard_answer_removal()` refuses the write from anyone who
+ * is not a moderator.
+ */
+export async function removeAnswer(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('answer_id') || '');
+  const questionId = String(formData.get('question_id') || '');
+
+  const { error } = await supabase
+    .from('answers')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: user.id })
+    .eq('id', id);
+
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      || error.message.includes('row-level security')
+      ? 'Only advisors and the exec team can remove an answer.'
+      : 'That didn’t save. The answer is still on the board.' };
+  }
+
+  if (questionId) revalidatePath(`/hub/qa/${questionId}`);
+  revalidatePath('/hub/qa');
+  return { ok: true };
+}

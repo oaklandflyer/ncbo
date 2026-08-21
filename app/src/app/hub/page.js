@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { canReview, reviewScope } from '@/lib/review';
+import { getViewerContext } from '@/lib/viewer';
 import {
   Page, PageHero, Section, SectionTitle, DarkTile,
   Stat, Stats, Badge, Empty, Meta, btnGhost, btnSmall,
@@ -15,7 +16,8 @@ import {
  */
 export default async function Hub() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
 
   // The layout redirects too, but layouts and pages render in parallel — this
   // page still runs, and would crash on profile.role before the layout's
@@ -28,8 +30,13 @@ export default async function Hub() {
   const [clubmates, openQuestions, pendingCount] = await Promise.all([
     profile.club_id
       ? supabase.from('profiles')
-          .select('id, display_name, role, division')
+          /* Removed accounts stay in the table for their authorship, but they
+             are not on anybody's roster. `member_directory` has always
+             filtered them; this query did not. */
+          .select('id, display_name, role, division, is_alumni, alumni_since')
           .eq('club_id', profile.club_id)
+          .eq('status', 'approved')
+          .is('deleted_at', null)
           .order('display_name')
       : Promise.resolve({ data: null }),
     canAnswer
@@ -102,7 +109,16 @@ export default async function Hub() {
       <Section>
         {roster.length > 0 ? (
           <>
-            <SectionTitle count={`${roster.length} member${roster.length === 1 ? '' : 's'}`}>
+            <SectionTitle
+              count={`${roster.length} member${roster.length === 1 ? '' : 's'}`}
+              action={
+                viewer.isClubLead || viewer.isAdmin ? (
+                  <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/roster">
+                    Manage roster
+                  </Link>
+                ) : null
+              }
+            >
               Your club
             </SectionTitle>
 

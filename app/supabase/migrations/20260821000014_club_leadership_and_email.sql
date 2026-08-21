@@ -340,18 +340,39 @@ begin
     return new;
   end if;
 
+  /* Deciding a pending application. School-scoped on purpose — an applicant
+     has a school but no club yet — and deliberately narrow: it is a status
+     change and nothing else. Without the "everything else unchanged" clauses,
+     "decide an application" would double as "edit any profile at my school". */
+  reviewing := public.leads_school_of(new.id)
+           and new.id <> auth.uid()
+           and old.status = 'pending'
+           and new.status in ('approved', 'rejected')
+           and new.deleted_at is not distinct from old.deleted_at
+           and new.school_id is not distinct from old.school_id
+           and new.role is not distinct from old.role
+           and new.club_id is not distinct from old.club_id
+           and new.display_name is not distinct from old.display_name
+           and new.division is not distinct from old.division
+           and new.class_year is not distinct from old.class_year
+           and new.home_region is not distinct from old.home_region
+           and new.is_alumni is not distinct from old.is_alumni;
+
+  /* Strict club scoping. `profiles_update` lets a lead reach any row at their
+     school so the approval queue works; this is what stops that reach turning
+     into editing another club's members. A lead of Club A at a school with a
+     Club B may not touch Club B's people at all. */
+  if public.my_role() = 'club_lead'
+     and new.id <> auth.uid()
+     and not public.leads_club_of(new.id)
+     and not reviewing then
+    raise exception 'A club lead can only manage members of their own club.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
   -- Account management is admin-only, by decision — a moderator moderates
   -- content, not membership.
   if new.status is distinct from old.status or new.deleted_at is distinct from old.deleted_at then
-    reviewing := public.leads_school_of(new.id)
-             and new.id <> auth.uid()
-             and old.status = 'pending'
-             and new.status in ('approved', 'rejected')
-             and new.deleted_at is not distinct from old.deleted_at
-             and new.school_id is not distinct from old.school_id
-             and new.role is not distinct from old.role
-             and new.club_id is not distinct from old.club_id;
-
     if not reviewing then
       if public.my_role() = 'club_lead' then
         raise exception 'A club lead can only approve or decline a pending application at their school.'
@@ -474,3 +495,48 @@ begin
     raise notice 'club_leads: linked % club_lead account(s) to the club they belong to', linked;
   end if;
 end $$;
+
+-- ── 8. co-lead management ───────────────────────────────────────────────────
+-- `club_leads_write` is admin-only, and stays that way: this table is what the
+-- whole gate reads, so a policy wide enough for leads to edit would be a
+-- policy wide enough to grant yourself a club. The one legitimate operation —
+-- a lead naming a co-lead on their own club — goes through here instead,
+-- where the check is explicit and narrow.
+create or replace function public.set_club_lead(target uuid, make_lead boolean)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  target_club uuid;
+  target_name text;
+begin
+  select p.club_id, p.display_name into target_club, target_name
+    from public.profiles p where p.id = target;
+
+  if target_club is null then
+    raise exception 'That member is not on a club roster.' using errcode = 'insufficient_privilege';
+  end if;
+
+  if not (public.is_admin() or target_club = any (public.my_led_clubs())) then
+    raise exception 'You do not lead that club.' using errcode = 'insufficient_privilege';
+  end if;
+
+  -- Nobody steps themselves down: a club that loses its last lead has no way
+  -- back without an admin.
+  if not make_lead and target = auth.uid() and not public.is_admin() then
+    raise exception 'Ask another lead or an admin to step you down.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  if make_lead then
+    insert into public.club_leads (club_id, name, profile_id, ordinal)
+    values (target_club, coalesce(target_name, 'Lead'), target, 5)
+    on conflict (club_id, name) do update set profile_id = excluded.profile_id;
+  else
+    delete from public.club_leads where profile_id = target and club_id = target_club;
+  end if;
+end;
+$$;
+
+revoke execute on function public.set_club_lead(uuid, boolean) from anon;
+grant execute on function public.set_club_lead(uuid, boolean) to authenticated;

@@ -497,3 +497,92 @@ set test.uid = '33333333-3333-3333-3333-333333333333';
 update site_settings set logo_path = 'logo-1.png' where id;
 select logo_path as after_advisor_write from site_settings;
 reset role;
+
+\echo ''
+\echo '=== 61. email is NOT selectable by a member, through any path ==='
+set role authenticated;
+set test.uid = '22222222-2222-2222-2222-222222222222';
+-- Column privilege, not RLS: this is a hard refusal, not an empty result.
+select email from profiles where id = '11111111-1111-1111-1111-111111111111';
+select * from member_directory limit 1;   -- projection must not carry email
+
+\echo ''
+\echo '=== 62. a member CANNOT call the privileged readers ==='
+select * from get_admin_members();
+select * from get_club_roster((select id from clubs limit 1));
+
+\echo ''
+\echo '=== 63. leadership is club-scoped: two clubs, one lead ==='
+-- `reset role` alone is not enough: auth.uid() reads a GUC, so the privilege
+-- guard still saw a member and refused the fixture writes.
+reset role;
+set test.uid = '';
+insert into auth.users (id, email) values
+  ('dddd0000-0000-0000-0000-00000000000d', 'leadA@pitt.edu'),
+  ('eeee0000-0000-0000-0000-00000000000e', 'memberA@pitt.edu'),
+  ('ffff0000-0000-0000-0000-00000000000f', 'memberB@pitt.edu');
+-- A second club at the SAME school, so only club scope can tell them apart.
+insert into clubs (school_id, name, status)
+select id, 'Second Pitt Club', 'Active' from schools where domain = 'pitt.edu';
+
+update profiles set role = 'club_lead', status = 'approved',
+       club_id = (select id from clubs where name = 'Fitness and Bodybuilding Club')
+ where id = 'dddd0000-0000-0000-0000-00000000000d';
+update profiles set status = 'approved',
+       club_id = (select id from clubs where name = 'Fitness and Bodybuilding Club')
+ where id = 'eeee0000-0000-0000-0000-00000000000e';
+update profiles set status = 'approved',
+       club_id = (select id from clubs where name = 'Second Pitt Club')
+ where id = 'ffff0000-0000-0000-0000-00000000000f';
+
+insert into club_leads (club_id, name, profile_id, ordinal)
+values ((select id from clubs where name = 'Fitness and Bodybuilding Club'),
+        'Lead A', 'dddd0000-0000-0000-0000-00000000000d', 1);
+
+set role authenticated;
+set test.uid = 'dddd0000-0000-0000-0000-00000000000d';
+select array_length(my_led_clubs(), 1) as clubs_i_lead;
+select display_name, role, club_id is not null as has_club
+  from profiles where id = 'dddd0000-0000-0000-0000-00000000000d';
+select leads_club_of('eeee0000-0000-0000-0000-00000000000e') as leads_own_club_member;
+select leads_club_of('ffff0000-0000-0000-0000-00000000000f') as leads_other_club_member;
+
+\echo ''
+\echo '=== 64. a lead CAN edit their own club''s member, NOT the other club''s ==='
+update profiles set division = 'Bikini' where id = 'eeee0000-0000-0000-0000-00000000000e';
+select division as own_club_edited from profiles where id = 'eeee0000-0000-0000-0000-00000000000e';
+update profiles set division = 'Should not stick' where id = 'ffff0000-0000-0000-0000-00000000000f';
+select coalesce(division, 'untouched') as other_club_untouched
+  from profiles where id = 'ffff0000-0000-0000-0000-00000000000f';
+
+\echo ''
+\echo '=== 65. a lead CAN read their own club''s emails, NOT the other club''s ==='
+select count(*) as own_roster_rows
+  from get_club_roster((select id from clubs where name = 'Fitness and Bodybuilding Club'));
+select count(*) from get_club_roster((select id from clubs where name = 'Second Pitt Club'));
+
+\echo ''
+\echo '=== 66. a lead CANNOT promote themselves to admin or remove an account ==='
+update profiles set role = 'admin' where id = 'dddd0000-0000-0000-0000-00000000000d';
+update profiles set status = 'removed' where id = 'eeee0000-0000-0000-0000-00000000000e';
+select role as lead_role_unchanged, status as member_status_unchanged
+  from profiles where id = 'dddd0000-0000-0000-0000-00000000000d';
+
+\echo ''
+\echo '=== 67. a lead CAN take a member off the roster, but not reassign them ==='
+update profiles set club_id = null where id = 'eeee0000-0000-0000-0000-00000000000e';
+select coalesce(club_id::text, 'off the roster') as after_removal
+  from profiles where id = 'eeee0000-0000-0000-0000-00000000000e';
+
+\echo ''
+\echo '=== 68. an advisor moderates content but CANNOT manage accounts ==='
+set test.uid = '33333333-3333-3333-3333-333333333333';
+select is_moderator() as advisor_moderates;
+update profiles set status = 'removed' where id = 'ffff0000-0000-0000-0000-00000000000f';
+
+\echo ''
+\echo '=== 69. an admin sees every member, with addresses ==='
+set test.uid = '44444444-4444-4444-4444-444444444444';
+select count(*) > 0 as admin_sees_members, count(*) filter (where email is not null) > 0 as with_emails
+  from get_admin_members();
+reset role;
