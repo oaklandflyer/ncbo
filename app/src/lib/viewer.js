@@ -47,8 +47,19 @@ export async function getViewerContext(supabaseArg) {
   /* Three reads rather than one join: PostgREST would embed these, but the
      membership row carries columns an ordinary member is not granted, and a
      failed embed is harder to reason about than three explicit selects. */
-  const [{ data: membershipRows }, { data: orgRoleRows }, { data: legacyLeadRows }] =
-    await Promise.all([
+  /* Wrapped, and this is the point of the wrapping: `Promise.all` rejects if
+     any one of these rejects, and an unhandled rejection in a layout is a
+     server-side exception on every page at once — the whole app, taken down by
+     a side query. None of the three is load-bearing enough to deserve that.
+     A member whose memberships could not be read should see the app with less
+     in it, and the reason should be in the log. */
+  let membershipRows = null;
+  let orgRoleRows = null;
+  let legacyLeadRows = null;
+
+  try {
+    [{ data: membershipRows }, { data: orgRoleRows }, { data: legacyLeadRows }] =
+      await Promise.all([
       supabase
         .from('club_memberships')
         .select('id, club_id, university_id, status, role, verified_at, grad_year, created_at, clubs(name), universities(name, short_name)')
@@ -60,6 +71,11 @@ export async function getViewerContext(supabaseArg) {
          policies would happily have served. */
       supabase.from('club_leads').select('club_id, clubs(name, university_id)').eq('profile_id', profile.id),
     ]);
+  } catch (err) {
+    console.error('[ncbo] viewer context queries failed', {
+      message: err?.message, code: err?.code,
+    });
+  }
 
   const memberships = membershipRows || [];
   const orgRoles = (orgRoleRows || []).map((r) => r.role);
