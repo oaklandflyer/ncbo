@@ -21,7 +21,12 @@ export const metadata = { title: 'Calendar · NCBO' };
 export default async function Competitions() {
   const supabase = await createClient();
   const viewer = await getViewerContext(supabase);
-  if (!viewer.profile) redirect('/login');
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!viewer?.signedIn) redirect('/login');
+  if (!viewer.profile) return null;
 
   const today = new Date().toISOString().slice(0, 10);
   const canAdd = viewer.isAdmin || viewer.orgRoles.includes('exec_board') || viewer.isClubLead;

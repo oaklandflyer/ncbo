@@ -224,6 +224,30 @@ tables aren't readable by ordinary members at all. Moderators can still see
 authorship on the base tables, because moderation needs it — worth telling
 members that, rather than implying anonymity is absolute.
 
+## If members suddenly cannot sign in
+
+The first thing to check is whether the database is behind the app.
+
+**Deploying updates the app; it does not run migrations.** Merging to `main`
+ships new code to Vercel within a minute or two, and the schema that code
+expects is still whatever was last pushed with `npm run db:push`. When the two
+drift, every profile query fails, and the symptom is that sign-in appears to be
+broken: the magic link works, the session is created, and the member is bounced
+straight back to the sign-in page.
+
+```sh
+cd app
+npm run db:status   # what's applied locally vs remotely
+npm run db:push     # apply anything missing
+```
+
+The app now says this on screen instead of redirecting, and logs the underlying
+error (`[ncbo] profile query failed`) to the server log. If the error mentions a
+column or a relationship, it is this.
+
+The other common cause is a **paused Supabase project**: the free tier pauses
+after about a week without traffic. Un-pause it from the dashboard.
+
 ## Known limits
 
 - **Supabase free tier pauses a project after about a week without traffic.**

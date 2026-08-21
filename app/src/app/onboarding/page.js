@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
-import { createClient, getProfile } from '@/lib/supabase/server';
+import { createClient, getProfileResult } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
 import { AuthPage, AuthHeading } from '@/app/ui';
 import OnboardingForm from './form';
+import SchemaError from '@/app/hub/schema-error';
 
 export const metadata = {
   title: 'Finish your profile · NCBO',
@@ -18,8 +19,13 @@ export const metadata = {
  */
 export default async function Onboarding() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const { signedIn, profile, error } = await getProfileResult(supabase);
 
+  /* Outside /hub, so there is no layout to explain this one. Same three-way
+     split as the hub: signed out is a redirect, an unreadable profile is a
+     message, and only a missing row sends somebody back to sign in. */
+  if (!signedIn) redirect('/login');
+  if (error) return <SchemaError error={error} />;
   if (!profile) redirect('/login');
   // A decided account has nothing to fill in: /hub shows it the decision.
   if (profile.status === 'rejected' || profile.status === 'suspended') redirect('/hub');

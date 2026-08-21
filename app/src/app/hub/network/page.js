@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient, getProfile } from '@/lib/supabase/server';
+import { createClient, getProfileResult } from '@/lib/supabase/server';
 import { Page, PageHero, Section, Empty } from '@/app/ui';
 import Directory from './directory';
 
@@ -13,8 +13,13 @@ import Directory from './directory';
  */
 export default async function Network() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
-  if (!profile) redirect('/login');
+  const { signedIn, profile } = await getProfileResult(supabase);
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!signedIn) redirect('/login');
+  if (!profile) return null;
 
   /* The roster comes from `clubs`, not from whoever has signed up. Before
      this, a club with no members simply did not exist in the app — the "By

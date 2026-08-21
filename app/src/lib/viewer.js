@@ -1,4 +1,4 @@
-import { createClient, getProfile } from '@/lib/supabase/server';
+import { createClient, getProfileResult } from '@/lib/supabase/server';
 
 /**
  * One answer to "who is asking, and what may they do".
@@ -25,6 +25,7 @@ import { createClient, getProfile } from '@/lib/supabase/server';
  * past this still meets Postgres.
  */
 const EMPTY = {
+  signedIn: false, profileError: null,
   userId: null, role: null, profile: null,
   membership: null, memberships: [], pendingMembership: null,
   orgRoles: [], ledClubIds: [], ledClubs: [], ledSchoolIds: [],
@@ -35,9 +36,13 @@ const EMPTY = {
 
 export async function getViewerContext(supabaseArg) {
   const supabase = supabaseArg || await createClient();
-  const profile = await getProfile(supabase);
+  const { signedIn, profile, error: profileError } = await getProfileResult(supabase);
 
-  if (!profile) return EMPTY;
+  /* `signedIn` and `profile` are separate answers on purpose. A signed-in
+     member whose profile could not be read is not signed out, and treating
+     them as though they were is what turned a stale schema into an
+     unexplained redirect loop at the sign-in page. */
+  if (!profile) return { ...EMPTY, signedIn, profileError };
 
   /* Three reads rather than one join: PostgREST would embed these, but the
      membership row carries columns an ordinary member is not granted, and a
@@ -95,6 +100,8 @@ export async function getViewerContext(supabaseArg) {
   const isClubLead = accountLive && ledClubIds.length > 0;
 
   return {
+    signedIn: true,
+    profileError: null,
     userId: profile.id,
     role: profile.role,
     profile,

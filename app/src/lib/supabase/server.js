@@ -49,18 +49,46 @@ export async function createClient() {
  * at all any more, so asking for it would fail the whole query; a member's own
  * address comes from their session, below.
  */
-export async function getProfile(supabase) {
+export async function getProfileResult(supabase) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return { signedIn: false, profile: null, error: null };
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, display_name, full_name, class_year, lifting_experience, major, is_adult, experience_phase, role, status, club_id, school_id, division, home_region, instagram_handle, tiktok_handle, verified, credentials, is_alumni, alumni_since, universities(name, short_name), clubs(name)')
     .eq('id', user.id)
     .single();
 
+  /* This used to be `return data ? … : null`, which threw the error away and
+     made two completely different situations indistinguishable: "you are not
+     signed in" and "your session is fine but this query failed". The app
+     redirected to /login for both, so a database whose migrations had not been
+     applied looked exactly like a broken magic link, and following the link
+     again just repeated it.
+     
+     The commonest cause by far is a schema behind the deployed code: this
+     select names `experience_phase` and embeds `universities`, and if either
+     is missing every request bounces the member back to the sign-in page. The
+     error is logged and handed upward so the app can say so. */
+  if (error) {
+    console.error('[ncbo] profile query failed', {
+      code: error.code, message: error.message, hint: error.hint,
+    });
+    return { signedIn: true, profile: null, error };
+  }
+
+  return {
+    signedIn: true,
+    error: null,
     /* `universities` is what the embed is called; `schools` is what fourteen
-     migrations' worth of UI calls it. Aliased once here rather than renamed
-     across every page in the same commit as a schema change. */
-  return data ? { ...data, schools: data.universities || null, email: user.email } : null;
+       migrations' worth of UI calls it. Aliased once here rather than renamed
+       across every page in the same commit as a schema change. */
+    profile: data ? { ...data, schools: data.universities || null, email: user.email } : null,
+  };
+}
+
+/** The profile alone, for callers that have no use for the failure reason. */
+export async function getProfile(supabase) {
+  const { profile } = await getProfileResult(supabase);
+  return profile;
 }
