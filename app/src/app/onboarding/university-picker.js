@@ -44,6 +44,7 @@ export default function UniversityPicker({
   name = 'university_id',
   defaultValue = '',
   onResolve,
+  affiliation = 'student',
 }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(
@@ -82,7 +83,9 @@ export default function UniversityPicker({
        scoped to it. The club id goes no further than this: the form never
        submits one, and the server resolves the university to a club again on
        its own. */
-    onResolve?.(u.chapter_state === 'active' ? u : null);
+    /* Only a student joining an active chapter gets the referral search,
+       because that search is scoped to a club they are about to apply to. */
+    onResolve?.(affiliation === 'student' && u.chapter_state === 'active' ? u : null);
   }
 
   function onKeyDown(e) {
@@ -95,7 +98,9 @@ export default function UniversityPicker({
 
   return (
     <div ref={boxRef} className="relative">
-      <label className={fieldLabel} htmlFor="university-search">Your university</label>
+      <label className={fieldLabel} htmlFor="university-search">
+        {affiliation === 'student' ? 'Your university' : 'The school you work with'}
+      </label>
 
       {/* The value the form actually submits. The visible input is a search
           box and is never itself the answer, which is what stops a typo
@@ -158,7 +163,20 @@ export default function UniversityPicker({
       {/* What they are joining, resolved from the school and shown before they
           submit. A person should never find out which chapter they applied to
           after the fact. */}
-      {selected && (
+      {selected && affiliation !== 'student' && (
+        <div className="mt-3 rounded-[8px] border border-edge bg-band px-4 py-3">
+          <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
+            Noted: {selected.short_name || selected.name}
+          </p>
+          <p className={`mt-1 ${fineprint}`}>
+            You will not be applied to a club, and no club lead will be asked to review
+            you. An admin gives coaches and advisors their standing separately, so tell
+            whoever invited you that you have signed up.
+          </p>
+        </div>
+      )}
+
+      {selected && affiliation === 'student' && (
         <div className="mt-3 rounded-[8px] border border-edge bg-band px-4 py-3">
           {selected.chapter_state === 'active' && (
             <>

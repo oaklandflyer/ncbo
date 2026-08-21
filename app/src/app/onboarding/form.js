@@ -2,9 +2,10 @@
 
 import { useActionState, useState } from 'react';
 import { saveOnboarding, searchChapterMembers } from './actions';
-import { CLASS_YEARS, EXPERIENCE, GRAD_YEARS, CHAT_PLATFORMS, FOUND_VIA } from './options';
+import { EXPERIENCE, CHAT_PLATFORMS, FOUND_VIA, AFFILIATION_CHOICES } from './options';
 import UniversityPicker from './university-picker';
 import { EXPERIENCE_PHASES } from '@/lib/membership';
+import { gradYearOptions } from '@/lib/academicYear';
 import { field, fieldLabel, checkline, btnPrimary, fineprint, buttonReset } from '@/app/ui';
 
 /**
@@ -23,6 +24,9 @@ import { field, fieldLabel, checkline, btnPrimary, fineprint, buttonReset } from
 export default function OnboardingForm({ email, defaultName, universities }) {
   const [state, action, pending] = useActionState(saveOnboarding, {});
   const [chapter, setChapter] = useState(null);
+  /* Defaults to student, which is what the overwhelming majority are and what
+     every account before this question existed answered implicitly. */
+  const [affiliation, setAffiliation] = useState('student');
 
   return (
     <form action={action}>
@@ -51,25 +55,63 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           />
         </div>
 
+        {/* Asked before the school, because it changes what the school
+            question means. Not a role picker: a role here would be a claim
+            anybody could make, and `profiles.role` is derived from org_roles
+            and club_memberships anyway, so a claim would be both a privilege
+            escalation and a lie the database would overwrite. This asks what
+            somebody IS, and grants nothing. */}
+        <fieldset className="sm:col-span-2">
+          <legend className={fieldLabel}>Which describes you</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            {AFFILIATION_CHOICES.map(([value, label, hint]) => (
+              <label
+                key={value}
+                className={`flex cursor-pointer gap-3 rounded-[8px] border px-4 py-3 ${
+                  affiliation === value ? 'border-brand bg-brand-wash' : 'border-edge bg-surface'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="affiliation"
+                  value={value}
+                  checked={affiliation === value}
+                  onChange={() => setAffiliation(value)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[#2F5FA8]"
+                />
+                <span className="min-w-0">
+                  <span className="block font-display text-[0.92rem] font-bold uppercase tracking-[0.02em] text-ink">
+                    {label}
+                  </span>
+                  <span className={`mt-1 block ${fineprint}`}>{hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <div className="sm:col-span-2">
-          <UniversityPicker universities={universities} onResolve={setChapter} />
+          <UniversityPicker
+            universities={universities}
+            onResolve={setChapter}
+            affiliation={affiliation}
+          />
         </div>
 
-        <div>
-          <label className={fieldLabel} htmlFor="grad_year">Expected graduation</label>
-          <select id="grad_year" name="grad_year" required defaultValue="" className={field}>
-            <option value="" disabled>Pick one</option>
-            {GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-
-        <div>
-          <label className={fieldLabel} htmlFor="class_year">Year</label>
-          <select id="class_year" name="class_year" required defaultValue="" className={field}>
-            <option value="" disabled>Pick one</option>
-            {CLASS_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
+        {/* Students only. A coach has no graduation year, and demanding a
+            fake one is how a field stops meaning anything. The relative
+            standing that used to sit beside this is gone: migration 0026
+            deprecated `class_year`, and academic level is a profile edit
+            rather than a signup question. */}
+        {affiliation === 'student' && (
+          <div>
+            <label className={fieldLabel} htmlFor="grad_year">Expected graduation</label>
+            <select id="grad_year" name="grad_year" required defaultValue="" className={field}>
+              <option value="" disabled>Pick one</option>
+              {gradYearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className={fieldLabel} htmlFor="lifting_experience">Training for</label>
