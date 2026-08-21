@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CardLink, Badge, Empty, Meta, VettedSeal, btnPrimary, field } from '@/app/ui';
+import { Card, Badge, Empty, Meta, VettedSeal, btnPrimary, field } from '@/app/ui';
 import Vote from './vote';
+import Remove from './remove';
 
 /**
  * The board's controls and list.
@@ -16,7 +17,7 @@ import Vote from './vote';
  * The layout is phone-first — segmented control, one full-width action,
  * search, chips, then cards — and widens rather than rearranging above md.
  */
-export default function Board({ questions, channels }) {
+export default function Board({ questions, channels, canModerate = false }) {
   const [query, setQuery] = useState('');
   const [channel, setChannel] = useState('');
 
@@ -114,24 +115,33 @@ export default function Board({ questions, channels }) {
         <ul className="mt-3 grid list-none gap-4">
           {shown.map((q) => (
             <li key={q.id}>
-              <CardLink href={`/hub/qa/${q.id}`} Component={Link}>
-                {/* Clamped rather than sliced: the full text stays in the DOM
-                    for search and screen readers. Sentence case on purpose —
-                    the site shouts its headings, but shouting someone's
-                    question back at them reads as an accusation. */}
-                <p className="line-clamp-3 font-display text-[1.25rem] font-bold leading-[1.2] text-ink transition group-hover:text-brand sm:text-[1.35rem]">
-                  {q.body}
-                </p>
+              {/* The card is a Card with a link inside it, not a link with
+                  controls inside it: the footer holds a vote button and — for
+                  moderators — a remove button, and interactive content nested
+                  in an anchor is both invalid HTML and a trap where every
+                  click has to remember to stop propagating. */}
+              <Card className="group p-6 transition duration-200 hover:-translate-y-[3px] hover:border-brand-deep hover:shadow-brand sm:p-7">
+                <Link
+                  href={`/hub/qa/${q.id}`}
+                  className="block focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-brand-light"
+                >
+                  {/* Clamped rather than sliced: the full text stays in the DOM
+                      for search and screen readers. Sentence case on purpose —
+                      the site shouts its headings, but shouting someone's
+                      question back at them reads as an accusation. */}
+                  <p className="line-clamp-3 font-display text-[1.25rem] font-bold leading-[1.2] text-ink transition group-hover:text-brand sm:text-[1.35rem]">
+                    {q.body}
+                  </p>
 
-                {q.channel_name && (
-                  <div className="mt-3">
-                    <Badge tone="forming">{q.channel_name}</Badge>
-                  </div>
-                )}
+                  {q.channel_name && (
+                    <div className="mt-3">
+                      <Badge tone="forming">{q.channel_name}</Badge>
+                    </div>
+                  )}
+                </Link>
 
-                {/* Footer row: how many answers, and who settled it. The
-                    prototype also shows a helpful count — nothing votes in
-                    this schema, so there is no number to print. */}
+                {/* Footer row: the helpful count, how many answers, who
+                    settled it, and the moderator's way out. */}
                 <Meta className="mt-4 border-t border-edge pt-3">
                   <Vote
                     questionId={q.id}
@@ -156,8 +166,18 @@ export default function Board({ questions, channels }) {
                       <span className="text-body">{q.author_name}</span>
                     </>
                   )}
+
+                  {canModerate && (
+                    <span className="ml-auto">
+                      <Remove
+                        questionId={q.id}
+                        title={q.body}
+                        answerCount={q.answer_count || 0}
+                      />
+                    </span>
+                  )}
                 </Meta>
-              </CardLink>
+              </Card>
             </li>
           ))}
         </ul>
