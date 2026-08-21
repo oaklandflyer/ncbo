@@ -24,7 +24,7 @@ export default function EditProfileForm({ profile, divisions }) {
           maxLength={80}
         />
         <p className={`mt-2 ${fineprint}`}>
-          An area, not an address — close enough to find someone to train with, and no
+          An area, not an address. Close enough to find someone to train with, and no
           closer.
         </p>
       </div>
@@ -64,7 +64,7 @@ export default function EditProfileForm({ profile, divisions }) {
       </div>
 
       <p className={`mt-3 ${fineprint}`}>
-        Handle only — paste a full link or an @ and we’ll take the name out of it.
+        Handle only. Paste a full link or an @ and we’ll take the name out of it.
       </p>
 
       {/* Graduating keeps you on the platform. The directory says so, so the

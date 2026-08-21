@@ -102,7 +102,7 @@ export async function setCoLead(prev, formData) {
   const { viewer } = gate;
 
   if (!makeLead && id === viewer.userId && !viewer.isAdmin) {
-    return { error: 'You can’t step yourself down — ask another lead or an admin.' };
+    return { error: 'You can’t step yourself down. Ask another lead or an admin.' };
   }
 
   /* Through the RPC, not the table: `club_leads_write` is admin-only on

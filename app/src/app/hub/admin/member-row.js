@@ -18,7 +18,7 @@ export default function MemberRow({ member, clubs }) {
         {state?.ok && <div className="mt-1 text-[0.82rem] text-brand-deep" role="status">Saved.</div>}
       </td>
       <td className="px-6 py-4 text-[0.92rem] text-body">
-        {member.schools?.name || <span className="text-fine">—</span>}
+        {member.school_name || <span className="text-fine">Independent</span>}
       </td>
       <td className="px-6 py-4">
         <form action={action} className="flex flex-wrap items-center gap-2">
@@ -31,7 +31,7 @@ export default function MemberRow({ member, clubs }) {
           </select>
           <select name="club_id" defaultValue={member.club_id || ''} aria-label="Club" className={`${field} w-auto py-2 text-[0.9rem]`}>
             <option value="">No club</option>
-            {clubs.map((c) => <option key={c.id} value={c.id}>{c.name} — {c.schools?.name}</option>)}
+            {clubs.map((c) => <option key={c.id} value={c.id}>{c.short_name || c.club_name}</option>)}
           </select>
           <button className={`${btnGhost} ${btnSmall}`} type="submit" disabled={pending}>
             {pending ? 'Saving…' : 'Save'}

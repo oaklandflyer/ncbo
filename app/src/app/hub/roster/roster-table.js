@@ -6,6 +6,7 @@ import {
   Card, Badge, Meta, AlumniBadge, field, fieldLabel, checkline,
   btnPrimary, btnGhost, btnDanger, btnSmall, buttonReset, fineprint, FormMessage,
 } from '@/app/ui';
+import { UserChip } from '@/app/hub/profile-popup/popup';
 
 /** Copy every address at once — the reason a lead opens this page at all. */
 function CopyEmails({ emails }) {
@@ -19,7 +20,7 @@ function CopyEmails({ emails }) {
     } catch {
       /* Clipboard is blocked outside a secure context and in some embedded
          browsers. Say so rather than silently doing nothing. */
-      setCopied('Your browser blocked the copy — select the addresses instead.');
+      setCopied('Your browser blocked the copy. Select the addresses instead.');
     }
     setTimeout(() => setCopied(''), 4000);
   }
@@ -65,7 +66,7 @@ function MemberEditor({ member, canPromote }) {
             <label className={`${checkline} sm:col-span-2 rounded-[8px] border border-edge bg-band px-4 py-3`}>
               <input type="checkbox" name="is_alumni" defaultChecked={!!member.is_alumni}
                      className="h-4 w-4 accent-[#2F5FA8]" />
-              <span>Graduated — show as Alumni</span>
+              <span>Graduated, so show as Alumni</span>
             </label>
 
             <div className="sm:col-span-2">
@@ -100,7 +101,7 @@ function MemberEditor({ member, canPromote }) {
                 <p className="text-[0.95rem] leading-relaxed text-body">
                   <b className="font-semibold text-ink">{member.display_name}</b> comes off this
                   club’s roster. They keep their NCBO account, their posts and everyone they know
-                  here — they just stop being one of your members.
+                  here. They just stop being one of your members.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <form action={removeAction}>
@@ -153,9 +154,12 @@ export default function RosterTable({ members, canPromote }) {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span className="font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink">
+                    <UserChip
+                      userId={m.id}
+                      className="font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink"
+                    >
                       {m.display_name}
-                    </span>
+                    </UserChip>
                     {m.is_lead && <Badge tone="active">Lead</Badge>}
                     {m.role !== 'member' && m.role !== 'club_lead' && (
                       <Badge tone="forming">{m.role}</Badge>

@@ -25,8 +25,8 @@ export const MISSION =
 export const PITCH =
   'NCBO is the overarching governing body for collegiate bodybuilding, acting as a '
   + 'national resource network designed to support student-run clubs without replacing '
-  + 'them. We provide independent campus clubs with an institutional pathway—covering '
-  + 'everything from a first training split to a competitive stage season—while allowing '
+  + 'them. We provide independent campus clubs with an institutional pathway, covering '
+  + 'everything from a first training split to a competitive stage season, while allowing '
   + 'local chapters to retain complete operational autonomy. By unifying campus lifters, '
   + 'we are building the definitive collegiate era for the sport.';
 

@@ -19,6 +19,7 @@ select public.restrict_columns('public.profiles', array['email']);
 select public.restrict_columns('public.club_memberships',
   array['legal_name', 'group_chat_handle', 'group_chat_platform',
         'found_via', 'student_id_photo_path', 'decision_note']);
+select public.restrict_columns('public.school_email_codes', array['code_hash']);
 
 \set ON_ERROR_STOP 0
 \pset pager off
@@ -408,4 +409,49 @@ select display_name, coalesce(club_name, 'Independent') as chapter, is_verified
 \echo '=== 35. a coaching advisor carries their org role and no chapter ==='
 select display_name, coalesce(club_name, 'Independent') as chapter, org_roles
   from public.get_public_profile('d2000000-0000-0000-0000-0000000000d2');
+reset role;
+
+-- ============================================================================
+-- 2.4 — the optional school-email code
+-- ============================================================================
+\echo ''
+\echo '=== 36. a code verifies the address, and never becomes a login ==='
+reset role;
+set test.uid = '';
+-- Pitt applies, so there is a pending membership to attach the code to.
+insert into auth.users (id, email) values ('c4000000-0000-0000-0000-0000000000c4', 'codepath@gmail.com');
+update public.profiles set display_name = 'Code Path'
+ where id = 'c4000000-0000-0000-0000-0000000000c4';
+insert into public.club_memberships (user_id, club_id, status, legal_name)
+select 'c4000000-0000-0000-0000-0000000000c4', c.id, 'pending', 'Code Path'
+  from public.clubs c where c.name = 'Fitness and Bodybuilding Club';
+
+set role authenticated;
+set test.uid = 'c4000000-0000-0000-0000-0000000000c4';
+-- A subdomain address, because schools are inconsistent about them and the
+-- apex-only rule would turn real students away.
+select public.issue_school_email_code('someone@students.pitt.edu') as code \gset
+select public.redeem_school_email_code(:'code') as redeemed;
+reset role;
+set test.uid = '';
+select status, verification_method, verified_at is not null as verified
+  from public.club_memberships where user_id = 'c4000000-0000-0000-0000-0000000000c4';
+
+\echo ''
+\echo '=== 37. the address did NOT become a login, and is not on the profile ==='
+select count(*) as auth_rows_for_that_address from auth.users
+ where email = 'someone@students.pitt.edu';
+select email = 'codepath@gmail.com' as login_address_unchanged
+  from public.profiles where id = 'c4000000-0000-0000-0000-0000000000c4';
+
+\echo ''
+\echo '=== 38. MUST FAIL: a code for a school you did not apply to ==='
+set role authenticated;
+set test.uid = 'c4000000-0000-0000-0000-0000000000c4';
+select public.issue_school_email_code('someone@purdue.edu');
+
+\echo ''
+\echo '=== 39. a wrong code is refused, and reading the hash MUST FAIL ==='
+select public.redeem_school_email_code('000000') as wrong_code_accepted;
+select code_hash from public.school_email_codes limit 1;
 reset role;

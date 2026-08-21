@@ -7,9 +7,12 @@ the marketing site in the repo root, which stays a static GitHub Pages build.
 security) · deployed on Vercel. All three have free tiers that fit an
 organisation this size.
 
-**What's built so far:** magic-link sign-in with an approval queue, the four
-roles, a club home, the Topics channels, and the Q&A board. Events, standings,
-check-in, tokens, and the club-lead surfaces are not built yet.
+**What's built so far:** magic-link sign-in, the membership model, a
+university picker that resolves to one chapter, the club lead's approval
+queue, the reusable profile popup, the four verification paths, a club home,
+the Topics channels, the Q&A board, and the resource vault. The competition
+calendar, national rankings, and the persona-driven Home layouts are not built
+yet, and are the next and highest-leverage thing to build.
 
 ---
 
@@ -72,17 +75,19 @@ You need a profile row before you can be promoted, and the trigger creates one
 on signup. You don't need the app running for this — **Authentication → Users
 → Add user** fires the same trigger.
 
-Add a user with whatever address you want as the founding admin — a `.edu` at
-a seeded school will come out approved, anything else comes out pending. It
-doesn't matter which, because the next step overrides both.
+Add a user with whatever address you want as the founding admin. Every account
+comes out live now, so it genuinely does not matter which address you use.
 
 Then, in the SQL Editor:
 
 ```sql
-update public.profiles
-   set role = 'admin', status = 'approved', approved_at = now()
- where id = (select id from auth.users where email = 'you@yourschool.edu');
+insert into public.org_roles (user_id, role)
+select id, 'admin' from auth.users where email = 'you@yourschool.edu';
 ```
+
+That is the whole of it: `profiles.role` is derived from this table and the
+trigger will bring it into line. Setting `profiles.role` by hand would work
+until the next membership change overwrote it.
 
 The SQL Editor can do this because the privilege guard allows trusted
 server-side contexts — that's the bootstrap path, since there's no admin yet
@@ -112,29 +117,75 @@ three variables from `.env.example` as environment variables, with
 
 ### Who can have an account
 
-Anyone can sign up. What varies is whether the account goes live immediately
-or waits for you:
+Anyone, with any address, and the account is live immediately.
 
-| Address | What happens |
-|---|---|
-| `.edu` at a school NCBO already runs | **Approved instantly**, linked to that school |
-| On the `allowed_emails` list | **Approved instantly** — pre-vetted staff |
-| Anything else | **Pending** until an admin approves it |
+That is a reversal, and it is worth saying why. The app used to require a
+`.edu`, on the reasoning that a `pitt.edu` address proves somebody is at Pitt
+better than a human scanning a queue can. The reasoning was sound and the
+premise was wrong: students do not read the inbox their school gave them and
+will not keep a password on it, so the requirement turned away the people it
+was meant to admit while stopping nobody who can guess an address format.
 
-The reasoning: a `pitt.edu` address has already proved the person is at Pitt,
-better than a human scanning a queue can. Making an admin approve every
-student would be manual work duplicating a check the database does for free —
-and the queue would back up exactly during recruiting season. So the queue
-holds only the accounts that genuinely need judgment: advisors, exec team,
-graduates, and students at schools not yet in NCBO.
+So the address went back to being a way to send somebody a link, and proving
+somebody is a student moved to a person who would know.
 
-Pending accounts can sign in and see their own status. They cannot read the
-board — enforced by policy, not by the UI. Approve them at
-**Admin → Waiting for approval**.
+### Two different questions
 
-`allowed_emails` is now optional: it's a shortcut for staff you already know
-are coming, so they skip the queue. Without it they simply land in the queue
-like anyone else.
+| Question | Where it lives | Who answers it |
+|---|---|---|
+| May this person sign in? | `profiles.status` | Nobody. Signup answers it |
+| Is this person a student at this chapter? | `club_memberships` | That chapter's club lead |
+| Are they current on dues? | `membership_dues` | Their club lead, per term |
+| Do they run part of NCBO? | `org_roles` | An admin |
+
+Keeping these apart is what makes the rest work. A member whose dues lapse
+loses the gated surfaces without needing to be re-verified. A coaching advisor
+holds an org role and appears on no chapter's roster. An admin who is also a
+student at Iowa appears on Iowa's roster as a member, because of the
+membership and not the org role.
+
+### What verification gates, and what it does not
+
+Open to anyone with an account: browsing the board, the competition calendar,
+reading Q&A, discovering clubs. Gating those would cost more members than it
+protects, and the whole point of a national organisation is that a stranger at
+a school with no chapter can look around.
+
+Gated behind a verified membership: appearing on a chapter roster, posting in
+chapter-private spaces, the member dues rate, and competition registration.
+
+### The four ways to get verified
+
+In the order they are meant to carry load:
+
+1. **A club lead vouches for you.** The default path, and the one the club
+   queue is built around. Everything signup collects is on one card, including
+   the group-chat handle, which is there so a lead can match a name to a face.
+2. **Three verified members of your chapter vouch for you.** Auto-approves,
+   and tells the lead rather than asking them. A stronger signal than one
+   person skimming a list, and free.
+3. **A one-time code to a school email.** Optional and never required. Any
+   subdomain counts, because schools are inconsistent about them. The address
+   never becomes a login and is never written to `auth.users`.
+4. **A student ID photo.** Uploaded at signup if the person wants to, reviewed
+   by the lead inside the approval card.
+
+`club_memberships.verification_method` records which one was used, so the
+claim that lead vouching carries the load can be checked against what people
+actually do.
+
+### The approval queue belongs to club leads
+
+Applications go to the lead at that chapter, not to an admin. An admin can
+open any queue for support and is deliberately not notified about any of them:
+being the fallback approver is what let the old queue back up in exactly the
+weeks it mattered.
+
+Leads get one digest a day rather than a push per application. Anything
+sitting more than 72 hours escalates to the co-lead, then to Club Relations.
+A club that is down to one approver is warned about it, because leadership
+turns over in May and December and a chapter with zero approvers cannot admit
+anybody.
 
 ### Staying signed in
 
@@ -144,17 +195,21 @@ explicitly sign out.
 
 ### What each role can do
 
-| Role | Can |
-|---|---|
-| `member` | Read everything, post to channels, ask questions, edit their own profile |
-| `club_lead` | Everything a member can, plus edit their own club's record |
-| `advisor` | Everything a member can, plus **answer questions** and moderate posts |
-| `admin` | Everything, plus assign roles and clubs, and edit reference data |
+Club roles come from a membership; org roles come from `org_roles`. The two
+are never substituted for each other.
 
-New signups are `member`. Only an admin can change a role, approve an account,
-or reassign a club — all enforced by the `guard_profile_privileges` trigger,
-so they hold even if someone calls the API directly. Without that trigger, "a
-member may edit their own profile" would let a pending account approve itself.
+| Role | Where | Can |
+|---|---|---|
+| `member` | membership | Read everything open, post, ask questions, edit their own profile |
+| `co_lead` | membership | Work their own chapter's queue and roster |
+| `club_lead` | membership | The same, plus name co-leads. Appointed by an admin |
+| `coaching_advisor` | org role | Answer questions and moderate posts |
+| `exec_board`, `board_of_directors` | org role | See where NCBO should expand next |
+| `admin` | org role | Everything, plus roles, accounts and reference data |
+
+`profiles.role` still exists and every policy written before the membership
+model still reads it, but nobody writes it: it is derived from the two tables
+above and kept in step by trigger.
 
 ## Privacy
 

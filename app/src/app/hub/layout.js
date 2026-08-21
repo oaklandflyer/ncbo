@@ -10,6 +10,7 @@ import { getViewerContext } from '@/lib/viewer';
 import { getBranding } from '@/lib/branding';
 import SignOut from './sign-out';
 import AccountStatus from './status';
+import { ProfilePopupProvider } from './profile-popup/popup';
 
 export default async function HubLayout({ children }) {
   const supabase = await createClient();
@@ -70,7 +71,7 @@ export default async function HubLayout({ children }) {
       />
 
       <HubNav
-        canReview={canReview(profile)}
+        canReview={canReview(viewer)}
         manages={viewer.isAdmin}
         isClubLead={viewer.isClubLead}
         /* Falls back to the school of a club they lead: a lead whose own
@@ -83,7 +84,12 @@ export default async function HubLayout({ children }) {
 
       {/* Bottom padding on a phone so the last card clears the tab bar rather
           than hiding under it; the bar adds the safe-area inset on top. */}
-      <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
+      {/* Mounted once, here, so every surface below opens the same modal from
+          the same component. Five per-screen copies would drift, and the one
+          that drifts is the one that starts showing a field it should not. */}
+      <ProfilePopupProvider>
+        <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
+      </ProfilePopupProvider>
 
       <TabBar pendingCount={pendingQuestions} isClubLead={viewer.isClubLead} />
 

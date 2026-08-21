@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { canReview, reviewScope } from '@/lib/review';
+import { canReview } from '@/lib/review';
+import { affiliationLabel } from '@/lib/membership';
 import { getViewerContext } from '@/lib/viewer';
 import {
   Page, PageHero, Section, SectionTitle, DarkTile,
@@ -24,50 +25,53 @@ export default async function Hub() {
   // redirect lands. Fail closed here as well.
   if (!profile) redirect('/login');
 
-  const canAnswer = profile.role === 'advisor' || profile.role === 'admin';
-  const scope = reviewScope(profile);
+  const canAnswer = viewer.canModerateContent;
+  const membership = viewer.membership;
 
   const [clubmates, openQuestions, pendingCount] = await Promise.all([
-    profile.club_id
-      ? supabase.from('profiles')
-          /* Removed accounts stay in the table for their authorship, but they
-             are not on anybody's roster. `member_directory` has always
-             filtered them; this query did not. */
-          .select('id, display_name, role, division, is_alumni, alumni_since')
-          .eq('club_id', profile.club_id)
-          .eq('status', 'approved')
-          .is('deleted_at', null)
+    /* The roster audit, on the busiest screen in the app. This used to read
+       `profiles.club_id`, which is how an admin or a coaching advisor ended up
+       counted as a clubmate. It reads `member_directory` now, whose club comes
+       from an active membership and from nothing else. */
+    membership?.clubId
+      ? supabase.from('member_directory')
+          .select('id, display_name, club_role, division, is_alumni, alumni_since, member_verified')
+          .eq('club_id', membership.clubId)
           .order('display_name')
       : Promise.resolve({ data: null }),
     canAnswer
-      ? supabase.from('question_feed').select('*', { count: 'exact', head: true }).eq('answered', false)
+      ? supabase.from('question_feed').select('id', { count: 'exact', head: true }).eq('answered', false)
       : Promise.resolve({ count: 0 }),
-    canReview(profile)
-      ? (scope.kind === 'school'
-          ? supabase.from('profiles').select('id', { count: 'exact', head: true })
-              .eq('status', 'pending').eq('school_id', scope.schoolId)
-          : supabase.from('profiles').select('id', { count: 'exact', head: true })
-              .eq('status', 'pending'))
+    /* Applications waiting on this person, club-scoped. An admin is not the
+       default approver for anybody's queue, so this is empty for them unless
+       they also lead a club — which is the point. */
+    viewer.isClubLead
+      ? supabase.from('club_memberships').select('id', { count: 'exact', head: true })
+          .eq('status', 'pending').in('club_id', viewer.ledClubIds)
       : Promise.resolve({ count: 0 }),
   ]);
 
   const roster = clubmates.data || [];
-  const roleLabel = (role) => (role === 'member' ? 'Member' : role.replace('_', ' '));
+  const roleLabel = (role) => (
+    { club_lead: 'Club lead', co_lead: 'Co-lead' }[role] || 'Member'
+  );
   const firstName = String(profile.display_name || 'member').split(/\s+/)[0];
 
   return (
     <Page>
       <PageHero
-        eyebrow={profile.schools?.name || 'NCBO'}
-        title={profile.clubs?.name || `Welcome back, ${firstName}.`}
+        eyebrow={membership ? affiliationLabel({ university_short_name: membership.shortName }) : 'NCBO'}
+        title={membership?.clubName || `Welcome back, ${firstName}.`}
         lead={
-          profile.clubs?.name
-            ? 'Your club, then the league. Everything the network is talking about is a click away.'
-            : 'You’re not attached to a club yet — the league board is open to you all the same.'
+          membership?.clubName
+            ? 'Your chapter, then the league. Everything the network is talking about is a click away.'
+            : viewer.pendingMembership
+              ? 'Your application is with your club lead. The league board is open to you in the meantime.'
+              : 'You are not at a chapter yet. The league board, the club directory and the Q&A board are open to you all the same.'
         }
         actions={
-          canReview(profile) && pendingCount.count > 0 ? (
-            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/admin">
+          canReview(viewer) && pendingCount.count > 0 ? (
+            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/club/queue">
               {pendingCount.count} waiting
             </Link>
           ) : null
@@ -84,7 +88,7 @@ export default async function Hub() {
               {canAnswer && openQuestions.count > 0 && (
                 <Stat value={openQuestions.count} label="Questions open" />
               )}
-              {canReview(profile) && pendingCount.count > 0 && (
+              {canReview(viewer) && pendingCount.count > 0 && (
                 <Stat value={pendingCount.count} label="Awaiting approval" />
               )}
             </Stats>
@@ -145,12 +149,12 @@ export default async function Hub() {
                         {m.display_name || <span className="font-body normal-case text-fine">No name yet</span>}
                       </td>
                       <td className="px-6 py-4">
-                        {m.role === 'member'
+                        {m.club_role === 'member'
                           ? <span className="text-[0.92rem] text-meta">Member</span>
-                          : <Badge tone="active">{roleLabel(m.role)}</Badge>}
+                          : <Badge tone="active">{roleLabel(m.club_role)}</Badge>}
                       </td>
                       <td className="px-6 py-4 text-[0.92rem] text-body">
-                        {m.division || <span className="text-fine">—</span>}
+                        {m.division || <span className="text-fine">Not set</span>}
                       </td>
                     </tr>
                   ))}
@@ -165,7 +169,7 @@ export default async function Hub() {
                     <span className="truncate font-display text-[1.05rem] font-bold uppercase text-ink">
                       {m.display_name || <span className="font-body normal-case text-fine">No name yet</span>}
                     </span>
-                    {m.role !== 'member' && <Badge tone="active">{roleLabel(m.role)}</Badge>}
+                    {m.club_role !== 'member' && <Badge tone="active">{roleLabel(m.club_role)}</Badge>}
                   </div>
                   {m.division && <Meta className="mt-1">{m.division}</Meta>}
                 </li>
@@ -176,8 +180,9 @@ export default async function Hub() {
           <>
             <SectionTitle>Your club</SectionTitle>
             <Empty>
-              No club on your account yet. An NCBO admin attaches you to one — the league
-              board is open in the meantime.
+              {viewer.pendingMembership
+                ? 'Your application is with your club lead. They usually get to it within a few days, and you will see your chapter here once they do.'
+                : 'You are not at a chapter yet. If your school has one, you can apply from your profile; if it does not, we will tell you when that changes.'}
             </Empty>
           </>
         )}

@@ -223,7 +223,7 @@ export function VettedSeal({ label = 'NCBO Vetted' }) {
   return (
     <span
       role="img"
-      aria-label={`${label} — verified by NCBO`}
+      aria-label={`${label}, verified by NCBO`}
       className="inline-flex items-center gap-[0.4rem] whitespace-nowrap rounded-full border border-[rgba(47,95,168,0.35)] bg-brand-wash px-[0.65rem] py-[0.28rem] font-display text-[0.68rem] font-bold uppercase tracking-[0.1em] text-brand-deep"
     >
       <svg aria-hidden width="12" height="14" viewBox="0 0 24 28" fill="none">

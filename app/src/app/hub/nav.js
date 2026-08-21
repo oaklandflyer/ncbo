@@ -109,7 +109,8 @@ export default function HubNav({ canReview, manages, isClubLead = false, school,
   const links = [
     ...LINKS,
     ...(isClubLead ? [['/hub/roster', 'Roster']] : []),
-    ...(canReview ? [['/hub/admin', manages ? 'Admin' : 'Review']] : []),
+    ...(isClubLead ? [['/hub/club/queue', 'Applications']] : []),
+    ...(manages ? [['/hub/admin', 'Admin']] : []),
   ];
   const isCurrent = (href) => (href === '/hub' ? pathname === '/hub' : pathname.startsWith(href));
 

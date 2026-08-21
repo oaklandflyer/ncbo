@@ -24,7 +24,7 @@ export default async function Topics() {
       <PageHero
         eyebrow="The board"
         title="Topics."
-        lead="Channels are league-wide. Posts are short by design — say one thing well."
+        lead="Channels are league-wide. Posts are short by design, so say one thing well."
       />
 
       <Section>

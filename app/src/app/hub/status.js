@@ -16,22 +16,26 @@
 const EMAIL = 'thencbo@gmail.com';
 
 const SCREENS = {
+  /* Reachable only for accounts left over from the old account-level queue.
+     Nothing creates a pending account any more: signing up gives you a live
+     account, and it is chapter membership that waits on a club lead. The
+     screen stays so those accounts get an explanation rather than a blank
+     hub, and it says the true thing rather than the thing it used to say. */
   pending: {
     eyebrow: 'Almost in',
-    title: ['Waiting on', 'approval.'],
-    lead: (name) => `Your account is created${name ? `, ${name}` : ''} — an NCBO admin needs to approve it before the board opens up.`,
-    note: `Accounts with a school email at a club we already run are approved automatically.
-           Yours needs a look because it's either a personal address — advisors and exec team —
-           or a school we haven't added yet. Either way, someone will get to it.`,
+    title: ['Waiting on', 'a person.'],
+    lead: (name) => `Your account is created${name ? `, ${name}` : ''}, and it is waiting on an NCBO admin to switch it on.`,
+    note: `This is an older account from before signup opened up. New accounts go live
+           straight away, so this should be quick; if it has been more than a day or two,
+           say so and someone will look.`,
     fineprint: 'Think this is a mistake?',
   },
   rejected: {
     eyebrow: 'Decision made',
     title: ['Application', 'declined.'],
     lead: (name) => `${name ? `${name}, we` : 'We'}'ve reviewed this application and it hasn't been approved for NCBO membership.`,
-    note: `Most declines come down to something we couldn't confirm — an address we couldn't tie
-           to a member school, or a club that isn't running yet. If your situation has changed,
-           or you think we've got this wrong, say so and a person will look again.`,
+    note: `Most declines come down to something we couldn't confirm. If your situation has
+           changed, or you think we've got this wrong, say so and a person will look again.`,
     fineprint: 'Want another look?',
   },
   removed: {
@@ -46,8 +50,8 @@ const SCREENS = {
     title: ['This account', 'is on hold.'],
     lead: (name) => `Access has been suspended${name ? ` for ${name}` : ''}, so the board and the club pages are closed for now.`,
     note: `A suspension is something an admin did deliberately, and it can be lifted the same way.
-           If you don't know why this happened, ask — we would rather explain it than leave you
-           guessing.`,
+           If you don't know why this happened, ask. We would rather explain it than leave
+           you guessing.`,
     fineprint: 'Think this is a mistake?',
   },
 };

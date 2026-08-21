@@ -41,7 +41,7 @@ export async function saveProfile(prev, formData) {
   const division = String(formData.get('division') || '').trim() || null;
 
   if (home_region && home_region.length > 80) {
-    return { error: 'Keep the region short — "Greater Pittsburgh, PA".' };
+    return { error: 'Keep the region short, like "Greater Pittsburgh, PA".' };
   }
 
   /* `alumni_since` is stamped the first time the box is ticked and cleared if

@@ -44,7 +44,7 @@ export default function Remove({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={`${label} — ${kind === 'answer' ? 'this answer' : 'this question'}`}
+        aria-label={`${label}: ${kind === 'answer' ? 'this answer' : 'this question'}`}
         className={`${buttonReset} inline-flex min-h-[44px] items-center gap-2 rounded-full border border-danger/40 px-4 font-display text-[0.74rem] font-bold uppercase tracking-[0.1em] text-danger transition hover:border-danger hover:bg-danger hover:text-white`}
       >
         <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -97,7 +97,7 @@ export default function Remove({
             </p>
 
             <p className="mt-3 text-[0.85rem] leading-relaxed text-meta">
-              Nothing is destroyed — it stays in the database, and a moderator can put it
+              Nothing is destroyed. It stays in the database, and a moderator can put it
               back from the Removed list.
             </p>
 
