@@ -5,14 +5,16 @@ import InstallPrompt from './install';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
-import { canReview, canManageRoles, isModerator } from '@/lib/review';
+import { canReview } from '@/lib/review';
+import { getViewerContext } from '@/lib/viewer';
 import { getBranding } from '@/lib/branding';
 import SignOut from './sign-out';
 import AccountStatus from './status';
 
 export default async function HubLayout({ children }) {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
 
   // The middleware already redirects anonymous visitors; this covers the case
   // where a user exists but their profile row doesn't (a failed signup).
@@ -42,7 +44,7 @@ export default async function HubLayout({ children }) {
      round trip per page render returning an RLS-empty result. A failure here
      is not worth a broken hub: the badge just doesn't appear. */
   let pendingQuestions = 0;
-  if (isModerator(profile)) {
+  if (viewer.canModerateContent) {
     const { count, error } = await supabase
       .from('question_feed')
       .select('id', { count: 'exact', head: true })
@@ -69,8 +71,11 @@ export default async function HubLayout({ children }) {
 
       <HubNav
         canReview={canReview(profile)}
-        manages={canManageRoles(profile)}
-        school={profile.schools?.name || null}
+        manages={viewer.isAdmin}
+        isClubLead={viewer.isClubLead}
+        /* Falls back to the school of a club they lead: a lead whose own
+           `school_id` is null still has one through the club. */
+        school={profile.schools?.name || viewer.ledClubs?.[0]?.name || null}
         role={profile.role}
         name={profile.display_name}
         logo={brand.logo}
@@ -80,7 +85,7 @@ export default async function HubLayout({ children }) {
           than hiding under it; the bar adds the safe-area inset on top. */}
       <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
 
-      <TabBar pendingCount={pendingQuestions} />
+      <TabBar pendingCount={pendingQuestions} isClubLead={viewer.isClubLead} />
 
       <InstallPrompt />
     </div>
