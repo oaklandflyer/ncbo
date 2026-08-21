@@ -36,6 +36,13 @@ jobs:
 
       - run: npm ci
 
+      # Before the build, because the build cannot catch this class of fault.
+      # An undeclared identifier compiles cleanly and throws at request time:
+      # `viewer?.signedIn` with no `viewer` in scope shipped that way and took
+      # out a page in production. `no-undef` is the whole of what this runs.
+      - name: Lint
+        run: npm run lint
+
       # The build needs the two public values to exist, not to be real: every
       # page that talks to Supabase is server-rendered on demand, so nothing
       # here connects to a project.

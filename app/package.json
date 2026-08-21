@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src middleware.js",
     "db:status": "supabase migration list",
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
@@ -20,7 +20,10 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.3.2",
     "@tailwindcss/postcss": "^4.3.3",
+    "eslint": "^9.39.5",
+    "globals": "^17.11.0",
     "postcss": "^8.5.26",
     "supabase": "^2.111.0",
     "tailwindcss": "^4.3.3"
