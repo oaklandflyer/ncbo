@@ -10,11 +10,13 @@
     "db:status": "supabase migration list",
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
-    "db:test": "./supabase/tests/run.sh"
+    "db:test": "./supabase/tests/run.sh",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
+    "@vercel/og": "^1.0.1",
     "next": "^15.1.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
