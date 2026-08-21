@@ -7,6 +7,7 @@ import { resolveClubScope } from '@/lib/scope';
 import AccountStatus from '@/app/hub/status';
 import SchemaError from '@/app/hub/schema-error';
 import Sidebar from './sidebar';
+import TopBar from './top-bar';
 import TabBar from './tab-bar';
 import ScopeSwitcher from './scope-switcher';
 
@@ -68,8 +69,16 @@ export default async function AppShell({ children, searchParams }) {
     switcher = <ScopeSwitcher clubs={clubs || []} clubId={scope.clubId} />;
   }
 
+  /* Two initials at most, and never an empty string: a blank circle in the
+     bar reads as a rendering fault rather than as a person. */
+  const initials = String(profile.display_name || profile.full_name || 'M')
+    .split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]).join('').toUpperCase() || 'M';
+
   return (
     <div className="relative min-h-screen bg-page font-body text-[17px] leading-relaxed text-ink antialiased">
+      <TopBar institution={viewer.membership?.shortName || null} initials={initials} />
+
       <Sidebar nav={nav} scopeSwitcher={switcher} />
 
       <div className="pb-24 pt-[60px] lg:pb-0 lg:pl-[248px]">{children}</div>

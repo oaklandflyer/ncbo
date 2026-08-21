@@ -61,7 +61,7 @@ export default async function AdminClubs() {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link className={`${btnGhost} ${btnSmall}`} href={`/club/entries?club=${c.id}`}>Results</Link>
                     <Link className={`${btnGhost} ${btnSmall}`} href={`/club/roster?club=${c.id}`}>Roster</Link>
-                    <Link className={`${btnGhost} ${btnSmall}`} href={`/club/calendar?club=${c.id}`}>Calendar</Link>
+                    <Link className={`${btnGhost} ${btnSmall}`} href={`/club/settings?club=${c.id}`}>Settings</Link>
                   </div>
                 </Card>
               </li>

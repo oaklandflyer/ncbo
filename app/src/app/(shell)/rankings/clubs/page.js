@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
 import { Page, PageHero, Section, Card, Meta, Empty } from '@/app/ui';
 import { Segmented, HowPointsWork, tabularNums } from '../segmented';
+import { ClubLogoResponsive } from '@/app/brand/club-logo';
 
 export const metadata = { title: 'Chapter Cup · NCBO' };
 
@@ -43,12 +44,15 @@ export default async function ChapterCup() {
             {standings.map((c) => (
               <li key={c.club_id}>
                 <Card className={`p-5 ${c.club_id === myClub ? 'border-brand' : ''}`}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-3">
-                    <span className="flex items-baseline gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    {/* items-center, not items-baseline: the logo is a box,
+                        and a box has no baseline to sit on. */}
+                    <span className="flex min-w-0 items-center gap-3">
                       <span className="font-display text-[1.15rem] font-bold text-brand" style={tabularNums}>
                         {c.rank}
                       </span>
-                      <span className="font-display text-[1.1rem] font-bold uppercase tracking-[0.02em] text-ink">
+                      <ClubLogoResponsive club={c} />
+                      <span className="truncate font-display text-[1.1rem] font-bold uppercase tracking-[0.02em] text-ink">
                         {c.chapter}
                       </span>
                     </span>

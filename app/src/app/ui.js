@@ -13,6 +13,8 @@
  * headers here invert the same way its interior heroes do.
  */
 
+import { Seal } from '@/app/brand/marks';
+
 /* ── page shell ───────────────────────────────────────────────────────── */
 
 /** Matches .wrap: 1180px, fluid gutters. */
@@ -65,7 +67,7 @@ export function PageHero({ eyebrow, title, lead, children, actions }) {
       <img
         aria-hidden
         alt=""
-        src="/ncbo-crest.webp"
+        src="/brand/ncbo-seal.svg"
         className="pointer-events-none absolute right-[-9%] top-1/2 hidden w-[clamp(280px,28vw,420px)] -translate-y-1/2 opacity-[0.05] lg:block"
       />
       <div className={`relative z-10 ${wrap} pb-10 pt-9 sm:pb-14 sm:pt-12`}>
@@ -339,14 +341,9 @@ export function AuthPage({ children, wide = false }) {
         }}
       />
       <div className={`relative z-10 w-full ${wide ? 'max-w-[680px]' : 'max-w-[480px]'}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/ncbo-crest.webp"
-          alt="NCBO"
-          width={64}
-          height={64}
-          className="mx-auto mb-7 h-16 w-16"
-        />
+        <div className="mb-7 flex justify-center">
+          <Seal size={64} />
+        </div>
         <div className="rounded-[8px] border border-edge bg-surface p-7 shadow-brand sm:p-10">
           {children}
         </div>

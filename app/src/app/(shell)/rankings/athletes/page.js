@@ -4,6 +4,7 @@ import { getViewerContext } from '@/lib/viewer';
 import { Page, PageHero, Section, Card, Badge, Meta, Empty } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
 import { Segmented, HowPointsWork, tabularNums } from '../segmented';
+import ClubLogo from '@/app/brand/club-logo';
 
 export const metadata = { title: 'Athlete rankings · NCBO' };
 
@@ -47,10 +48,18 @@ export default async function AthleteRankings() {
                     <UserChip userId={l.profile_id} className="font-display text-[1.02rem] font-bold uppercase tracking-[0.02em] text-ink">
                       {l.display_name}
                     </UserChip>
-                    <Meta className="mt-1">
-                      {l.chapter || 'Independent'}
-                      {` · ${l.entries} show${l.entries === 1 ? '' : 's'}`}
-                      {l.best_placing !== 'DNP' ? ` · best ${l.best_placing}` : ''}
+                    {/* The mark sits with the chapter name, not with the
+                        athlete's: this line is where the row says which club
+                        they lift for. `club_logo` comes back from the ranking
+                        RPC itself, off a join it was already making, so this
+                        costs no query per row. */}
+                    <Meta className="mt-1 flex items-center gap-1.5">
+                      {l.chapter && <ClubLogo club={l} size={20} />}
+                      <span className="min-w-0 truncate">
+                        {l.chapter || 'Independent'}
+                        {` · ${l.entries} show${l.entries === 1 ? '' : 's'}`}
+                        {l.best_placing !== 'DNP' ? ` · best ${l.best_placing}` : ''}
+                      </span>
                     </Meta>
                   </span>
                   {l.profile_id === viewer.userId && <Badge tone="active">You</Badge>}

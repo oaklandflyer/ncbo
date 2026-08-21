@@ -6,7 +6,7 @@
  * used — so the app renders correctly before the CMS has ever been opened,
  * and keeps rendering if the bucket is unreachable.
  */
-const FALLBACK = { logo: '/ncbo-crest.webp', hero: null };
+const FALLBACK = { logo: '/brand/ncbo-seal.svg', hero: null };
 
 export function publicBase() {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand_assets`;

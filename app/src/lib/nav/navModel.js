@@ -57,7 +57,7 @@ export function navModel(viewer, counts = {}) {
       items: [
         { id: 'club-entries', href: '/club/entries', label: 'Verify results', icon: 'check', badge: pendingEntries },
         { id: 'club-roster', href: '/club/roster', label: 'Roster', icon: 'roster' },
-        { id: 'club-calendar', href: '/club/calendar', label: 'Calendar setup', icon: 'settings' },
+        { id: 'club-settings', href: '/club/settings', label: 'Club settings', icon: 'settings' },
       ],
     });
   }

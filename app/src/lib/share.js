@@ -27,15 +27,45 @@ export async function loadShareCard(token) {
 }
 
 /**
- * How long a card may be cached, by status.
+ * How long a card may be cached.
  *
  * A pending card changes the moment a lead approves it, so five minutes is the
- * longest anybody should see the old one. An approved card never changes
- * again, so it is immutable — that is the whole year of CDN hits the
- * leaderboard traffic would otherwise cost.
+ * longest anybody should see the old one.
+ *
+ * An approved card used to be immutable for a year, and that was right while
+ * the only thing on it was the result. It is not right any more: the card now
+ * draws the chapter's logo, and a lead who replaces their logo would otherwise
+ * be looking at the old one on every card their chapter has ever shared, for
+ * up to a year, with nothing they could do about it.
+ *
+ * So a card with a logo on it gets a day, plus a week of
+ * `stale-while-revalidate` so the CDN still serves instantly and refreshes
+ * behind the request. A card with no logo has nothing left that can change and
+ * keeps the year.
  */
-export function shareCacheControl(status) {
-  if (status === 'approved') return 'public, max-age=31536000, immutable';
+export function shareCacheControl(status, hasLogo = false) {
+  if (status === 'approved') {
+    return hasLogo
+      ? 'public, max-age=86400, stale-while-revalidate=604800'
+      : 'public, max-age=31536000, immutable';
+  }
   if (status === 'pending') return 'public, max-age=300';
   return 'no-store';
+}
+
+/**
+ * A weak ETag naming everything the rendered card depends on.
+ *
+ * `logo_updated_at` is in here rather than in the URL because the URL is
+ * `/share/<token>/opengraph-image` and the token is the entry, not the club:
+ * there is no query string to bump when a chapter swaps its mark. This is what
+ * lets a revalidation return 304 for the common case where nothing changed.
+ */
+export function shareETag(card) {
+  const parts = [card?.status, card?.placing, card?.won_overall, card?.club_logo || '',
+    card?.logo_updated_at || ''];
+  let hash = 5381;
+  const key = parts.join('|');
+  for (let i = 0; i < key.length; i += 1) hash = ((hash * 33) ^ key.charCodeAt(i)) >>> 0;
+  return `W/"${hash.toString(36)}"`;
 }

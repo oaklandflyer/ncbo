@@ -20,8 +20,11 @@ export default function manifest() {
     background_color: '#F4F8FD',
     theme_color: '#2F5FA8',
     icons: [
-      { src: '/ncbo-crest.webp', sizes: '192x192', type: 'image/webp', purpose: 'any' },
-      { src: '/ncbo-crest.webp', sizes: '512x512', type: 'image/webp', purpose: 'any' },
+      /* The seal, as the raster the launcher can actually use. Android and
+         iOS both accept SVG here in principle and disagree about it in
+         practice, so the PNG is what is listed. */
+      { src: '/brand/ncbo-seal.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/brand/ncbo-seal.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }
