@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { CLASS_YEARS, EXPERIENCE, GRAD_YEARS, CHAT_PLATFORMS, FOUND_VIA } from './options';
+import { EXPERIENCE, CHAT_PLATFORMS, FOUND_VIA, AFFILIATIONS } from './options';
+import { gradYearOptions } from '@/lib/academicYear';
 import { EXPERIENCE_PHASES } from '@/lib/membership';
 
 /**
@@ -35,7 +36,7 @@ export async function saveOnboarding(prev, formData) {
   const fullName = text('full_name', 120);
   const preferredName = text('preferred_name', 60);
   const displayName = preferredName || fullName.split(/\s+/)[0];
-  const classYear = text('class_year', 40);
+  const affiliation = text('affiliation', 20);
   const experience = text('lifting_experience', 40);
   const major = text('major', 120);
   const universityId = text('university_id', 64);
@@ -47,13 +48,26 @@ export async function saveOnboarding(prev, formData) {
   const phase = text('experience_phase', 40);
   const isAdult = formData.get('is_adult') === 'on';
 
+  /* Every one of these is also enforced by `is_onboarded`, which is what the
+     shell gates on. Checking here as well is not belt-and-braces for its own
+     sake: a submission that passes this and fails that would save a profile
+     and then bounce the person straight back to the form they just completed,
+     with nothing on screen saying why. */
   if (!fullName) return { error: 'We need your name.', focus: 'full_name' };
-  if (!universityId) return { error: 'Pick your university from the list.', focus: 'university-search' };
-  if (!gradYear || !GRAD_YEARS.includes(gradYear)) {
-    return { error: 'Pick the year you expect to graduate.', focus: 'grad_year' };
+  if (!AFFILIATIONS.includes(affiliation)) {
+    return { error: 'Tell us which describes you.', focus: 'affiliation' };
   }
-  if (!classYear) return { error: 'Pick your year.', focus: 'class_year' };
-  if (!CLASS_YEARS.includes(classYear)) return { error: 'Pick a year from the list.', focus: 'class_year' };
+  if (!universityId) return { error: 'Pick your university from the list.', focus: 'university-search' };
+
+  /* Students only. An affiliate has no graduation year, and `is_onboarded`
+     agrees: requiring one of a coach would trap them in this form forever. */
+  if (affiliation === 'student') {
+    if (!gradYear) return { error: 'Pick the year you expect to graduate.', focus: 'grad_year' };
+    const year = Number(gradYear);
+    if (!Number.isInteger(year) || !gradYearOptions().includes(year)) {
+      return { error: 'Pick a graduation year from the list.', focus: 'grad_year' };
+    }
+  }
   if (!experience) return { error: 'Pick how long you have been training.', focus: 'lifting_experience' };
   if (!EXPERIENCE.includes(experience)) return { error: 'Pick an option from the list.', focus: 'lifting_experience' };
   if (!major) return { error: 'Tell us what you study.', focus: 'major' };
@@ -78,10 +92,15 @@ export async function saveOnboarding(prev, formData) {
     .update({
       full_name: fullName,
       display_name: displayName,
-      class_year: classYear,
       lifting_experience: experience,
       major,
       experience_phase: phase || null,
+      affiliation,
+      /* Null for an affiliate rather than absent, so re-answering the question
+         as "something else" clears a year that no longer applies. Stated, so
+         never `grad_year_inferred`. */
+      grad_year: affiliation === 'student' ? Number(gradYear) : null,
+      grad_year_inferred: false,
       is_adult: true,
     })
     .eq('id', user.id);
@@ -105,7 +124,25 @@ export async function saveOnboarding(prev, formData) {
 
   const state = chapter?.chapter_state || 'none';
 
-  if (state === 'active' && chapter.club_id) {
+  /* An affiliate never joins a club, whatever their school's chapter state.
+     Onboarding used to have one path and it applied everybody to a chapter,
+     so a coaching advisor signing up landed in a club lead's approval queue
+     for somebody that lead has no way to place. Migration 0015 separated org
+     standing from club membership; this is the front door catching up.
+
+     `school_id` is deliberately NOT written here either. It is a derived
+     mirror of the member's active membership, and `guard_profile_privileges`
+     refuses a direct write with "Only an admin can reassign a school". The
+     school they named is recorded as interest, and an admin who grants them
+     an org role assigns the school at the same time. */
+  if (affiliation !== 'student') {
+    await supabase.from('signup_interest').upsert({
+      user_id: user.id,
+      university_id: universityId,
+      grad_year: null,
+      note: 'Signed up as a non-student affiliate (coach, advisor, staff or alum).',
+    }, { onConflict: 'user_id,university_id' });
+  } else if (state === 'active' && chapter.club_id) {
     const { error: applyError } = await supabase
       .from('club_memberships')
       .upsert({
