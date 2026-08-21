@@ -63,7 +63,34 @@ export const FOUND_VIA = [
  */
 export const AFFILIATION_CHOICES = [
   ['student', 'I am a student', 'Undergraduate or graduate, at the school you pick below.'],
+  ['lead', 'I run my chapter', 'You are the club lead or a co-lead. We will not ask you to prove yourself to yourself.'],
   ['affiliate', 'Something else', 'Coach, advisor, staff, or an alum staying involved. You will not be applied to a club.'],
 ];
 
-export const AFFILIATIONS = AFFILIATION_CHOICES.map(([v]) => v);
+/*
+ * `lead` is a form answer, not a database value.
+ *
+ * `profiles.affiliation` stores only `student` or `affiliate`, because a club
+ * lead IS a student and the column records what somebody is, not what they do.
+ * What the third choice actually changes is two things: the recognition
+ * questions are not asked, and `club_memberships.claimed_lead` is set so
+ * whoever reviews the application can see the claim.
+ *
+ * It grants nothing. The membership is still created pending with
+ * `role = 'member'` by `guard_membership_insert`, and only an admin appoints a
+ * lead. Somebody ticking this to skip three questions gains three skipped
+ * questions.
+ */
+export const AFFILIATION_VALUES = AFFILIATION_CHOICES.map(([v]) => v);
+
+/** What actually goes in the column. */
+export function affiliationColumn(choice) {
+  return choice === 'affiliate' ? 'affiliate' : 'student';
+}
+
+/** Whether this choice means "I am a student here", which drives the year. */
+export function isStudentChoice(choice) {
+  return choice === 'student' || choice === 'lead';
+}
+
+export const AFFILIATIONS = ['student', 'affiliate'];

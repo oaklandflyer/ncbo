@@ -3,7 +3,10 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { EXPERIENCE, CHAT_PLATFORMS, FOUND_VIA, AFFILIATIONS } from './options';
+import {
+  EXPERIENCE, CHAT_PLATFORMS, FOUND_VIA,
+  AFFILIATION_VALUES, affiliationColumn, isStudentChoice,
+} from './options';
 import { gradYearOptions } from '@/lib/academicYear';
 import { EXPERIENCE_PHASES } from '@/lib/membership';
 
@@ -36,7 +39,10 @@ export async function saveOnboarding(prev, formData) {
   const fullName = text('full_name', 120);
   const preferredName = text('preferred_name', 60);
   const displayName = preferredName || fullName.split(/\s+/)[0];
-  const affiliation = text('affiliation', 20);
+  const choice = text('affiliation', 20);
+  const affiliation = affiliationColumn(choice);
+  const isStudent = isStudentChoice(choice);
+  const leadsChapter = choice === 'lead';
   const experience = text('lifting_experience', 40);
   const major = text('major', 120);
   const universityId = text('university_id', 64);
@@ -54,14 +60,14 @@ export async function saveOnboarding(prev, formData) {
      and then bounce the person straight back to the form they just completed,
      with nothing on screen saying why. */
   if (!fullName) return { error: 'We need your name.', focus: 'full_name' };
-  if (!AFFILIATIONS.includes(affiliation)) {
+  if (!AFFILIATION_VALUES.includes(choice)) {
     return { error: 'Tell us which describes you.', focus: 'affiliation' };
   }
   if (!universityId) return { error: 'Pick your university from the list.', focus: 'university-search' };
 
   /* Students only. An affiliate has no graduation year, and `is_onboarded`
      agrees: requiring one of a coach would trap them in this form forever. */
-  if (affiliation === 'student') {
+  if (isStudent) {
     if (!gradYear) return { error: 'Pick the year you expect to graduate.', focus: 'grad_year' };
     const year = Number(gradYear);
     if (!Number.isInteger(year) || !gradYearOptions().includes(year)) {
@@ -99,7 +105,7 @@ export async function saveOnboarding(prev, formData) {
       /* Null for an affiliate rather than absent, so re-answering the question
          as "something else" clears a year that no longer applies. Stated, so
          never `grad_year_inferred`. */
-      grad_year: affiliation === 'student' ? Number(gradYear) : null,
+      grad_year: isStudent ? Number(gradYear) : null,
       grad_year_inferred: false,
       is_adult: true,
     })
@@ -135,7 +141,7 @@ export async function saveOnboarding(prev, formData) {
      refuses a direct write with "Only an admin can reassign a school". The
      school they named is recorded as interest, and an admin who grants them
      an org role assigns the school at the same time. */
-  if (affiliation !== 'student') {
+  if (!isStudent) {
     await supabase.from('signup_interest').upsert({
       user_id: user.id,
       university_id: universityId,
@@ -143,25 +149,27 @@ export async function saveOnboarding(prev, formData) {
       note: 'Signed up as a non-student affiliate (coach, advisor, staff or alum).',
     }, { onConflict: 'user_id,university_id' });
   } else if (state === 'active' && chapter.club_id) {
-    const { error: applyError } = await supabase
-      .from('club_memberships')
-      .upsert({
-        user_id: user.id,
-        club_id: chapter.club_id,
-        legal_name: fullName,
-        preferred_name: preferredName || null,
-        grad_year: Number(gradYear),
-        group_chat_platform: chatPlatform || null,
-        group_chat_handle: chatHandle || null,
-        found_via: foundVia || null,
-        referred_by_user_id: referredBy || null,
-      }, { onConflict: 'user_id,club_id' });
+    const applyError = await applyToChapter(supabase, {
+      userId: user.id,
+      clubId: chapter.club_id,
+      legalName: fullName,
+      preferredName: preferredName || null,
+      gradYear: Number(gradYear),
+      chatPlatform: chatPlatform || null,
+      chatHandle: chatHandle || null,
+      foundVia: foundVia || null,
+      referredBy: referredBy || null,
+      claimedLead: leadsChapter,
+    });
 
     /* A failed application is not a failed signup. The profile is saved, the
        account works, and the person can apply again from their profile, which
        is far better than sending them back to a form they have already filled
        in correctly. */
     if (applyError) {
+      console.error('[ncbo] chapter application failed', {
+        userId: user.id, clubId: chapter.club_id, message: applyError.message, code: applyError.code,
+      });
       revalidatePath('/hub', 'layout');
       return { error: 'Your profile is saved, but the application to your chapter did not go through. Try again from your profile.' };
     }
@@ -206,4 +214,66 @@ export async function searchChapterMembers(clubId, query) {
 
   if (error) return { members: [] };
   return { members: data || [] };
+}
+
+/**
+ * Create or update this person's application to a chapter.
+ *
+ * Deliberately NOT an upsert, and this is the bug that made onboarding
+ * unfinishable on a second attempt.
+ *
+ * `ON CONFLICT DO UPDATE` reads `excluded.legal_name`, and `legal_name` is on
+ * `club_memberships`'s SELECT deny list: verification data a lead collects,
+ * which the member may write but not read back. So the conflict path failed
+ * with `permission denied for table club_memberships`, surfacing to the person
+ * as "the application to your chapter did not go through". The first
+ * submission always worked, because a plain INSERT never touches SELECT, which
+ * is exactly why it survived testing.
+ *
+ * Looking the row up first and then writing with literal values reads no
+ * denied column on either branch. The lookup itself selects only `id` and
+ * `status`, both readable.
+ *
+ * Re-applying after a decline is allowed on purpose: somebody who was turned
+ * down because their handle was wrong should be able to fix it and try again.
+ * An already-active membership is left alone, because rewriting a live roster
+ * row from a signup form is not something this should ever do.
+ */
+async function applyToChapter(supabase, m) {
+  const fields = {
+    legal_name: m.legalName,
+    preferred_name: m.preferredName,
+    grad_year: m.gradYear,
+    group_chat_platform: m.chatPlatform,
+    group_chat_handle: m.chatHandle,
+    found_via: m.foundVia,
+    referred_by_user_id: m.referredBy,
+    claimed_lead: m.claimedLead,
+  };
+
+  const { data: existing, error: lookupError } = await supabase
+    .from('club_memberships')
+    .select('id, status')
+    .eq('user_id', m.userId)
+    .eq('club_id', m.clubId)
+    .maybeSingle();
+
+  if (lookupError) return lookupError;
+
+  if (!existing) {
+    const { error } = await supabase
+      .from('club_memberships')
+      .insert({ user_id: m.userId, club_id: m.clubId, ...fields });
+    return error || null;
+  }
+
+  /* Already on the roster. Their details are the lead's record now, not a
+     signup form's, so this changes nothing and reports no error. */
+  if (existing.status === 'active' || existing.status === 'alumni') return null;
+
+  const { error } = await supabase
+    .from('club_memberships')
+    .update(fields)
+    .eq('id', existing.id);
+  return error || null;
 }

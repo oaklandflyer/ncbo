@@ -9,6 +9,32 @@ import { gradYearOptions } from '@/lib/academicYear';
 import { field, fieldLabel, checkline, btnPrimary, fineprint, buttonReset } from '@/app/ui';
 
 /**
+ * Every label says whether its field is required, because the alternative is
+ * what shipped: a form where three of nine fields are optional, nothing says
+ * which, and somebody fills in all nine to be safe or abandons the ones they
+ * cannot answer.
+ *
+ * `Optional` is marked as loudly as `Required`. An unmarked field reads as
+ * required by default, so leaving the optional ones bare is the version that
+ * misleads.
+ */
+function Req() {
+  return (
+    <span className="ml-2 font-display text-[0.62rem] font-bold uppercase tracking-[0.14em] text-brand">
+      Required
+    </span>
+  );
+}
+
+function Opt() {
+  return (
+    <span className="ml-2 font-display text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-fine">
+      Optional
+    </span>
+  );
+}
+
+/**
  * The onboarding form.
  *
  * `required` on the inputs is a courtesy — it catches mistakes without a round
@@ -32,7 +58,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
     <form action={action}>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className={fieldLabel} htmlFor="full_name">Your full name</label>
+          <label className={fieldLabel} htmlFor="full_name">Your full name<Req /></label>
           <input
             id="full_name" name="full_name" type="text" required maxLength={120}
             autoComplete="name" defaultValue={defaultName || ''}
@@ -46,7 +72,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
 
         <div className="sm:col-span-2">
           <label className={fieldLabel} htmlFor="preferred_name">
-            Preferred name, if different
+            Preferred name, if different<Opt />
           </label>
           <input
             id="preferred_name" name="preferred_name" type="text" maxLength={60}
@@ -62,7 +88,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
             escalation and a lie the database would overwrite. This asks what
             somebody IS, and grants nothing. */}
         <fieldset className="sm:col-span-2">
-          <legend className={fieldLabel}>Which describes you</legend>
+          <legend className={fieldLabel}>Which describes you<Req /></legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             {AFFILIATION_CHOICES.map(([value, label, hint]) => (
               <label
@@ -103,9 +129,9 @@ export default function OnboardingForm({ email, defaultName, universities }) {
             standing that used to sit beside this is gone: migration 0026
             deprecated `class_year`, and academic level is a profile edit
             rather than a signup question. */}
-        {affiliation === 'student' && (
+        {affiliation !== 'affiliate' && (
           <div>
-            <label className={fieldLabel} htmlFor="grad_year">Expected graduation</label>
+            <label className={fieldLabel} htmlFor="grad_year">Expected graduation<Req /></label>
             <select id="grad_year" name="grad_year" required defaultValue="" className={field}>
               <option value="" disabled>Pick one</option>
               {gradYearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
@@ -114,7 +140,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
         )}
 
         <div>
-          <label className={fieldLabel} htmlFor="lifting_experience">Training for</label>
+          <label className={fieldLabel} htmlFor="lifting_experience">Training for<Req /></label>
           <select
             id="lifting_experience" name="lifting_experience" required defaultValue=""
             className={field}
@@ -125,7 +151,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
         </div>
 
         <div>
-          <label className={fieldLabel} htmlFor="major">Major</label>
+          <label className={fieldLabel} htmlFor="major">Major<Req /></label>
           <input
             id="major" name="major" type="text" required maxLength={120}
             placeholder="Mechanical engineering, undecided, …"
@@ -175,7 +201,14 @@ export default function OnboardingForm({ email, defaultName, universities }) {
 
       {/* The verification block. Set apart from the run of fields, and
           labelled for what it is, because these answers are read by one
-          person for one purpose. */}
+          person for one purpose.
+
+          Not shown to a lead or an affiliate, and that is the whole point of
+          the three-way choice above. Every question in here exists so a club
+          lead can recognise a stranger; asking the lead to prove themselves to
+          themselves, or asking a coaching advisor which group chat they are
+          in, is a form demanding an answer that does not exist. */}
+      {affiliation === 'student' && (
       <div className="mt-8 rounded-[8px] border border-edge bg-band px-5 py-5">
         <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.04em] text-ink">
           How your club lead will recognise you
@@ -187,7 +220,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
 
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
           <div>
-            <label className={fieldLabel} htmlFor="group_chat_platform">Group chat</label>
+            <label className={fieldLabel} htmlFor="group_chat_platform">Group chat<Opt /></label>
             <select id="group_chat_platform" name="group_chat_platform" defaultValue="" className={field}>
               <option value="">Pick one</option>
               {CHAT_PLATFORMS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -195,7 +228,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           </div>
 
           <div>
-            <label className={fieldLabel} htmlFor="group_chat_handle">Your handle there</label>
+            <label className={fieldLabel} htmlFor="group_chat_handle">Your handle there<Opt /></label>
             <input
               id="group_chat_handle" name="group_chat_handle" type="text" maxLength={120}
               autoComplete="off" placeholder="@yourhandle"
@@ -204,7 +237,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           </div>
 
           <div className="sm:col-span-2">
-            <label className={fieldLabel} htmlFor="found_via">How you found the club</label>
+            <label className={fieldLabel} htmlFor="found_via">How you found the club<Opt /></label>
             <select id="found_via" name="found_via" defaultValue="" className={field}>
               <option value="">Pick one</option>
               {FOUND_VIA.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -216,6 +249,25 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           </div>
         </div>
       </div>
+      )}
+
+      {/* A lead has nobody in the club to prove themselves to, so instead of
+          the questions above they get told what happens next. Saying this is
+          not decoration: the alternative is somebody ticking "I run my
+          chapter" and then wondering why they are still pending. */}
+      {affiliation === 'lead' && chapter && (
+        <div className="mt-8 rounded-[8px] border border-edge bg-band px-5 py-5">
+          <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.04em] text-ink">
+            You said you run {chapter.short_name || chapter.name}
+          </p>
+          <p className={`mt-2 ${fineprint}`}>
+            We have not asked how a lead would recognise you, because those questions are
+            for somebody a lead has never met. Your application still goes in as pending
+            and an admin confirms it, since nobody approves their own membership. Tell
+            whoever set up your chapter that you have signed up.
+          </p>
+        </div>
+      )}
 
       {/* The attestation gets its own panel rather than sitting in the run of
           fields: it is a statement someone is making, not a preference. */}

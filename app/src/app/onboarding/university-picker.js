@@ -85,7 +85,7 @@ export default function UniversityPicker({
        its own. */
     /* Only a student joining an active chapter gets the referral search,
        because that search is scoped to a club they are about to apply to. */
-    onResolve?.(affiliation === 'student' && u.chapter_state === 'active' ? u : null);
+    onResolve?.(affiliation !== 'affiliate' && u.chapter_state === 'active' ? u : null);
   }
 
   function onKeyDown(e) {
@@ -99,7 +99,7 @@ export default function UniversityPicker({
   return (
     <div ref={boxRef} className="relative">
       <label className={fieldLabel} htmlFor="university-search">
-        {affiliation === 'student' ? 'Your university' : 'The school you work with'}
+        {affiliation === 'affiliate' ? 'The school you work with' : 'Your university'}
       </label>
 
       {/* The value the form actually submits. The visible input is a search
@@ -163,7 +163,7 @@ export default function UniversityPicker({
       {/* What they are joining, resolved from the school and shown before they
           submit. A person should never find out which chapter they applied to
           after the fact. */}
-      {selected && affiliation !== 'student' && (
+      {selected && affiliation === 'affiliate' && (
         <div className="mt-3 rounded-[8px] border border-edge bg-band px-4 py-3">
           <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
             Noted: {selected.short_name || selected.name}
@@ -176,7 +176,7 @@ export default function UniversityPicker({
         </div>
       )}
 
-      {selected && affiliation === 'student' && (
+      {selected && affiliation !== 'affiliate' && (
         <div className="mt-3 rounded-[8px] border border-edge bg-band px-4 py-3">
           {selected.chapter_state === 'active' && (
             <>
