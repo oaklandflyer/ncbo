@@ -1,0 +1,14 @@
+-- ============================================================================
+-- 'removed' — an account taken off the platform by an admin.
+--
+-- Distinct from the three that already exist. 'suspended' is a member who was
+-- live and has been stopped; 'rejected' is an application that was declined.
+-- 'removed' is an admin deleting somebody: they can no longer sign in, and
+-- they are gone from every directory, but the row survives so their questions
+-- and answers keep an author and the decision stays auditable.
+--
+-- Nothing else can live in this file. Postgres will not let a new enum value
+-- be *used* in the transaction that adds it, and the Supabase CLI runs each
+-- migration in one transaction — exactly the constraint 20260818000005 hit.
+-- ============================================================================
+alter type public.account_status add value if not exists 'removed';

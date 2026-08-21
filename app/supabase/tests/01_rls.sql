@@ -447,3 +447,53 @@ select count(*) as answer_still_recoverable
 select status, count(*) from club_directory group by status order by status;
 select count(*) as clubs_with_leads from club_directory where array_length(leads, 1) > 0;
 reset role;
+
+\echo ''
+\echo '=== 56. a plain member marks THEMSELVES alumni, and nobody else ==='
+-- 2222 is a plain member; 1111 is a club lead by this point in the suite, and
+-- a lead marking their own school's graduates is allowed by design (test 57a).
+set role authenticated;
+set test.uid = '22222222-2222-2222-2222-222222222222';
+update profiles set is_alumni = true, alumni_since = current_date
+ where id = '22222222-2222-2222-2222-222222222222';
+select is_alumni as self_marked from profiles where id = '22222222-2222-2222-2222-222222222222';
+update profiles set is_alumni = true where id = '33333333-3333-3333-3333-333333333333';
+select is_alumni as advisor_untouched from profiles where id = '33333333-3333-3333-3333-333333333333';
+
+\echo ''
+\echo '=== 57a. a club lead CAN mark a graduate at their own school ==='
+set test.uid = '11111111-1111-1111-1111-111111111111';
+update profiles set is_alumni = false where id = '22222222-2222-2222-2222-222222222222';
+select is_alumni as lead_cleared_it from profiles where id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== 57. an advisor CAN edit a member''s details and alumni flag ==='
+set test.uid = '33333333-3333-3333-3333-333333333333';
+update profiles set display_name = 'Corrected Name', is_alumni = true
+ where id = '22222222-2222-2222-2222-222222222222';
+select display_name, is_alumni from profiles where id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== 58. an advisor CANNOT remove an account or change a role ==='
+update profiles set status = 'removed' where id = '22222222-2222-2222-2222-222222222222';
+update profiles set role = 'admin' where id = '33333333-3333-3333-3333-333333333333';
+select status as status_unchanged from profiles where id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== 59. an admin CAN remove an account, and it leaves the directory ==='
+set test.uid = '44444444-4444-4444-4444-444444444444';
+update profiles set status = 'removed' where id = '22222222-2222-2222-2222-222222222222';
+select status as removed_status from profiles where id = '22222222-2222-2222-2222-222222222222';
+select count(*) as rows_in_directory
+  from member_directory where id = '22222222-2222-2222-2222-222222222222';
+
+\echo ''
+\echo '=== 60. site settings: everyone reads, only moderators write ==='
+set test.uid = '11111111-1111-1111-1111-111111111111';
+select count(*) as settings_readable_by_member from site_settings;
+update site_settings set logo_path = 'member-was-here.png' where id;
+select coalesce(logo_path, 'still null') as after_member_write from site_settings;
+set test.uid = '33333333-3333-3333-3333-333333333333';
+update site_settings set logo_path = 'logo-1.png' where id;
+select logo_path as after_advisor_write from site_settings;
+reset role;

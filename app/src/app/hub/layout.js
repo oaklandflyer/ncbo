@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import HubNav from './nav';
 import TabBar from './tabbar';
+import InstallPrompt from './install';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isOnboarded } from '@/lib/onboarding';
 import { canReview, canManageRoles, isModerator } from '@/lib/review';
+import { getBranding } from '@/lib/branding';
 import SignOut from './sign-out';
 import AccountStatus from './status';
 
@@ -19,7 +21,7 @@ export default async function HubLayout({ children }) {
   // A decision has already been made about these two, so there is nothing
   // left to collect — sending a declined applicant through an onboarding form
   // would be asking for work we have no intention of reading.
-  if (profile.status === 'rejected' || profile.status === 'suspended') {
+  if (['rejected', 'suspended', 'removed'].includes(profile.status)) {
     return <AccountStatus status={profile.status} profile={profile} />;
   }
 
@@ -48,6 +50,8 @@ export default async function HubLayout({ children }) {
     pendingQuestions = error ? 0 : (count || 0);
   }
 
+  const brand = await getBranding(supabase);
+
   return (
     /* The light ground, the grain, and the 72px nav offset are all the public
        site's — see assets/styles.css. Scoped to the hub shell rather than the
@@ -69,6 +73,7 @@ export default async function HubLayout({ children }) {
         school={profile.schools?.name || null}
         role={profile.role}
         name={profile.display_name}
+        logo={brand.logo}
       />
 
       {/* Bottom padding on a phone so the last card clears the tab bar rather
@@ -76,6 +81,8 @@ export default async function HubLayout({ children }) {
       <div className="relative z-[2] pb-24 pt-[60px] md:pb-0 md:pt-nav">{children}</div>
 
       <TabBar pendingCount={pendingQuestions} />
+
+      <InstallPrompt />
     </div>
   );
 }

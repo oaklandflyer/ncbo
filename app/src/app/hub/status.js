@@ -7,6 +7,7 @@
  *   pending    — nobody has looked at it yet
  *   rejected   — someone looked and said no
  *   suspended  — they were in, and that stopped
+ *   removed    — an admin took the account off the platform
  *
  * Telling a declined applicant they are "waiting on approval" is a small lie
  * that wastes their time, and telling a suspended member the same thing tells
@@ -32,6 +33,13 @@ const SCREENS = {
            to a member school, or a club that isn't running yet. If your situation has changed,
            or you think we've got this wrong, say so and a person will look again.`,
     fineprint: 'Want another look?',
+  },
+  removed: {
+    eyebrow: 'Account closed',
+    title: 'This account is closed.',
+    body: 'An NCBO admin has removed this account from the member hub. Your posts and answers '
+      + 'are still on the board. If you think this was a mistake, reply to any NCBO email and '
+      + 'an admin will look again.',
   },
   suspended: {
     eyebrow: 'Account suspended',

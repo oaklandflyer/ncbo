@@ -436,3 +436,21 @@ export function SocialLinks({ instagram, tiktok, className = '' }) {
  */
 export const btnDanger =
   'inline-flex items-center justify-center gap-2 rounded-[8px] border border-danger bg-danger px-[1.7rem] py-[0.85rem] font-display text-[0.92rem] font-bold uppercase tracking-[0.12em] text-white transition duration-200 hover:-translate-y-[2px] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-danger disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0';
+
+/**
+ * Alumni.
+ *
+ * Deliberately not the same treatment as the vetted seal — this is a fact
+ * about someone's year, not a claim NCBO is vouching for. It sits beside the
+ * name so a student can see at a glance that they are talking to a graduate.
+ */
+export function AlumniBadge({ since }) {
+  return (
+    <span
+      className="inline-flex items-center whitespace-nowrap rounded-full border border-[rgba(86,101,128,0.35)] bg-raised/70 px-[0.65rem] py-[0.28rem] font-display text-[0.68rem] font-bold uppercase tracking-[0.1em] text-dim"
+      title={since ? `Alumni since ${since}` : undefined}
+    >
+      Alumni
+    </span>
+  );
+}
