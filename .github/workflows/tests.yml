@@ -43,6 +43,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # The nav model decides who can reach which queue, and it is pure, so it
+      # is testable without a database. Running it here is what makes those
+      # tests matter: a test suite nothing executes is documentation.
+      - name: Unit tests
+        run: npm test
+
       # The build needs the two public values to exist, not to be real: every
       # page that talks to Supabase is server-rendered on demand, so nothing
       # here connects to a project.
