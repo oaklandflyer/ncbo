@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import { adminUpdateUser, adminRemoveUser, adminRestoreUser } from './actions';
+import { hardDeleteUser } from './delete-actions';
 import {
   Card, Badge, Meta, AlumniBadge, VettedSeal, field, fieldLabel, checkline,
   btnPrimary, btnGhost, btnDanger, btnSmall, buttonReset, fineprint, FormMessage,
@@ -10,12 +11,94 @@ import AcademicFields from '@/app/hub/academic-fields';
 
 const ROLES = [['member', 'Member'], ['club_lead', 'Club lead'], ['advisor', 'Advisor'], ['admin', 'Admin']];
 
-function UserEditor({ user, clubs, schools, isSelf }) {
+/**
+ * The permanent deletion panel.
+ *
+ * It enumerates both halves before it asks for anything. "This cannot be
+ * undone" is true and useless; what an admin actually needs to know is that
+ * the chapter keeps its Chapter Cup points and that the person's answers stay
+ * on the board under their name, because those are the two things somebody
+ * will ask about afterwards.
+ *
+ * The email has to be typed. Not a checkbox, not a second click: typing the
+ * address is the only confirmation that cannot be done by muscle memory on
+ * the wrong row.
+ */
+function HardDelete({ user, onDone }) {
+  const [state, action, pending] = useActionState(hardDeleteUser, {});
+  const [typed, setTyped] = useState('');
+
+  const matches = !!user.email && typed.trim().toLowerCase() === String(user.email).toLowerCase();
+
+  useEffect(() => { if (state?.ok) onDone?.(); }, [state, onDone]);
+
+  return (
+    <div className="mt-4 w-full rounded-[8px] border border-danger bg-[rgba(180,50,74,0.05)] p-5">
+      <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.04em] text-danger">
+        Delete {user.display_name || 'this account'} permanently
+      </p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className="font-display text-[0.7rem] font-bold uppercase tracking-[0.14em] text-danger">
+            Destroyed
+          </p>
+          <ul className="mt-2 list-none text-[0.88rem] leading-relaxed text-body">
+            <li>Their sign-in. They cannot log in again, ever.</li>
+            <li>Their profile and club membership.</li>
+            <li>Every vote they cast, and any org role.</li>
+            <li>Their student ID photo, if they uploaded one.</li>
+          </ul>
+        </div>
+        <div>
+          <p className="font-display text-[0.7rem] font-bold uppercase tracking-[0.14em] text-brand">
+            Kept, under their name
+          </p>
+          <ul className="mt-2 list-none text-[0.88rem] leading-relaxed text-body">
+            <li>Verified competition results, so their chapter keeps the points.</li>
+            <li>Handler credits, for the same reason.</li>
+            <li>Questions and answers, so other people&rsquo;s threads still read.</li>
+            <li>This deletion, in the audit log.</li>
+          </ul>
+        </div>
+      </div>
+
+      <form action={action} className="mt-5">
+        <input type="hidden" name="target_id" value={user.id} />
+        <label className={fieldLabel} htmlFor={`confirm-${user.id}`}>
+          Type {user.email || 'the account email'} to confirm
+        </label>
+        <input
+          id={`confirm-${user.id}`}
+          name="confirm_email"
+          className={field}
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+        />
+        <button
+          type="submit"
+          disabled={!matches || pending}
+          className={`${btnDanger} mt-4`}
+        >
+          {pending ? 'Deleting…' : 'Delete permanently'}
+        </button>
+      </form>
+
+      <FormMessage error={state?.error} ok={state?.ok} />
+    </div>
+  );
+}
+
+function UserEditor({ user, clubs, schools, isSelf, canHardDelete = false }) {
   const [state, action, pending] = useActionState(adminUpdateUser, {});
   const [removeState, removeAction, removing] = useActionState(adminRemoveUser, {});
   const [restoreState, restoreAction, restoring] = useActionState(adminRestoreUser, {});
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [purging, setPurging] = useState(false);
 
   const removed = !!user.deleted_at || user.status === 'removed';
 
@@ -34,7 +117,23 @@ function UserEditor({ user, clubs, schools, isSelf }) {
             </button>
           </form>
         )}
+
+        {/* Three conditions, all required: an admin, an account already in the
+            REMOVED state, and not yourself. Restore sits beside it on purpose,
+            so the reversible option is never further away than the
+            irreversible one. */}
+        {removed && canHardDelete && !isSelf && (
+          <button
+            type="button"
+            onClick={() => setPurging((v) => !v)}
+            className={`${btnGhost} ${btnSmall} border-danger text-danger`}
+          >
+            {purging ? 'Cancel' : 'Delete permanently'}
+          </button>
+        )}
       </div>
+
+      {purging && <HardDelete user={user} onDone={() => setPurging(false)} />}
 
       {(restoreState?.error || removeState?.error) && (
         <p role="alert" className="mt-2 w-full text-[0.85rem] text-danger">
@@ -170,7 +269,7 @@ function UserEditor({ user, clubs, schools, isSelf }) {
   );
 }
 
-export default function UserTable({ users, clubs, schools, viewerId }) {
+export default function UserTable({ users, clubs, schools, viewerId, canHardDelete = false }) {
   const [query, setQuery] = useState('');
   const [role, setRole] = useState('');
   const [club, setClub] = useState('');
@@ -247,7 +346,13 @@ export default function UserTable({ users, clubs, schools, viewerId }) {
                     </Meta>
                   </div>
 
-                  <UserEditor user={u} clubs={clubs} schools={schools} isSelf={u.id === viewerId} />
+                  <UserEditor
+                    user={u}
+                    clubs={clubs}
+                    schools={schools}
+                    isSelf={u.id === viewerId}
+                    canHardDelete={canHardDelete}
+                  />
                 </div>
               </Card>
             </li>
