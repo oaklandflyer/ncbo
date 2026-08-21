@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, AlumniBadge, field, buttonReset } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
+import Avatar from '@/app/brand/avatar';
 
 /**
  * The network, three ways: by club, by hometown region, and as a flat list of
@@ -21,23 +22,6 @@ const VIEWS = [
   ['people', 'People'],
 ];
 
-/** Initials, standing in for an avatar the schema has nowhere to store. */
-function Avatar({ name, size = 44 }) {
-  const initials = String(name || 'M')
-    .split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((w) => w[0]).join('').toUpperCase() || 'M';
-
-  return (
-    <span
-      aria-hidden
-      className="grid shrink-0 place-items-center rounded-full border border-edge bg-band font-display font-bold tracking-[0.04em] text-brand-deep"
-      style={{ height: size, width: size, fontSize: size * 0.32 }}
-    >
-      {initials}
-    </span>
-  );
-}
-
 /**
  * One person. The vetted seal and the credential pills only appear when the
  * database says so — an unvetted coach gets neither, which is the whole point
@@ -47,7 +31,7 @@ function PersonCard({ person }) {
   return (
     <Card className="p-5 sm:p-5">
       <div className="flex items-start gap-4">
-        <Avatar name={person.display_name} />
+        <Avatar name={person.display_name} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <UserChip

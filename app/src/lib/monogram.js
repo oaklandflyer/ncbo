@@ -26,3 +26,22 @@ export function monogram(club) {
     .toUpperCase();
   return letters || 'NC';
 }
+
+/**
+ * Somebody's initials, up to two letters.
+ *
+ * The same eight lines were copy-pasted into four components. Here it is once,
+ * beside `monogram`, testable without a renderer, with the same guarantee: it
+ * never returns an empty string, because a blank circle reads as a broken
+ * avatar rather than as a person.
+ */
+export function initials(name) {
+  const letters = String(name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+  return letters || 'M';
+}

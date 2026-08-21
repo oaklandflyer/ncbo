@@ -66,7 +66,7 @@ export default function ClubLogoForm({ club }) {
         <input type="hidden" name="club_id" value={club.id} />
 
         <div className="mt-5 flex items-center gap-5">
-          <ClubLogo club={shown} size={72} />
+          <ClubLogo club={shown} size="lg" />
           <div className="min-w-0 flex-1">
             <label className={fieldLabel} htmlFor="logo">
               {club.logo_url ? 'Replace it' : 'Upload one'}

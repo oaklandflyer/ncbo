@@ -54,7 +54,7 @@ export default async function AthleteRankings() {
                         RPC itself, off a join it was already making, so this
                         costs no query per row. */}
                     <Meta className="mt-1 flex items-center gap-1.5">
-                      {l.chapter && <ClubLogo club={l} size={20} />}
+                      {l.chapter && <ClubLogo club={l} size="xs" />}
                       <span className="min-w-0 truncate">
                         {l.chapter || 'Independent'}
                         {` · ${l.entries} show${l.entries === 1 ? '' : 's'}`}

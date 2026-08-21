@@ -69,15 +69,13 @@ export default async function AppShell({ children, searchParams }) {
     switcher = <ScopeSwitcher clubs={clubs || []} clubId={scope.clubId} />;
   }
 
-  /* Two initials at most, and never an empty string: a blank circle in the
-     bar reads as a rendering fault rather than as a person. */
-  const initials = String(profile.display_name || profile.full_name || 'M')
-    .split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((w) => w[0]).join('').toUpperCase() || 'M';
 
   return (
     <div className="relative min-h-screen bg-page font-body text-[17px] leading-relaxed text-ink antialiased">
-      <TopBar institution={viewer.membership?.shortName || null} initials={initials} />
+      <TopBar
+        institution={viewer.membership?.shortName || null}
+        name={profile.display_name || profile.full_name}
+      />
 
       <Sidebar nav={nav} scopeSwitcher={switcher} />
 

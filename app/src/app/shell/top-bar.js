@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Wordmark } from '@/app/brand/marks';
+import { Seal, Wordmark } from '@/app/brand/marks';
 import SignOut from '@/app/hub/sign-out';
+import Avatar from '@/app/brand/avatar';
 
 /**
  * The fixed bar across the top of every signed-in page.
@@ -15,17 +16,25 @@ import SignOut from '@/app/hub/sign-out';
  * how those two came to disagree in the first place. This bar is identity:
  * whose app this is, which chapter you are in, and the way out.
  */
-export default function TopBar({ institution = null, initials = 'M' }) {
+export default function TopBar({ institution = null, name = '' }) {
   return (
     <header className="fixed inset-x-0 top-0 z-[200] h-[60px] border-b border-edge bg-white/90 shadow-brand-sm backdrop-blur-[12px]">
       <div className="flex h-full items-center gap-4 px-5 sm:px-8 lg:px-6">
-        {/* 44px of tap target around a 30px mark: this is a link, and the
-            wordmark alone is under the size a fingertip actually is. */}
+        {/* The seal below `lg`, the full lockup above it. The wordmark stacks
+            "NCBO" over two subtitle lines, and below roughly 44px of total
+            height those lines stop being legible: shrinking it to fit a phone
+            would ship an illegible tagline rather than a smaller logo. The
+            seal is the mark that survives being small.
+
+            min-h-[44px] because this is a tap target, and 36px of seal is
+            under the size a fingertip actually is. */}
         <Link
           href="/hub"
+          aria-label="NCBO home"
           className="flex min-h-[44px] shrink-0 items-center lg:w-[248px] lg:pl-1"
         >
-          <Wordmark height={30} />
+          <Seal alt="" className="h-9 w-9 lg:hidden" />
+          <Wordmark alt="" className="hidden h-10 w-auto lg:block" />
         </Link>
 
         {institution && (
@@ -42,12 +51,8 @@ export default function TopBar({ institution = null, initials = 'M' }) {
             the way through to your own profile. Initials, not a photo: there
             is no avatar in the schema, and a generic silhouette says less
             than somebody's own initials do. */}
-        <Link
-          href="/hub/profile"
-          aria-label="Your profile"
-          className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-wash font-display text-[0.8rem] font-bold tracking-[0.04em] text-brand md:hidden"
-        >
-          {initials}
+        <Link href="/hub/profile" aria-label="Your profile" className="ml-auto md:hidden">
+          <Avatar name={name} size="xs" tone="wash" />
         </Link>
       </div>
     </header>

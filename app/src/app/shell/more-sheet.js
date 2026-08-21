@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Seal } from '@/app/brand/marks';
 import { NavIcon } from './icons';
 import { NavBadge } from './badge';
 import { buttonReset } from '@/app/ui';
@@ -37,6 +38,7 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
   const pathname = usePathname();
   const closeRef = useRef(null);
   const openerRef = useRef(null);
+  const panelRef = useRef(null);
 
   /* Portals need a DOM. Rendering nothing on the server and on the first
      client pass keeps the two in agreement. */
@@ -73,9 +75,20 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
     };
   }, [open]);
 
+  /* The sheet used to open part-way down its own list, and the cause was this
+     effect rather than a stale scroll position: the panel is conditionally
+     rendered, so every open mounts a fresh element at scrollTop 0, and then
+     `closeRef.current.focus()` moved focus to the *last* child and the browser
+     scrolled it into view. `preventScroll` is the actual fix. The explicit
+     `scrollTop = 0` stays as a belt-and-braces guard for browsers that restore
+     a remembered offset. */
   useEffect(() => {
-    if (open) closeRef.current?.focus();
-    else openerRef.current?.focus?.();
+    if (open) {
+      if (panelRef.current) panelRef.current.scrollTop = 0;
+      closeRef.current?.focus({ preventScroll: true });
+    } else {
+      openerRef.current?.focus?.();
+    }
   }, [open]);
 
   const drawer = open && (
@@ -84,13 +97,26 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
       onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="More"
-        className="max-h-[85vh] w-full overflow-y-auto rounded-t-[16px] border-t border-edge bg-surface px-5 pt-4"
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+        /* The safe-area inset is a class rather than an inline style, so a
+           caller can still override the padding. Tailwind passes the whole
+           `max(...)` through untouched. */
+        className="max-h-[85vh] w-full overflow-y-auto rounded-t-[16px] border-t border-edge bg-surface px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-edge" aria-hidden />
+        <div className="mx-auto h-1 w-10 rounded-full bg-edge" aria-hidden />
+
+        {/* The one branded surface on a phone below the header. The seal
+            rather than the wordmark: at this size the lockup's two subtitle
+            lines are illegible, so the name is set as text beside it. */}
+        <div className="mb-4 mt-3 flex items-center gap-2.5 border-b border-edge pb-4">
+          <Seal alt="" className="h-8 w-8" />
+          <span className="font-display text-[0.95rem] font-extrabold uppercase tracking-[0.16em] text-ink">
+            NCBO
+          </span>
+        </div>
 
         {/* The scope switcher is the top row, because an admin who opens this
             on a phone is almost always about to act on a specific chapter and
