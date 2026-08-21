@@ -12,7 +12,12 @@ const FALLBACK_DIVISIONS = [
 export default async function EditProfile() {
   const supabase = await createClient();
   const profile = await getProfile(supabase);
-  if (!profile) redirect('/login');
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!viewer?.signedIn) redirect('/login');
+  if (!profile) return null;
 
   const { data: rows } = await supabase
     .from('member_directory').select('division').not('division', 'is', null).limit(200);

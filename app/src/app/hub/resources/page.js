@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient, getProfile } from '@/lib/supabase/server';
+import { createClient, getProfileResult } from '@/lib/supabase/server';
 import { Page, PageHero, Section, SectionTitle } from '@/app/ui';
 import Vault from './vault';
 import AddResource from './add';
@@ -13,8 +13,13 @@ import AddResource from './add';
  */
 export default async function Resources() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
-  if (!profile) redirect('/login');
+  const { signedIn, profile } = await getProfileResult(supabase);
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!signedIn) redirect('/login');
+  if (!profile) return null;
 
   const { data: resources } = await supabase
     .from('resources')

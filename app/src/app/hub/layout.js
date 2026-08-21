@@ -10,6 +10,7 @@ import { getViewerContext } from '@/lib/viewer';
 import { getBranding } from '@/lib/branding';
 import SignOut from './sign-out';
 import AccountStatus from './status';
+import SchemaError from './schema-error';
 import { ProfilePopupProvider } from './profile-popup/popup';
 
 export default async function HubLayout({ children }) {
@@ -17,8 +18,12 @@ export default async function HubLayout({ children }) {
   const viewer = await getViewerContext(supabase);
   const profile = viewer.profile;
 
-  // The middleware already redirects anonymous visitors; this covers the case
-  // where a user exists but their profile row doesn't (a failed signup).
+  /* Three different situations that used to collapse into one redirect:
+       · genuinely signed out          → /login, which is true
+       · signed in, query failed       → say so; /login would be a lie and a loop
+       · signed in, no profile row     → a failed signup, so start it again */
+  if (!viewer.signedIn) redirect('/login');
+  if (viewer.profileError) return <SchemaError error={viewer.profileError} />;
   if (!profile) redirect('/login');
 
   // A decision has already been made about these two, so there is nothing

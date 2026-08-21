@@ -18,7 +18,12 @@ export default async function Roster({ searchParams }) {
   const supabase = await createClient();
   const viewer = await getViewerContext(supabase);
 
-  if (!viewer.profile) redirect('/login');
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!viewer?.signedIn) redirect('/login');
+  if (!viewer.profile) return null;
   /* Admins are allowed in — they lead nothing, but they manage everything. */
   if (!viewer.isClubLead && !viewer.isAdmin) redirect('/hub');
 

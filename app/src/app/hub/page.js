@@ -42,7 +42,12 @@ export default async function Hub() {
 
   // The layout redirects too, but layouts and pages render in parallel, so
   // this page still runs and would crash before that redirect lands.
-  if (!profile) redirect('/login');
+  /* Layout and page render in parallel, so this page runs even when the layout
+     is about to show the schema error. Redirecting here would win that race and
+     send a signed-in member back to /login, which is the loop this whole change
+     exists to remove. Render nothing and let the layout explain. */
+  if (!viewer?.signedIn) redirect('/login');
+  if (!profile) return null;
 
   const membership = viewer.membership;
   const phase = profile.experience_phase || 'new_to_bodybuilding';
