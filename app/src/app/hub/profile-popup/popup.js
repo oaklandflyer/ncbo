@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { loadPublicProfile } from './actions';
 import { affiliationLabel, badgesFor, clubRoleLabel, phaseLabel } from '@/lib/membership';
 import { Badge, VettedSeal, Credentials, Meta, buttonReset, btnGhost, btnSmall, fineprint } from '@/app/ui';
+import { initials } from '@/lib/monogram';
 
 /**
  * The profile popup, and the chip that opens it.
@@ -88,16 +89,12 @@ export function ProfilePopupProvider({ children }) {
 }
 
 function Initials({ name }) {
-  const initials = String(name || 'M')
-    .split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((w) => w[0]).join('').toUpperCase() || 'M';
-
   return (
     <span
       aria-hidden
       className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-wash font-display text-[1.15rem] font-bold text-brand"
     >
-      {initials}
+      {initials(name)}
     </span>
   );
 }

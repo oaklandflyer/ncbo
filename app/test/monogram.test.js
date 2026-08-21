@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { monogram } from '../src/lib/monogram.js';
+import { monogram, initials } from '../src/lib/monogram.js';
 
 /*
  * The monogram is the branch every chapter without a logo takes, which today
@@ -36,5 +36,20 @@ test('prefers the chapter name over the full club name', () => {
 test('never returns an empty string', () => {
   for (const club of [null, undefined, {}, { chapter: '' }, { chapter: '   ' }, { chapter: '-' }]) {
     assert.equal(monogram(club), 'NC', `empty monogram for ${JSON.stringify(club)}`);
+  }
+});
+
+/* `initials` was the same eight lines copy-pasted into four components. It has
+   the same hard requirement as `monogram`: never an empty string. */
+
+test('initials takes up to two letters', () => {
+  assert.equal(initials('Drew Coutinho'), 'DC');
+  assert.equal(initials('Drew'), 'D');
+  assert.equal(initials('Mary Jane Watson'), 'MJ');
+});
+
+test('initials never returns an empty string', () => {
+  for (const name of [null, undefined, '', '   ', 0, false]) {
+    assert.equal(initials(name), 'M', `empty initials for ${JSON.stringify(name)}`);
   }
 });

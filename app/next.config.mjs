@@ -1,5 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    /* Club logos live in a public Supabase bucket, so `next/image` has to be
+       told the host is allowed before it will proxy one. Narrowed to the
+       public object path: `/storage/v1/object/public/**` is served without a
+       token by design, and nothing else on this host should be reachable
+       through the optimiser.
+
+       The project ref is the same value already in `supabase/config.toml` and
+       in `NEXT_PUBLIC_SUPABASE_URL`. It is not a secret; it is in every API
+       request the app makes. */
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'bjfxgwjnkfjrgrpqubab.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
+
   async redirects() {
     return [
       /* `/club/calendar` shipped, and leads have it bookmarked and pasted into

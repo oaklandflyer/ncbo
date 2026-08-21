@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
 import { Page, PageHero, Section, Card, Meta, Empty } from '@/app/ui';
 import { Segmented, HowPointsWork, tabularNums } from '../segmented';
-import { ClubLogoResponsive } from '@/app/brand/club-logo';
+import ClubLogo from '@/app/brand/club-logo';
 
 export const metadata = { title: 'Chapter Cup · NCBO' };
 
@@ -51,7 +51,7 @@ export default async function ChapterCup() {
                       <span className="font-display text-[1.15rem] font-bold text-brand" style={tabularNums}>
                         {c.rank}
                       </span>
-                      <ClubLogoResponsive club={c} />
+                      <ClubLogo club={c} size="md" />
                       <span className="truncate font-display text-[1.1rem] font-bold uppercase tracking-[0.02em] text-ink">
                         {c.chapter}
                       </span>

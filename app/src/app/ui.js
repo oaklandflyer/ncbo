@@ -342,7 +342,7 @@ export function AuthPage({ children, wide = false }) {
       />
       <div className={`relative z-10 w-full ${wide ? 'max-w-[680px]' : 'max-w-[480px]'}`}>
         <div className="mb-7 flex justify-center">
-          <Seal size={64} />
+          <Seal className="h-16 w-16" />
         </div>
         <div className="rounded-[8px] border border-edge bg-surface p-7 shadow-brand sm:p-10">
           {children}

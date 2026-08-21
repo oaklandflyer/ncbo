@@ -1,9 +1,11 @@
+import Image from 'next/image';
 import { monogram, clubLabel } from '@/lib/monogram';
+import { resolveSize } from './sizes';
 
 /**
  * A chapter's mark, or the monogram that stands in for it.
  *
- * Built first and used by every surface, so that no leaderboard, roster or
+ * Used by every surface that draws a club, so that no leaderboard, roster or
  * card does its own null check. A club with no logo is not an error state and
  * never will be: most chapters will not have uploaded one, and the ones that
  * never do should still look deliberate.
@@ -12,40 +14,48 @@ import { monogram, clubLabel } from '@/lib/monogram';
  * is what makes a leaderboard's club names jump left and right down the
  * column, which is worse than an empty square would have been.
  *
- * A plain <img> rather than `next/image`: the source is an arbitrary Supabase
- * storage URL, so the optimiser would need that host in `remotePatterns` and
- * would then proxy and re-encode an image we already normalised to a 512px
- * PNG on the way in. There is nothing left for it to do.
+ * **Size is a variant, not a number.** `next/image` writes exactly one inline
+ * property of its own, `color: transparent`, so the `h-*`/`w-*` classes decide
+ * the rendered box and the `width`/`height` props serve only as the intrinsic
+ * ratio the optimiser needs. Nothing here can be overridden by a caller's
+ * class, because nothing here is inline.
  */
-
-export default function ClubLogo({ club, size = 32, className = '' }) {
+export default function ClubLogo({ club, size = 'sm', className = '' }) {
+  const { box, radius, text } = resolveSize(size, 'ClubLogo');
   const src = club?.logoUrl || club?.logo_url || club?.club_logo || null;
   const name = clubLabel(club) || 'this chapter';
 
-  /* One box, one set of dimensions, whichever branch renders. Inline styles
-     rather than Tailwind classes because the size is a prop: a template
-     literal class name is a class Tailwind never sees at build time and so
-     never emits. */
-  const box = {
-    width: size,
-    height: size,
-    minWidth: size,
-    borderRadius: Math.max(4, Math.round(size * 0.18)),
-  };
-
-  if (src) {
+  /* A `blob:` or `data:` source is bytes the browser already holds: the upload
+     form's own preview of the file somebody just picked. There is nothing for
+     the optimiser to fetch, and `next/image` refuses the URL outright, so this
+     one case is a plain <img>. Same classes, same box, so the preview and the
+     saved mark are the same size on screen. */
+  if (src && /^(blob|data):/.test(src)) {
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
       <img
         src={src}
         alt=""
         aria-hidden
-        width={size}
-        height={size}
-        loading="lazy"
-        decoding="async"
-        style={{ ...box, objectFit: 'contain' }}
-        className={`shrink-0 bg-transparent ${className}`}
+        className={`shrink-0 bg-transparent object-contain ${box} ${radius} ${className}`}
+      />
+    );
+  }
+
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        aria-hidden
+        /* The source is a 512px square PNG, normalised on upload. 96 is the
+           intrinsic size handed to the optimiser: twice the largest box this
+           renders at, so a 2x screen at `md` is still served real pixels and
+           nothing downloads a 512px file to draw it at 40. */
+        width={96}
+        height={96}
+        sizes="96px"
+        className={`shrink-0 bg-transparent object-contain ${box} ${radius} ${className}`}
       />
     );
   }
@@ -54,28 +64,9 @@ export default function ClubLogo({ club, size = 32, className = '' }) {
     <span
       aria-hidden
       title={name}
-      style={{ ...box, fontSize: Math.max(9, Math.round(size * 0.4)) }}
-      className={`inline-flex shrink-0 select-none items-center justify-center bg-brand-wash font-display font-bold uppercase leading-none tracking-[0.02em] text-brand ${className}`}
+      className={`inline-flex shrink-0 select-none items-center justify-center bg-brand-wash font-display font-bold uppercase leading-none tracking-[0.02em] text-brand ${box} ${radius} ${text} ${className}`}
     >
       {monogram(club)}
     </span>
-  );
-}
-
-/**
- * The same mark at one size on a phone and another from `md` up.
- *
- * Two elements, one hidden at each breakpoint, rather than one element with a
- * responsive class: the size drives an inline width, a border radius and a
- * font size, and Tailwind cannot emit a class for a value that only exists at
- * render time. The browser requests the URL once regardless, so the second
- * copy costs a hidden node and nothing over the network.
- */
-export function ClubLogoResponsive({ club, small = 24, large = 32, className = '' }) {
-  return (
-    <>
-      <ClubLogo club={club} size={small} className={`md:hidden ${className}`} />
-      <ClubLogo club={club} size={large} className={`hidden md:inline-flex ${className}`} />
-    </>
   );
 }

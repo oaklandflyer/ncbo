@@ -9,6 +9,7 @@ import {
   VettedSeal, Credentials, SocialLinks, AlumniBadge, fineprint, btnGhost, btnSmall,
 } from '@/app/ui';
 import SignOut from '../sign-out';
+import { initials } from '@/lib/monogram';
 
 /**
  * The member's own record — the fifth destination on the phone's tab bar, and
@@ -30,10 +31,6 @@ export default async function Profile() {
      exists to remove. Render nothing and let the layout explain. */
   if (!viewer?.signedIn) redirect('/login');
   if (!profile) return null;
-
-  const initials = String(profile.display_name || 'M')
-    .split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((w) => w[0]).join('').toUpperCase() || 'M';
 
   const roleLabel = profile.role === 'member' ? 'Member' : profile.role.replace('_', ' ');
 
@@ -76,7 +73,7 @@ export default async function Profile() {
             aria-hidden
             className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-edge bg-surface font-display text-[1.6rem] font-extrabold tracking-[0.04em] text-brand-deep shadow-brand-sm"
           >
-            {initials}
+            {initials(profile.display_name)}
           </span>
           <div className="min-w-0">
             <p className="font-display text-[1.5rem] font-extrabold uppercase leading-none text-ink">
