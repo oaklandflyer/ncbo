@@ -84,6 +84,19 @@ Eighteen tests.
 | 13, 14 | An ordinary member cannot add a show; a club lead can |
 | 15–18 | The Q&A starter library is 30 answered questions, attributed to the Coaching Desk rather than a named advisor, and clearable in one statement |
 
+## The harness mirrors Supabase's grants
+
+`run.sh` issues Supabase's own blanket grants and default privileges before
+applying migrations. Without them the throwaway database was *more* restrictive
+than production, which hid privilege bugs rather than catching them: a column
+production could not read looked fine here, because nothing could read anything
+here until `01_rls.sql` granted it.
+
+Tests `0a`, `0b` and `0c` in `01_rls.sql` run before that file grants anything,
+so they see the ACL state the migrations actually produced. Move them below the
+grants and they can never fail, because the harness repairs the thing they
+exist to catch.
+
 ## A trap worth knowing about
 
 `restrict_columns()` in `20260822000015` takes away `authenticated`'s
