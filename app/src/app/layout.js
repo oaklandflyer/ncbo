@@ -25,8 +25,8 @@ export const metadata = {
     statusBarStyle: 'default',
   },
   icons: {
-    icon: '/ncbo-crest.webp',
-    apple: '/ncbo-crest.webp',
+    icon: '/brand/ncbo-seal.svg',
+    apple: '/brand/ncbo-seal.png',
   },
 };
 
