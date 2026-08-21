@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, AlumniBadge, field, buttonReset } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
 import Avatar from '@/app/brand/avatar';
+import { academicLine } from '@/lib/academicYear';
 
 /**
  * The network, three ways: by club, by hometown region, and as a flat list of
@@ -41,7 +42,7 @@ function PersonCard({ person }) {
               {person.display_name}
             </UserChip>
             {person.verified && <VettedSeal />}
-            {person.is_alumni && <AlumniBadge since={person.alumni_since} />}
+            {person.is_alumni_effective && <AlumniBadge since={person.alumni_since} />}
           </div>
 
           <Meta className="mt-2">
@@ -50,7 +51,15 @@ function PersonCard({ person }) {
               <span aria-hidden className="text-fine">·</span>
             )}
             {person.home_region && <span>{person.home_region}</span>}
-            {person.is_alumni && (
+            {academicLine(person) && (
+              <>
+                {(person.division || person.home_region) && (
+                  <span aria-hidden className="text-fine">·</span>
+                )}
+                <span>{academicLine(person)}</span>
+              </>
+            )}
+            {person.is_alumni_effective && (
               <>
                 <span aria-hidden className="text-fine">·</span>
                 <span className="text-dim">Graduate</span>

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { EXPERIENCE_PHASES } from '@/lib/membership';
+import { parseAcademic } from '@/lib/academicYear';
 
 /** Instagram and TikTok both allow letters, digits, dot and underscore. */
 const HANDLE = /^[A-Za-z0-9._]+$/;
@@ -50,6 +51,13 @@ export async function saveProfile(prev, formData) {
     return { error: 'Keep the region short, like "Greater Pittsburgh, PA".' };
   }
 
+  /* Shared with the roster and admin sheets, so all three agree about what an
+     empty year means and what range is allowed. Picking a year by hand clears
+     `grad_year_inferred`: somebody choosing from a dropdown has stated it,
+     which is the whole distinction that flag records. */
+  const academic = parseAcademic(formData);
+  if (academic.error) return { error: academic.error, focus: academic.focus };
+
   /* `alumni_since` is stamped the first time the box is ticked and cleared if
      it is unticked, so the date always means what it says. */
   const isAlumni = formData.get('is_alumni') === 'on';
@@ -65,6 +73,7 @@ export async function saveProfile(prev, formData) {
     .update({
       home_region, division, instagram_handle, tiktok_handle, experience_phase,
       is_alumni: isAlumni, alumni_since,
+      ...academic.patch,
     })
     .eq('id', user.id);
 

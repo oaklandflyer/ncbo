@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
 import { Page, PageHero, Section, SectionTitle, Empty, BackLink, fineprint } from '@/app/ui';
 import UserTable from './user-table';
+import { hardDeleteAvailable } from '@/lib/supabase/admin';
 
 /**
  * Every account, with the addresses.
@@ -54,14 +55,22 @@ export default async function AdminUsers() {
             clubs={clubs || []}
             schools={schools || []}
             viewerId={viewer.userId}
+            canHardDelete={viewer.isAdmin && hardDeleteAvailable()}
           />
         ) : (
           <Empty>No accounts yet.</Empty>
         )}
 
         <p className={`mt-6 ${fineprint}`}>
-          Removing an account never deletes it: the row stays so posts keep their author, and
-          you can restore it from this page. Nothing here touches the sign-in system.
+          Removing an account does not delete it: the row stays so posts keep their author,
+          and you can restore it from this page. Removing never touches the sign-in system.
+        </p>
+        <p className={`mt-3 ${fineprint}`}>
+          Permanent deletion is a separate, irreversible act, available to admins only and
+          only on an account already removed. It destroys the sign-in, the membership and
+          every vote; it keeps competition results, questions and answers under the name
+          they were written with, so chapters keep the points their members earned and
+          nobody else&rsquo;s thread loses its context.
         </p>
       </Section>
     </Page>

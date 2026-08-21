@@ -38,7 +38,7 @@ export default async function Onboarding() {
      on campus wifi is the difference between a picker and a wait. */
   const { data: universities } = await supabase
     .from('university_picker')
-    .select('id, name, short_name, state, club_id, club_name, has_chapter')
+    .select('id, name, short_name, state, club_id, club_name, has_chapter, chapter_state')
     .order('name');
 
   return (

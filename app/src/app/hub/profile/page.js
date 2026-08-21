@@ -10,6 +10,7 @@ import {
 } from '@/app/ui';
 import SignOut from '../sign-out';
 import { initials } from '@/lib/monogram';
+import { academicLine, isAlumniEffective } from '@/lib/academicYear';
 
 /**
  * The member's own record — the fifth destination on the phone's tab bar, and
@@ -62,7 +63,7 @@ export default async function Profile() {
     ['TikTok', profile.tiktok_handle && `@${profile.tiktok_handle}`],
     ['Division', profile.division],
     ['Home screen', phaseLabel(profile.experience_phase)],
-    ['Class year', profile.class_year],
+    ['Class', academicLine(profile) || profile.class_year],
   ].filter(([, value]) => value);
 
   return (
@@ -82,7 +83,7 @@ export default async function Profile() {
             <Meta className="mt-2">
               <Badge tone="active">{roleLabel}</Badge>
               {profile.verified && <VettedSeal />}
-              {profile.is_alumni && <AlumniBadge since={profile.alumni_since} />}
+              {isAlumniEffective(profile) && <AlumniBadge since={profile.alumni_since} />}
             </Meta>
             {profile.credentials?.length > 0 && (
               <div className="mt-3"><Credentials items={profile.credentials} /></div>
@@ -96,11 +97,13 @@ export default async function Profile() {
           </div>
         </div>
 
-        {(profile.class_year || profile.division) && (
+        {(academicLine(profile) || profile.class_year || profile.division) && (
           <div className="mt-8 max-w-lg">
             <Stats>
               {profile.division && <Stat value={profile.division} label="Division" isText />}
-              {profile.class_year && <Stat value={profile.class_year} label="Class year" isText />}
+              {(academicLine(profile) || profile.class_year) && (
+              <Stat value={academicLine(profile) || profile.class_year} label="Class" isText />
+            )}
             </Stats>
           </div>
         )}

@@ -23,6 +23,22 @@ import { field, fieldLabel, fineprint } from '@/app/ui';
  * dead end. Turning that person away at the form would throw away the
  * clearest expansion signal there is.
  */
+const TAGS = {
+  active:   ['Chapter', 'text-brand font-bold'],
+  pipeline: ['Forming', 'text-[#B26A1F] font-bold'],
+  none:     ['No chapter', 'text-fine font-semibold'],
+};
+
+/** The three states, worded the same in the list as in the panel below it. */
+function ChapterTag({ state }) {
+  const [label, tone] = TAGS[state] || TAGS.none;
+  return (
+    <span className={`shrink-0 font-display text-[0.65rem] uppercase tracking-[0.14em] ${tone}`}>
+      {label}
+    </span>
+  );
+}
+
 export default function UniversityPicker({
   universities,
   name = 'university_id',
@@ -66,7 +82,7 @@ export default function UniversityPicker({
        scoped to it. The club id goes no further than this: the form never
        submits one, and the server resolves the university to a club again on
        its own. */
-    onResolve?.(u.has_chapter ? u : null);
+    onResolve?.(u.chapter_state === 'active' ? u : null);
   }
 
   function onKeyDown(e) {
@@ -126,9 +142,7 @@ export default function UniversityPicker({
                     {u.name}{u.state ? `, ${u.state}` : ''}
                   </span>
                 </span>
-                {u.has_chapter
-                  ? <span className="shrink-0 font-display text-[0.65rem] font-bold uppercase tracking-[0.14em] text-brand">Chapter</span>
-                  : <span className="shrink-0 font-display text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-fine">No chapter</span>}
+                <ChapterTag state={u.chapter_state} />
               </button>
             </li>
           ))}
@@ -146,29 +160,55 @@ export default function UniversityPicker({
           after the fact. */}
       {selected && (
         <div className="mt-3 rounded-[8px] border border-edge bg-band px-4 py-3">
-          {selected.has_chapter ? (
+          {selected.chapter_state === 'active' && (
             <>
               <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
-                Joining {selected.short_name || selected.name}
+                You&rsquo;ll join {selected.club_name}
               </p>
               <p className={`mt-1 ${fineprint}`}>
-                {selected.club_name}. Your club lead reviews new members, usually within a few days.
+                Your club lead reviews new members, usually within a few days.
               </p>
             </>
-          ) : (
+          )}
+
+          {/* Pipeline used to read as "no chapter", which is a worse answer
+              than the truth: there IS one forming, it just has nobody who can
+              review an application yet. Saying so is the difference between a
+              wait somebody understands and a form that appears to do nothing. */}
+          {selected.chapter_state === 'pipeline' && (
+            <>
+              <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
+                {selected.short_name || selected.name}&rsquo;s chapter is still forming
+              </p>
+              <p className={`mt-1 ${fineprint}`}>
+                We&rsquo;ll add you to the wait list and tell you the day it opens. Everything
+                else is open to you now: the calendar, the Q&amp;A board and the club
+                directory.
+              </p>
+            </>
+          )}
+
+          {selected.chapter_state === 'none' && (
             <>
               <p className="font-display text-[0.95rem] font-bold uppercase tracking-[0.02em] text-ink">
                 No chapter at {selected.short_name || selected.name} yet
               </p>
               <p className={`mt-1 ${fineprint}`}>
-                You can still finish signing up. The calendar, the Q&amp;A board and the
-                club directory are open to you, and we will tell you if a chapter starts
-                at your school.
+                You can still finish signing up, and where students sign up is how NCBO
+                decides where to expand. If you want to start one here, say so at{' '}
+                <a
+                  href="mailto:hello@thencbo.org?subject=Starting%20a%20chapter"
+                  className="font-semibold text-brand underline underline-offset-2"
+                >
+                  hello@thencbo.org
+                </a>{' '}
+                and we&rsquo;ll walk you through it.
               </p>
             </>
           )}
         </div>
       )}
+
     </div>
   );
 }

@@ -90,15 +90,22 @@ export async function saveOnboarding(prev, formData) {
 
   /* The university resolves to its one club here, on the server, from the id
      the picker submitted. The client is never told a club id and never sends
-     one — which is what makes "a user cannot select a club directly" true
-     rather than merely unoffered. */
+     one, which is what makes "a user cannot select a club directly" true
+     rather than merely unoffered.
+
+     Three outcomes, named rather than inferred from a boolean. `pipeline` used
+     to fall in with `none` because a forming club carries `active = false`,
+     so somebody at a school with a chapter on the way was told there wasn't
+     one. See migration 0028. */
   const { data: chapter } = await supabase
     .from('university_picker')
-    .select('club_id, has_chapter')
+    .select('club_id, chapter_state')
     .eq('id', universityId)
     .maybeSingle();
 
-  if (chapter?.has_chapter && chapter.club_id) {
+  const state = chapter?.chapter_state || 'none';
+
+  if (state === 'active' && chapter.club_id) {
     const { error: applyError } = await supabase
       .from('club_memberships')
       .upsert({
@@ -114,15 +121,21 @@ export async function saveOnboarding(prev, formData) {
       }, { onConflict: 'user_id,club_id' });
 
     /* A failed application is not a failed signup. The profile is saved, the
-       account works, and the person can apply again from their profile —
-       far better than sending them back to a form they have already filled
+       account works, and the person can apply again from their profile, which
+       is far better than sending them back to a form they have already filled
        in correctly. */
     if (applyError) {
       revalidatePath('/hub', 'layout');
       return { error: 'Your profile is saved, but the application to your chapter did not go through. Try again from your profile.' };
     }
   } else {
-    // No chapter: record the interest, and let them in.
+    /* Pipeline and none both land here, and both leave `club_id` null: a
+       membership row nobody can approve is a row that sits pending forever,
+       and a pending row is how a person concludes the app is broken.
+
+       They are recorded in the same table because the question it answers is
+       the same one either way, and `university_picker.chapter_state` can tell
+       them apart at any time without a second column to keep in sync. */
     await supabase.from('signup_interest').upsert({
       user_id: user.id,
       university_id: universityId,
