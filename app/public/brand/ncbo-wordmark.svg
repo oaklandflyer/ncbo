@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150" width="100%" height="100%" style="background-color: #FFFFFF;">
+  <!-- Primary NCBO Text (Deep Navy) -->
+  <text x="40" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="76" font-weight="900" fill="#152A47" letter-spacing="4">NCBO</text>
+  
+  <!-- Subtitle Line 1 (Medium Steel Blue) -->
+  <text x="45" y="110" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800" fill="#6B84A6" letter-spacing="5">NATIONAL COLLEGIATE</text>
+  
+  <!-- Subtitle Line 2 (Deep Navy) -->
+  <text x="45" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800" fill="#152A47" letter-spacing="5">BODYBUILDING ORGANIZATION</text>
+</svg>
