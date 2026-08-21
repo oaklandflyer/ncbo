@@ -15,11 +15,7 @@ grant execute on all functions in schema public to anon, authenticated;
 -- The blanket grant above hands back the table-level SELECT that
 -- `restrict_columns()` takes away. Re-apply it, or test 10 would be checking
 -- this file's own grant instead of the schema.
-select public.restrict_columns('public.profiles', array['email']);
-select public.restrict_columns('public.club_memberships',
-  array['legal_name', 'group_chat_handle', 'group_chat_platform',
-        'found_via', 'student_id_photo_path', 'decision_note']);
-select public.restrict_columns('public.school_email_codes', array['code_hash']);
+select public.reapply_column_privileges();
 
 \set ON_ERROR_STOP 0
 \pset pager off

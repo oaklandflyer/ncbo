@@ -1,3 +1,57 @@
+-- ============================================================================
+-- Column privileges, checked FIRST.
+--
+-- Before this file grants anything. `restrict_columns()` hands `authenticated`
+-- an explicit column list, and a column added by a later migration gets no
+-- grant at all — selecting it then fails the whole statement with
+-- `permission denied for table X`, naming the table rather than the column.
+--
+-- That shipped: 0015 restricted `profiles` to hide `email`, 0016 added
+-- `experience_phase`, and every signed-in member was bounced to the sign-in
+-- page because `getProfile()` selects it.
+--
+-- These run before the blanket grants below on purpose. Underneath them the
+-- state is whatever the migrations actually produced, which is the only state
+-- worth asserting; run them afterwards and the harness has already repaired
+-- what they were meant to catch.
+-- ============================================================================
+\pset pager off
+
+\echo '=== 0a. MUST BE EMPTY: columns no migration meant to hide ==='
+select row.tbl::text as protected_table, a.attname as unreadable_column
+  from public.protected_columns() row
+  join pg_attribute a on a.attrelid = row.tbl and a.attnum > 0 and not a.attisdropped
+ where not has_column_privilege('authenticated', row.tbl, a.attname, 'SELECT')
+   and not (a.attname = any (row.deny))
+ order by 1, 2;
+
+\echo ''
+\echo '=== 0b. MUST BE EMPTY: deny-list columns that are readable anyway ==='
+-- The other half. A repair that handed back everything would satisfy 0a and
+-- leak every address in the database.
+select row.tbl::text as protected_table, d.col as leaked_column
+  from public.protected_columns() row
+  cross join lateral unnest(row.deny) as d(col)
+ where has_column_privilege('authenticated', row.tbl, d.col, 'SELECT')
+ order by 1, 2;
+
+\echo ''
+\echo '=== 0c. the exact column list getProfile() selects is readable ==='
+-- No error is the assertion; the row count is beside the point. This is the
+-- query whose failure took the whole app down, so it gets a test of its own.
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000000';
+select count(*) as getprofile_selects_without_error
+  from (
+    select id, display_name, full_name, class_year, lifting_experience, major,
+           is_adult, experience_phase, role, status, club_id, school_id, division,
+           home_region, instagram_handle, tiktok_handle, verified, credentials,
+           is_alumni, alumni_since
+      from public.profiles limit 1
+  ) as q;
+reset role;
+set test.uid = '';
+
 -- Supabase grants table privileges to these roles; RLS is the actual gate.
 grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
@@ -6,11 +60,7 @@ grant execute on all functions in schema public to anon, authenticated;
 -- The blanket grant above stands in for Supabase's own, and it hands back the
 -- table-level SELECT that `restrict_columns()` takes away. Re-apply it, or the
 -- email test below would be checking this line instead of the schema.
-select public.restrict_columns('public.profiles', array['email']);
-select public.restrict_columns('public.club_memberships',
-  array['legal_name', 'group_chat_handle', 'group_chat_platform',
-        'found_via', 'student_id_photo_path', 'decision_note']);
-select public.restrict_columns('public.school_email_codes', array['code_hash']);
+select public.reapply_column_privileges();
 
 \set ON_ERROR_STOP 0
 \pset pager off
@@ -631,3 +681,5 @@ set test.uid = '44444444-4444-4444-4444-444444444444';
 select count(*) > 0 as admin_sees_members, count(*) filter (where email is not null) > 0 as with_emails
   from get_admin_members();
 reset role;
+
+\echo ''

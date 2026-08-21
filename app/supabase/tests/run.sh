@@ -28,6 +28,18 @@ chmod 755 "$DIR"
 sleep 2
 
 psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 -f "$HERE/00_supabase_shim.sql"
+
+# Supabase grants table-level privileges on everything in `public` to `anon`
+# and `authenticated`, and sets default privileges so new tables get them too.
+# The shim did not, which made the throwaway database more restrictive than
+# production and hid a whole class of privilege bug: a column that production
+# could not read looked fine here, because nothing could read anything here.
+psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 <<'GRANTS'
+grant usage on schema public to anon, authenticated;
+alter default privileges in schema public grant all on tables    to anon, authenticated;
+alter default privileges in schema public grant all on functions to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+GRANTS
 for m in $(ls "$HERE"/../migrations/*.sql | sort); do
   echo "applying $(basename "$m")"
   psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 -f "$m"

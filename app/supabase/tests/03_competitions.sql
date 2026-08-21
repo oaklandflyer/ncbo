@@ -12,10 +12,7 @@ grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 grant execute on all functions in schema public to anon, authenticated;
 
-select public.restrict_columns('public.profiles', array['email']);
-select public.restrict_columns('public.club_memberships',
-  array['legal_name', 'group_chat_handle', 'group_chat_platform',
-        'found_via', 'student_id_photo_path', 'decision_note']);
+select public.reapply_column_privileges();
 
 \set ON_ERROR_STOP 0
 \pset pager off
