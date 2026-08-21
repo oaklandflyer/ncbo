@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { saveProfile } from '../actions';
 import { EXPERIENCE_PHASES } from '@/lib/membership';
 import { field, fieldLabel, btnPrimary, btnGhost, checkline, fineprint, FormMessage } from '@/app/ui';
+import AcademicFields from '@/app/hub/academic-fields';
 
 /**
  * The parts of a profile a member owns. Everything else on the profile page
@@ -65,6 +66,13 @@ export default function EditProfileForm({ profile, divisions }) {
           An area, not an address. Close enough to find someone to train with, and no
           closer.
         </p>
+      </div>
+
+      {/* New here rather than replacing something: this form has never had a
+          class field at all, so a member has had no way to correct the year
+          they gave at signup. */}
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <AcademicFields person={profile} />
       </div>
 
       <div className="mt-6">

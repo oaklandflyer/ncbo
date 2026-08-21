@@ -55,7 +55,7 @@ export async function getProfileResult(supabase) {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, full_name, class_year, lifting_experience, major, is_adult, experience_phase, role, status, club_id, school_id, division, home_region, instagram_handle, tiktok_handle, verified, credentials, is_alumni, alumni_since, universities(name, short_name), clubs(name)')
+    .select('id, display_name, full_name, class_year, lifting_experience, major, is_adult, experience_phase, role, status, club_id, school_id, division, home_region, instagram_handle, tiktok_handle, verified, credentials, is_alumni, alumni_since, grad_year, grad_year_inferred, academic_level, universities(name, short_name), clubs(name)')
     .eq('id', user.id)
     .single();
 

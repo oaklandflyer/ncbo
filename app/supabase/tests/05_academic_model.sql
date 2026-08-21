@@ -77,7 +77,7 @@ with stated as (
    where p.grad_year is null
 )
 update public.profiles p set grad_year = stated.grad_year::smallint, grad_year_inferred = false
-  from stated where p.id = stated.id and stated.grad_year between 1960 and 2100;
+  from stated where p.id = stated.id and stated.grad_year between 1960 and 2200;
 
 update public.profiles p
    set grad_year = public.project_grad_year(p.class_year, now()), grad_year_inferred = true

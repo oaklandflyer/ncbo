@@ -6,6 +6,7 @@ import {
   Card, Badge, Meta, AlumniBadge, VettedSeal, field, fieldLabel, checkline,
   btnPrimary, btnGhost, btnDanger, btnSmall, buttonReset, fineprint, FormMessage,
 } from '@/app/ui';
+import AcademicFields from '@/app/hub/academic-fields';
 
 const ROLES = [['member', 'Member'], ['club_lead', 'Club lead'], ['advisor', 'Advisor'], ['admin', 'Admin']];
 
@@ -84,11 +85,7 @@ function UserEditor({ user, clubs, schools, isSelf }) {
                      className={field} maxLength={60} />
             </div>
 
-            <div>
-              <label className={fieldLabel} htmlFor={`cy-${user.id}`}>Class year</label>
-              <input id={`cy-${user.id}`} name="class_year" defaultValue={user.class_year || ''}
-                     className={field} maxLength={20} />
-            </div>
+            <AcademicFields person={user} idPrefix={`u-${user.id}-`} />
 
             <div>
               <label className={fieldLabel} htmlFor={`hr-${user.id}`}>Home region</label>
@@ -226,7 +223,15 @@ export default function UserTable({ users, clubs, schools, viewerId }) {
                       </span>
                       {u.role !== 'member' && <Badge tone="active">{u.role.replace('_', ' ')}</Badge>}
                       {u.verified && <VettedSeal />}
-                      {u.is_alumni && <AlumniBadge since={u.alumni_since} />}
+                      {u.is_alumni_effective && <AlumniBadge since={u.alumni_since} />}
+                      {/* A projected year is a guess the backfill made from a
+                          relative standing, and a guess nothing surfaces
+                          becomes a fact by default. This is the only place
+                          that says so, and opening EDIT and saving clears it,
+                          because picking a year from the dropdown states it. */}
+                      {u.grad_year_inferred && (
+                        <Badge tone="forming">Confirm {u.grad_year}</Badge>
+                      )}
                       {removed && <Badge tone="forming">Removed</Badge>}
                       {u.status === 'pending' && <Badge tone="pending">Pending</Badge>}
                     </div>

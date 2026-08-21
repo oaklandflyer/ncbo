@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
+import { parseAcademic } from '@/lib/academicYear';
 
 /**
  * Account management is admin-only — not moderator-only. An advisor moderates
@@ -36,13 +37,16 @@ export async function adminUpdateUser(prev, formData) {
     return raw ? raw.slice(0, max) : null;
   };
 
+  const academic = parseAcademic(formData);
+  if (academic.error) return { error: academic.error };
+
   const patch = {
     display_name: text(formData.get('display_name'), 80) || 'Member',
     role: String(formData.get('role') || 'member'),
     club_id: String(formData.get('club_id') || '') || null,
     school_id: String(formData.get('school_id') || '') || null,
+    ...academic.patch,
     division: text(formData.get('division'), 60),
-    class_year: text(formData.get('class_year'), 20),
     home_region: text(formData.get('home_region'), 80),
     instagram_handle: handle(formData.get('instagram_handle')),
     tiktok_handle: handle(formData.get('tiktok_handle')),

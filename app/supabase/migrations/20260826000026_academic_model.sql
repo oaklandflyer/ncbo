@@ -75,12 +75,16 @@ comment on column public.profiles.grad_year_inferred is
   'True only where grad_year was projected from a relative standing rather than stated. A projected year is a guess and the admin UI prompts to confirm it.';
 
 /* Static bounds, because a CHECK must be immutable and `academic_year_of` is
-   not. Wide enough for an alumnus from 1970 and a first-year who will finish
-   in 2034, narrow enough that a mistyped 20264 is refused. */
+   not. The job here is catching a mistyped 20264, not policing plausibility,
+   so the ceiling is deliberately far out: a range that the year dropdown could
+   ever reach the edge of is a form that fails on submit, and the unit test
+   `every offered year is inside the CHECK constraint` found exactly that when
+   the ceiling was 2100. GRAD_YEAR_MIN and GRAD_YEAR_MAX in
+   `src/lib/academicYear.js` mirror these two numbers. */
 alter table public.profiles drop constraint if exists profiles_grad_year_range;
 alter table public.profiles
   add constraint profiles_grad_year_range
-  check (grad_year is null or (grad_year >= 1960 and grad_year <= 2100));
+  check (grad_year is null or (grad_year >= 1960 and grad_year <= 2200));
 
 /* Nothing is "inferred" without a year to have inferred. */
 alter table public.profiles drop constraint if exists profiles_grad_year_inferred_check;
@@ -190,7 +194,7 @@ update public.profiles p
        grad_year_inferred = false
   from stated
  where p.id = stated.id
-   and stated.grad_year between 1960 and 2100;
+   and stated.grad_year between 1960 and 2200;
 
 -- Pass 2: the projection, only where pass 1 found nothing.
 update public.profiles p

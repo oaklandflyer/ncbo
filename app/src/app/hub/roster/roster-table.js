@@ -7,6 +7,8 @@ import {
   btnPrimary, btnGhost, btnDanger, btnSmall, buttonReset, fineprint, FormMessage,
 } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
+import AcademicFields from '@/app/hub/academic-fields';
+import { academicLine } from '@/lib/academicYear';
 
 /** Copy every address at once — the reason a lead opens this page at all. */
 function CopyEmails({ emails }) {
@@ -57,11 +59,7 @@ function MemberEditor({ member, canPromote }) {
               <input id={`div-${member.id}`} name="division" defaultValue={member.division || ''}
                      className={field} maxLength={60} />
             </div>
-            <div>
-              <label className={fieldLabel} htmlFor={`cy-${member.id}`}>Class year</label>
-              <input id={`cy-${member.id}`} name="class_year" defaultValue={member.class_year || ''}
-                     className={field} maxLength={20} />
-            </div>
+            <AcademicFields person={member} idPrefix={`m-${member.id}-`} />
 
             <label className={`${checkline} sm:col-span-2 rounded-[8px] border border-edge bg-band px-4 py-3`}>
               <input type="checkbox" name="is_alumni" defaultChecked={!!member.is_alumni}
@@ -148,7 +146,9 @@ export default function RosterTable({ members, canPromote }) {
       </div>
 
       <ul className="grid list-none gap-3">
-        {members.map((m) => (
+        {members.map((m) => {
+          const academic = academicLine(m) || (m.class_year ? `Class of ${m.class_year}` : null);
+          return (
           <li key={m.id}>
             <Card className="p-5 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -164,7 +164,7 @@ export default function RosterTable({ members, canPromote }) {
                     {m.role !== 'member' && m.role !== 'club_lead' && (
                       <Badge tone="forming">{m.role}</Badge>
                     )}
-                    {m.is_alumni && <AlumniBadge since={m.alumni_since} />}
+                    {m.is_alumni_effective && <AlumniBadge since={m.alumni_since} />}
                   </div>
 
                   {/* The address is the point of this screen — selectable, and
@@ -175,11 +175,16 @@ export default function RosterTable({ members, canPromote }) {
                     </a>
                   </p>
 
+                  {/* "Class of 2027 · Undergraduate", built by one helper so
+                      the roster, the profile and the directory cannot word it
+                      three different ways. `class_year` is deprecated and is
+                      the fallback only until the backfill has been verified in
+                      production. */}
                   <Meta className="mt-2">
                     {m.division && <span>{m.division}</span>}
-                    {m.division && m.class_year && <span aria-hidden className="text-fine">·</span>}
-                    {m.class_year && <span>Class of {m.class_year}</span>}
-                    {(m.division || m.class_year) && <span aria-hidden className="text-fine">·</span>}
+                    {m.division && academic && <span aria-hidden className="text-fine">·</span>}
+                    {academic && <span>{academic}</span>}
+                    {(m.division || academic) && <span aria-hidden className="text-fine">·</span>}
                     <span>Joined {new Date(m.created_at).toLocaleDateString()}</span>
                   </Meta>
                 </div>
@@ -188,7 +193,8 @@ export default function RosterTable({ members, canPromote }) {
               </div>
             </Card>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </>
   );

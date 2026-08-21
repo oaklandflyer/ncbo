@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
+import { parseAcademic } from '@/lib/academicYear';
 
 /**
  * Every action here re-checks `canManageClub(clubId)` against the club the
@@ -36,10 +37,13 @@ export async function updateRosterMember(prev, formData) {
   const gate = await authorize(supabase, id);
   if (gate.error) return { error: gate.error };
 
+  const academic = parseAcademic(formData);
+  if (academic.error) return { error: academic.error };
+
   const patch = {
     division: String(formData.get('division') || '').trim() || null,
-    class_year: String(formData.get('class_year') || '').trim() || null,
     is_alumni: formData.get('is_alumni') === 'on',
+    ...academic.patch,
   };
 
   const { data: current } = await supabase
