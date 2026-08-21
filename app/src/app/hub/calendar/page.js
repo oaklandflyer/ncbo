@@ -53,7 +53,7 @@ export default async function ClubCalendarFeed() {
           <Empty>
             Your chapter has not connected a calendar yet.{' '}
             {viewer.isClubLead
-              ? <Link className="font-semibold text-brand underline underline-offset-2" href="/club/calendar">Set one up</Link>
+              ? <Link className="font-semibold text-brand underline underline-offset-2" href="/club/settings">Set one up</Link>
               : 'Ask your club lead to set one up.'}
           </Empty>
         )}
