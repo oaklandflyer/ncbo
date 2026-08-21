@@ -4,7 +4,7 @@ import { isModerator } from '@/lib/review';
 import Link from 'next/link';
 import {
   Page, PageHero, Section, SectionTitle, Card, Stat, Stats, Badge, Meta,
-  VettedSeal, Credentials, SocialLinks, fineprint, btnGhost, btnSmall,
+  VettedSeal, Credentials, SocialLinks, AlumniBadge, fineprint, btnGhost, btnSmall,
 } from '@/app/ui';
 import SignOut from '../sign-out';
 
@@ -76,6 +76,7 @@ export default async function Profile() {
             <Meta className="mt-2">
               <Badge tone="active">{roleLabel}</Badge>
               {profile.verified && <VettedSeal />}
+              {profile.is_alumni && <AlumniBadge since={profile.alumni_since} />}
             </Meta>
             {profile.credentials?.length > 0 && (
               <div className="mt-3"><Credentials items={profile.credentials} /></div>

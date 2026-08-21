@@ -18,6 +18,24 @@ export const metadata = {
     type: 'website',
   },
   twitter: { card: 'summary', title: `${ORG_SHORT} — ${TAGLINE}`, description: META_DESCRIPTION },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: ORG_SHORT,
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: '/ncbo-crest.webp',
+    apple: '/ncbo-crest.webp',
+  },
+};
+
+/** The browser chrome picks this up — steel, matching the nav. */
+export const viewport = {
+  themeColor: '#2F5FA8',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }) {

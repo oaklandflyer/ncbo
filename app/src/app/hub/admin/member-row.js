@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { updateMember } from './actions';
 import { btnGhost, btnSmall, field } from '@/app/ui';
+import EditMember from './edit-member';
 
 export default function MemberRow({ member, clubs }) {
   const [state, action, pending] = useActionState(updateMember, {});
@@ -36,6 +37,9 @@ export default function MemberRow({ member, clubs }) {
             {pending ? 'Saving…' : 'Save'}
           </button>
         </form>
+      </td>
+      <td className="px-6 py-4">
+        <EditMember member={member} canRemove />
       </td>
     </tr>
   );

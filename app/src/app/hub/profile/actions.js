@@ -44,9 +44,22 @@ export async function saveProfile(prev, formData) {
     return { error: 'Keep the region short — "Greater Pittsburgh, PA".' };
   }
 
+  /* `alumni_since` is stamped the first time the box is ticked and cleared if
+     it is unticked, so the date always means what it says. */
+  const isAlumni = formData.get('is_alumni') === 'on';
+  const { data: current } = await supabase
+    .from('profiles').select('is_alumni, alumni_since').eq('id', user.id).single();
+
+  const alumni_since = isAlumni
+    ? (current?.alumni_since || new Date().toISOString().slice(0, 10))
+    : null;
+
   const { error } = await supabase
     .from('profiles')
-    .update({ home_region, division, instagram_handle, tiktok_handle })
+    .update({
+      home_region, division, instagram_handle, tiktok_handle,
+      is_alumni: isAlumni, alumni_since,
+    })
     .eq('id', user.id);
 
   if (error) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, field, buttonReset } from '@/app/ui';
+import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, AlumniBadge, field, buttonReset } from '@/app/ui';
 
 /**
  * The network, three ways: by club, by hometown region, and as a flat list of
@@ -53,6 +53,7 @@ function PersonCard({ person }) {
               {person.display_name}
             </span>
             {person.verified && <VettedSeal />}
+            {person.is_alumni && <AlumniBadge since={person.alumni_since} />}
           </div>
 
           <Meta className="mt-2">
@@ -61,6 +62,12 @@ function PersonCard({ person }) {
               <span aria-hidden className="text-fine">·</span>
             )}
             {person.home_region && <span>{person.home_region}</span>}
+            {person.is_alumni && (
+              <>
+                <span aria-hidden className="text-fine">·</span>
+                <span className="text-dim">Graduate</span>
+              </>
+            )}
           </Meta>
 
           {person.credentials?.length > 0 && (

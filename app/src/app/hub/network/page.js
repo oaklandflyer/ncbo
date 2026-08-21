@@ -28,7 +28,7 @@ export default async function Network() {
 
   const { data: members } = await supabase
     .from('member_directory')
-    .select('id, display_name, role, division, home_region, verified, credentials, club_name, school_name, school_state, instagram_handle, tiktok_handle')
+    .select('id, display_name, role, division, home_region, verified, credentials, club_name, school_name, school_state, instagram_handle, tiktok_handle, is_alumni, alumni_since')
     .order('display_name')
     .limit(500);
 

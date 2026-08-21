@@ -129,3 +129,103 @@ export async function setStatus(prev, formData) {
   }
   return { ok: true };
 }
+
+/**
+ * Edit any member's details.
+ *
+ * Moderators and club leads reach this; the columns each may actually write
+ * are decided by `guard_profile_privileges()`, not here. An advisor changing
+ * somebody's role, or a lead changing their status, is refused by Postgres —
+ * this function only decides what to *offer*.
+ */
+export async function editMember(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('id') || '');
+  if (!id) return { error: 'Unknown member.' };
+
+  const handle = (value) => {
+    const raw = String(value || '').trim().replace(/\/+$/, '');
+    if (!raw) return null;
+    return raw.split('/').pop().replace(/^@/, '') || null;
+  };
+
+  const patch = {
+    display_name: String(formData.get('display_name') || '').trim() || 'Member',
+    division: String(formData.get('division') || '').trim() || null,
+    home_region: String(formData.get('home_region') || '').trim() || null,
+    instagram_handle: handle(formData.get('instagram_handle')),
+    tiktok_handle: handle(formData.get('tiktok_handle')),
+    is_alumni: formData.get('is_alumni') === 'on',
+  };
+
+  /* Same rule as the member's own form: the date is stamped once and cleared
+     when the flag is, so it never outlives the fact it records. */
+  const { data: current } = await supabase
+    .from('profiles').select('alumni_since').eq('id', id).single();
+  patch.alumni_since = patch.is_alumni
+    ? (current?.alumni_since || new Date().toISOString().slice(0, 10))
+    : null;
+
+  const { error } = await supabase.from('profiles').update(patch).eq('id', id);
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      || error.message.includes('row-level security')
+      ? 'You can’t change that field on this member.'
+      : error.message };
+  }
+
+  revalidatePath('/hub/admin');
+  revalidatePath('/hub/network');
+  return { ok: true };
+}
+
+/**
+ * Remove a member from the platform. Admins only.
+ *
+ * Not a delete: `auth.users` is left alone, and the profile row survives so
+ * their questions and answers keep an author. `status = 'removed'` is what
+ * takes them out — every directory filters on `status = 'approved'`, and the
+ * hub layout turns them away at the door.
+ */
+export async function removeMember(prev, formData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You are signed out.' };
+
+  const id = String(formData.get('id') || '');
+  if (id === user.id) return { error: 'You can’t remove your own account.' };
+
+  const { error } = await supabase
+    .from('profiles').update({ status: 'removed' }).eq('id', id);
+
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      ? 'Only an admin can remove an account.'
+      : 'That didn’t save. The account is unchanged.' };
+  }
+
+  revalidatePath('/hub/admin');
+  return { ok: true };
+}
+
+/**
+ * Take a member off a club's roster. A club lead may do this for their own
+ * school; the guard allows a club change only when it is a removal.
+ */
+export async function removeFromRoster(prev, formData) {
+  const supabase = await createClient();
+  const id = String(formData.get('id') || '');
+
+  const { error } = await supabase.from('profiles').update({ club_id: null }).eq('id', id);
+  if (error) {
+    return { error: error.message.includes('insufficient_privilege')
+      ? 'You can only remove members of your own club.'
+      : 'That didn’t save.' };
+  }
+
+  revalidatePath('/hub/admin');
+  return { ok: true };
+}

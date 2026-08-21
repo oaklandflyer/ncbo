@@ -101,7 +101,7 @@ function Standing({ role, school }) {
   );
 }
 
-export default function HubNav({ canReview, manages, school, role = 'member', name = '' }) {
+export default function HubNav({ canReview, manages, school, role = 'member', name = '', logo = '/ncbo-crest.webp' }) {
   const pathname = usePathname() || '';
 
   const links = canReview ? [...LINKS, ['/hub/admin', manages ? 'Admin' : 'Review']] : LINKS;
@@ -124,7 +124,7 @@ export default function HubNav({ canReview, manages, school, role = 'member', na
             wordmark is under the size a fingertip actually is. */}
         <Link href="/hub" className="flex min-h-[44px] shrink-0 items-center gap-[0.65rem]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/ncbo-crest.webp" alt="" width={40} height={40} className="h-8 w-8 md:h-10 md:w-10" />
+          <img src={logo} alt="" width={40} height={40} className="h-8 w-8 object-contain md:h-10 md:w-10" />
           <span className="font-display text-[1.15rem] font-extrabold tracking-[0.16em] text-ink md:text-[1.4rem]">
             NCBO
           </span>

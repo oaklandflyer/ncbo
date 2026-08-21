@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import Link from 'next/link';
 import { saveProfile } from '../actions';
-import { field, fieldLabel, btnPrimary, btnGhost, fineprint, FormMessage } from '@/app/ui';
+import { field, fieldLabel, btnPrimary, btnGhost, checkline, fineprint, FormMessage } from '@/app/ui';
 
 /**
  * The parts of a profile a member owns. Everything else on the profile page
@@ -66,6 +66,26 @@ export default function EditProfileForm({ profile, divisions }) {
       <p className={`mt-3 ${fineprint}`}>
         Handle only — paste a full link or an @ and we’ll take the name out of it.
       </p>
+
+      {/* Graduating keeps you on the platform. The directory says so, so the
+          students you trained with know who they are talking to. */}
+      <div className="mt-7 rounded-[8px] border border-edge bg-band px-5 py-4">
+        <label className={checkline}>
+          <input
+            type="checkbox"
+            name="is_alumni"
+            defaultChecked={!!profile.is_alumni}
+            className="h-4 w-4 accent-[#2F5FA8]"
+          />
+          <span className="font-display text-[0.82rem] font-semibold uppercase tracking-[0.12em] text-ink">
+            I’ve graduated
+          </span>
+        </label>
+        <p className={`mt-2 ${fineprint}`}>
+          You keep your account, your club and everyone you know here. Your card is marked
+          Alumni so current students know they’re talking to a graduate.
+        </p>
+      </div>
 
       <FormMessage error={state?.error} ok={state?.ok && 'Saved.'} />
 
