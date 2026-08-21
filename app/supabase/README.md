@@ -73,5 +73,27 @@ All three should read as applied both locally and remotely. From that point
 | `migrations/20260731000001_init.sql` | Tables, RLS, feed views, seed data |
 | `migrations/20260731000002_allowed_emails.sql` | Staff allowlist |
 | `migrations/20260731000003_approvals.sql` | Approval queue, `is_approved()` |
-| `tests/` | 23 policy tests — see `tests/README.md` |
+| `migrations/0004`–`0014` | Onboarding, moderation, the directory, the vault, club leadership |
+| `migrations/20260822000015_universities_and_memberships.sql` | Universities, clubs at 1:1, `club_memberships`, `org_roles`, dues, open signup |
+| `migrations/20260822000016_club_queue_and_rosters.sql` | The club-scoped approval queue, vouches, escalation, and every roster repointed |
+| `tests/` | 106 policy tests in two files — see `tests/README.md` |
 | `config.toml` | CLI config (project ref, local Postgres version) |
+
+## Two things about this schema that will surprise you
+
+**Membership is not the account.** `profiles.status` says whether somebody may
+sign in. Whether they are a student at a chapter is a `club_memberships` row,
+granted by that chapter's lead. Nothing about an email address decides either
+one any more: `handle_new_user()` takes any address and creates no membership.
+
+`profiles.role`, `profiles.club_id` and `profiles.school_id` still exist and are
+still read by every policy written before `0015`, but nobody writes them. They
+are derived from memberships and org roles by `sync_profile_mirror()`, and
+`guard_profile_privileges()` permits a write only when it changes nothing but
+those three columns and sets each to exactly the derived value.
+
+**Hiding a column takes `restrict_columns()`, not `revoke select (col)`.** The
+column-level revoke is a no-op against the table-level grant Supabase issues, so
+it silently protects nothing. See the trap section in `tests/README.md`. The
+practical consequence: `select *` on `profiles` or `club_memberships` as an
+ordinary member is `permission denied`. Name your columns.

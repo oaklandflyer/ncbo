@@ -21,7 +21,7 @@ export default async function QA() {
 
   const [{ data: questions }, { data: channels }, { data: mine }] = await Promise.all([
     supabase.from('question_feed')
-      .select('id, channel_id, body, anonymous, answered, status, created_at, author_name, author_school, answer_count, helpful_count, voted_by_me')
+      .select('id, channel_id, body, anonymous, answered, status, created_at, author_id, author_name, author_school, answer_count, helpful_count, voted_by_me')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(100),
@@ -145,7 +145,7 @@ export default async function QA() {
         <Section>
           <SectionTitle count={`${removedRows.length}`}>Removed</SectionTitle>
           <p className="mb-5 max-w-[620px] text-[0.98rem] text-body">
-            Taken off the board. Nothing is destroyed — restoring one puts it back exactly
+            Taken off the board. Nothing is destroyed, and restoring one puts it back exactly
             where it was, answers and votes included. Separate from the review queue above:
             that decides what gets published, this undoes a removal.
           </p>

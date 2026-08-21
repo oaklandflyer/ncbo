@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { canReview, canManageRoles, reviewScope } from '@/lib/review';
+import { canManageRoles } from '@/lib/review';
+import { getViewerContext } from '@/lib/viewer';
 
 /**
  * Change a member's role, club, or school.
@@ -57,8 +58,15 @@ export async function setStatus(prev, formData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'You are signed out.' };
 
-  const me = await getProfile(supabase);
-  if (!canReview(me)) return { error: 'You are not on the review queue.' };
+  /* Account status is admin-only now. It used to be shared with club leads,
+     because approving an account was how somebody got into a chapter; that
+     job moved to `decide_membership()` and the club queue, where it is
+     scoped to one club. What is left here is suspending and removing
+     accounts, which was always an admin's. */
+  const viewer = await getViewerContext(supabase);
+  if (!canManageRoles(viewer)) {
+    return { error: 'Only an NCBO admin can change an account status. Applications are decided by club leads, on their own queue.' };
+  }
 
   const id = String(formData.get('id') || '');
   const status = String(formData.get('status') || '');
@@ -75,22 +83,6 @@ export async function setStatus(prev, formData) {
   const { data: before } = await supabase
     .from('profiles').select('status, school_id').eq('id', id).single();
   const previous = before?.status || null;
-
-  // A club lead's remit: a pending account at their own school, approved or
-  // declined. Everything else is an admin's. Postgres refuses these too — this
-  // is here so the answer is a sentence rather than a policy violation.
-  const scope = reviewScope(me);
-  if (scope.kind === 'school') {
-    if (!canManageRoles(me) && status === 'suspended') {
-      return { error: 'Only an NCBO admin can suspend an account.' };
-    }
-    if (!before || before.school_id !== scope.schoolId) {
-      return { error: 'That account is not at your school.' };
-    }
-    if (previous !== 'pending') {
-      return { error: 'That account has already been decided. An NCBO admin can change it.' };
-    }
-  }
 
   const { error } = await supabase
     .from('profiles')

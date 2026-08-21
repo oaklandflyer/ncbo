@@ -38,7 +38,7 @@ export default function Branding({ settings, publicBase }) {
       return;
     }
     if (file.size > MAX_BYTES) {
-      setState({ error: 'That file is over 2MB. Export it smaller — this loads on every page.' });
+      setState({ error: 'That file is over 2MB. Export it smaller, since this loads on every page.' });
       return;
     }
 

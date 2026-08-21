@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, AlumniBadge, field, buttonReset } from '@/app/ui';
+import { UserChip } from '@/app/hub/profile-popup/popup';
 
 /**
  * The network, three ways: by club, by hometown region, and as a flat list of
@@ -49,9 +50,12 @@ function PersonCard({ person }) {
         <Avatar name={person.display_name} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="font-display text-[1.1rem] font-extrabold uppercase leading-none tracking-[0.02em] text-ink">
+            <UserChip
+              userId={person.id}
+              className="font-display text-[1.1rem] font-extrabold uppercase leading-none tracking-[0.02em] text-ink"
+            >
               {person.display_name}
-            </span>
+            </UserChip>
             {person.verified && <VettedSeal />}
             {person.is_alumni && <AlumniBadge since={person.alumni_since} />}
           </div>
@@ -109,7 +113,7 @@ function RegionMap({ groups, active, onPick }) {
         {groups.map((g, i) => (
           <span
             key={g.key}
-            title={`${g.key} — ${g.people.length}`}
+            title={`${g.key} · ${g.people.length}`}
             className="h-full border-r border-band last:border-r-0 transition-opacity"
             style={{
               width: `${(g.people.length / total) * 100}%`,

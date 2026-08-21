@@ -26,7 +26,7 @@ export default function Composer({ slug, channelName }) {
       </h2>
       <p className="mt-3 max-w-[560px] text-[0.98rem] text-body">
         {LIMIT} characters to {channelName ? `#${channelName}` : 'this channel'}. Short on
-        purpose — it keeps the board readable.
+        purpose, and it keeps the board readable.
       </p>
 
       <div className="mt-6">

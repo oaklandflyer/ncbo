@@ -132,7 +132,7 @@ function UserEditor({ user, clubs, schools, isSelf }) {
             <div className="mt-6 border-t border-edge pt-5">
               {isSelf ? (
                 <p className={fineprint}>
-                  This is your own account — an admin can’t remove themselves. Ask another
+                  This is your own account, and an admin can’t remove themselves. Ask another
                   admin if you need it closed.
                 </p>
               ) : !confirming ? (
@@ -149,7 +149,7 @@ function UserEditor({ user, clubs, schools, isSelf }) {
                     <b className="font-semibold text-ink">{user.display_name}</b> will be signed
                     out and unable to sign back in, and disappears from every directory. Their
                     questions and answers stay on the board with their name on them. Nothing is
-                    deleted — you can restore the account from this page.
+                    deleted, and you can restore the account from this page.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <form action={removeAction}>

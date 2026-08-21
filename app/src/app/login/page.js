@@ -35,7 +35,7 @@ function callbackUrl() {
 
 /** Messages for the reasons /auth/callback can send someone back here. */
 const RETURNED_ERRORS = {
-  link: 'That link didn’t work — it may have been used already or expired. Send yourself a fresh one.',
+  link: 'That link didn’t work. It may have been used already, or expired. Send yourself a fresh one.',
   oauth: 'Google sign-in didn’t go through. Try again, or use a sign-in link instead.',
 };
 
@@ -148,7 +148,7 @@ export default function Login() {
 
         <div className="mt-7 rounded-[8px] border border-edge bg-band px-5 py-4 text-[0.92rem] leading-relaxed text-body">
           The link works once and expires in an hour. Nothing after a minute or two? Check
-          spam — it arrives from Supabase on NCBO’s behalf.
+          spam, since it arrives from Supabase on NCBO’s behalf.
         </div>
 
         <button
@@ -211,8 +211,7 @@ export default function Login() {
 
         {email.includes('@') && !EDU.test(email.trim()) && (
           <p className={`mt-3 ${fineprint}`}>
-            Not a school address — that’s fine, an admin will approve your account before
-            it goes live.
+            Any address works. Use the one you actually read.
           </p>
         )}
 
@@ -228,8 +227,8 @@ export default function Login() {
       </form>
 
       <p className={`mt-7 border-t border-edge pt-6 text-center ${fineprint}`}>
-        A school address ties you to your school and club automatically. Either way your
-        email stays private — other members never see it.
+        Use whichever address you actually read. Your school does not have to be involved,
+        and your address stays private: other members never see it.
       </p>
     </AuthPage>
   );

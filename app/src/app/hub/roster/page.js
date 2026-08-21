@@ -106,7 +106,7 @@ export default async function Roster({ searchParams }) {
 
         <p className={`mt-6 ${fineprint}`}>
           Addresses come from members’ sign-in accounts and are visible to this club’s leads
-          and NCBO admins only — never to other members.
+          and NCBO admins only, never to other members.
         </p>
       </Section>
     </Page>

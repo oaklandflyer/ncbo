@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, Badge, Empty, Meta, VettedSeal, btnPrimary, field } from '@/app/ui';
 import Vote from './vote';
 import Remove from './remove';
+import { UserChip } from '@/app/hub/profile-popup/popup';
 
 /**
  * The board's controls and list.
@@ -163,7 +164,12 @@ export default function Board({ questions, channels, canModerate = false }) {
                   {!q.answered && (
                     <>
                       <span aria-hidden className="text-fine">·</span>
-                      <span className="text-body">{q.author_name}</span>
+                      {/* No id on an anonymous row, and UserChip renders a
+                          plain span in that case: making "Anonymous" tappable
+                          would undo the anonymity boundary in one click. */}
+                      <UserChip userId={q.author_id} className="text-body">
+                        {q.author_name}
+                      </UserChip>
                     </>
                   )}
 

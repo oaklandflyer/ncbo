@@ -26,7 +26,7 @@ export default function AddResource({ categories }) {
         Add a resource.
       </h2>
       <p className="mt-3 max-w-[560px] text-[0.98rem] text-body">
-        A link to something already hosted elsewhere — an unlisted YouTube video, a Drive
+        A link to something already hosted elsewhere, like an unlisted YouTube video, a Drive
         PDF, a guide on the site. Nothing is uploaded here.
       </p>
 
@@ -34,7 +34,7 @@ export default function AddResource({ categories }) {
         <div>
           <label className={fieldLabel} htmlFor="r-title">Title</label>
           <input id="r-title" name="title" required maxLength={160} className={field}
-                 placeholder="Posing Fundamentals — Mandatories" />
+                 placeholder="Posing Fundamentals: Mandatories" />
         </div>
 
         <div>

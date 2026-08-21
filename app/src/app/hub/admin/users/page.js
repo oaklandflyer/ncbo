@@ -31,7 +31,7 @@ export default async function AdminUsers() {
       <PageHero
         eyebrow="Admin"
         title="Members."
-        lead="Every account on the platform, including removed ones. Editing a role or closing an account is an admin action — advisors moderate content, not membership."
+        lead="Every account on the platform, including removed ones. Editing a role or closing an account is an admin action. Advisors moderate content, not membership."
       >
         <div className="mt-6">
           <BackLink href="/hub/admin" Component={Link}>Back to admin</BackLink>

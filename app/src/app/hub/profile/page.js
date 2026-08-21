@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
 import { isModerator } from '@/lib/review';
+import { getViewerContext } from '@/lib/viewer';
 import Link from 'next/link';
 import {
   Page, PageHero, Section, SectionTitle, Card, Stat, Stats, Badge, Meta,
@@ -20,7 +21,8 @@ import SignOut from '../sign-out';
  */
 export default async function Profile() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
   if (!profile) redirect('/login');
 
   const initials = String(profile.display_name || 'M')
@@ -36,7 +38,7 @@ export default async function Profile() {
      The count is only asked for by someone who can act on it, and a failed
      count renders the entry point without a number rather than taking the
      profile page down with it. */
-  const moderates = isModerator(profile);
+  const moderates = isModerator(viewer);
   let pending = null;
   if (moderates) {
     const { count, error } = await supabase

@@ -104,7 +104,7 @@ export default function EditMember({ member, canRemove = false, canRoster = fals
               <label className={`${checkline} rounded-[8px] border border-edge bg-band px-4 py-3`}>
                 <input type="checkbox" name="is_alumni" defaultChecked={!!member.is_alumni}
                        className="h-4 w-4 accent-[#2F5FA8]" />
-                <span>Graduated — show as Alumni in the directory</span>
+                <span>Graduated, so show as Alumni in the directory</span>
               </label>
 
               <FormMessage error={state?.error} ok={state?.ok && 'Saved.'} />
@@ -134,7 +134,7 @@ export default function EditMember({ member, canRemove = false, canRoster = fals
                     <p className="text-[0.95rem] leading-relaxed text-body">
                       {canRemove
                         ? `${member.display_name || 'This member'} will be signed out, removed from every directory, and unable to sign back in. Their posts and answers stay, with their name on them. An admin can undo this by setting their status back to approved.`
-                        : `${member.display_name || 'This member'} stays on the platform and keeps their account — they just come off this club’s roster.`}
+                        : `${member.display_name || 'This member'} stays on the platform and keeps their account. They just come off this club’s roster.`}
                     </p>
 
                     {removeState?.error && (
