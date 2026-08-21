@@ -18,34 +18,69 @@ Needs Postgres 16 locally.
 ./run.sh
 ```
 
-Expected: tests 1, 3, 4, 6, 8, 10, 16, 20, 22 fail loudly (that IS the pass —
-those are the operations that must be refused); the rest succeed. Read the
-output; there's no assertion harness.
+`run.sh` applies every migration to a throwaway database and then runs each
+`NN_*.sql` in order. There is no assertion harness: read the output. A test
+whose title starts with **MUST FAIL** passes by printing a loud `ERROR` — those
+are the operations the schema has to refuse. Everything else passes by printing
+a row.
+
+One category needs saying out loud, because it looks like a failure and is not:
+an `UPDATE` or `INSERT` that no policy matches is **filtered to zero rows**, not
+raised on. `UPDATE 0` followed by an unchanged row is a pass. A refusal only
+raises when a trigger raises it.
 
 ## What's covered
 
+### 01_rls.sql
+
+Roles, anonymity, moderation, and the account-level policies. Seventy tests.
+Four of them changed meaning in `20260822000015`, when signup reopened to any
+address and the account-level approval queue stopped deciding anything:
+
+| # | Now checks |
+|---|---|
+| 1 | **Any** address can sign up, and gets a live account with no chapter |
+| 2 | A `.edu` signup is provisioned exactly like any other, with no school resolved |
+| 17, 18 | A recognised school domain buys no chapter access; an unrecognised one is treated identically |
+| 20, 21, 22, 23 | An unaffiliated user reads the open surfaces and can ask a question, and is on nobody's roster |
+| 33 | The account-level queue no longer decides anything. The queue that does is in `02` |
+| 61 | `profiles.email` is refused outright. It was not, before `0015` — see below |
+
+### 02_membership.sql
+
+The membership model: 1:1 universities and clubs, the club-scoped approval
+queue, the roster audit, dues, and the referral fast-track. Thirty-six tests.
+
+The two groups worth reading first are the ones the brief singles out as the
+places a bug leaks data across chapters:
+
 | # | Behaviour |
-|---|-----------|
-| 1 | A non-.edu address cannot become a user |
-| 2 | A .edu signup provisions a profile and resolves its school (including subdomains) |
-| 3 | A member cannot promote themselves |
-| 4 | A member cannot reassign their own club |
-| 5 | A member can edit their own display name |
-| 6 | A member cannot edit anyone else's profile |
-| 7 | A member can post, named or anonymously |
-| 8 | A member cannot post as someone else |
-| 9 | The feed nulls the author of an anonymous post |
-| 10 | A member cannot answer a question |
-| 11 | An advisor can answer |
-| 12 | An admin can change a role |
-| 13 | Members cannot read raw `posts` — only the anonymised view |
-| 14 | An allowlisted non-.edu address can sign up, with no school, as `member` |
-| 15 | A non-.edu address not on the list signs up **pending** |
-| 16 | A member can neither read nor write the allowlist |
-| 17 | A .edu at a known school is approved automatically |
-| 18 | A .edu at an unknown school lands in the queue |
-| 19 | A pre-vetted staff address is approved on the spot |
-| 20 | A pending user cannot approve themselves |
-| 21 | A pending user cannot read the board, but can see their own row |
-| 22 | A pending user cannot post |
-| 23 | An admin can approve, and the board then opens up |
+|---|---|
+| 1, 2 | A university has exactly one club, and one person has one membership per university |
+| 4–9 | **Club scoping.** A Pitt lead sees only Pitt's queue, is refused Purdue's, cannot decide a Purdue application through the RPC or by writing the row, and approving records who verified and how |
+| 10–14 | The group-chat handle is refused to a member; nobody approves or verifies themselves; an applicant may correct their own answers while pending |
+| 15–19 | **The roster audit.** An org admin and a coaching advisor with no student membership are on zero rosters and in no headcount; an admin who *is* a student appears as a member |
+| 20, 21 | Verified and dues-paid are independent, and dues are not readable by a clubmate |
+| 22–25b | Referral fast-track: discovery, two vouches is not three, a stranger's vouch is refused, the third auto-approves and tells the lead |
+| 26–30 | A lead names co-leads but not leads, not at another chapter, and cannot step themselves down; the single-approver warning |
+| 31, 32 | Escalation past 72 hours fires once; the digest is one row per club per day |
+| 33–35 | The profile popup's projection carries no email, no dues, no handle, no legal name |
+
+## A trap worth knowing about
+
+`restrict_columns()` in `20260822000015` takes away `authenticated`'s
+table-level `SELECT` and hands back an explicit column list. That is the only
+mechanism that actually hides a column: a bare `revoke select (col)` is a
+**no-op** against a table-level grant, which is why `profiles.email` was
+readable by every signed-in member from `0014` until `0015`, and why the test
+meant to catch it passed for an unrelated reason.
+
+Two consequences:
+
+- `select *` on `profiles` or `club_memberships` as `authenticated` is now
+  `permission denied`. Name the columns. PostgREST does this already; the two
+  `select('*', { head: true })` counts in the app did not, and were changed.
+- Both test files re-apply `restrict_columns()` after their blanket
+  `grant all on all tables`, which stands in for Supabase's own. Without that
+  line the grant hands the columns straight back and the tests check
+  themselves rather than the schema.

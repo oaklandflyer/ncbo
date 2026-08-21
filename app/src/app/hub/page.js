@@ -44,9 +44,9 @@ export default async function Hub() {
       : Promise.resolve({ count: 0 }),
     canReview(profile)
       ? (scope.kind === 'school'
-          ? supabase.from('profiles').select('*', { count: 'exact', head: true })
+          ? supabase.from('profiles').select('id', { count: 'exact', head: true })
               .eq('status', 'pending').eq('school_id', scope.schoolId)
-          : supabase.from('profiles').select('*', { count: 'exact', head: true })
+          : supabase.from('profiles').select('id', { count: 'exact', head: true })
               .eq('status', 'pending'))
       : Promise.resolve({ count: 0 }),
   ]);

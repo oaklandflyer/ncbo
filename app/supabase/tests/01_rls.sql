@@ -3,14 +3,36 @@ grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 grant execute on all functions in schema public to anon, authenticated;
 
+-- The blanket grant above stands in for Supabase's own, and it hands back the
+-- table-level SELECT that `restrict_columns()` takes away. Re-apply it, or the
+-- email test below would be checking this line instead of the schema.
+select public.restrict_columns('public.profiles', array['email']);
+select public.restrict_columns('public.club_memberships',
+  array['legal_name', 'group_chat_handle', 'group_chat_platform',
+        'found_via', 'student_id_photo_path', 'decision_note']);
+
 \set ON_ERROR_STOP 0
 \pset pager off
 
-\echo '=== 1. non-.edu signup is rejected ==='
-insert into auth.users (email) values ('someone@gmail.com');
+\echo '=== 1. ANY address can sign up, and gets a live account with no chapter ==='
+-- 0015 reversed 0001 here. A school address is no longer proof of anything:
+-- students do not maintain a password on an inbox they never read, so the
+-- address became a barrier to the people it was meant to admit. Verification
+-- moved to a club lead, and this is the check that the door is open.
+insert into auth.users (id, email) values
+  ('0e000000-0000-0000-0000-00000000000e', 'someone@gmail.com');
+select status as account_is_live,
+       (school_id is null) as no_school_assigned,
+       (club_id is null)   as no_club_assigned
+  from profiles where id = '0e000000-0000-0000-0000-00000000000e';
+select count(*) as memberships_created_by_signup
+  from club_memberships where user_id = '0e000000-0000-0000-0000-00000000000e';
 
 \echo ''
-\echo '=== 2. .edu signup provisions a profile and maps the school ==='
+\echo '=== 2. a .edu signup is provisioned exactly like any other ==='
+-- No school is resolved from the domain any more. The `school` column below
+-- is null for all four on purpose: affiliation now comes from a membership a
+-- lead granted, never from the right-hand side of an @.
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'alex@pitt.edu'),
   ('22222222-2222-2222-2222-222222222222', 'dana@cs.pitt.edu'),
@@ -99,9 +121,14 @@ select p.display_name, p.role, s.name as school
  where p.id = '55555555-5555-5555-5555-555555555555';
 
 \echo ''
-\echo '=== 15. a non-.edu address NOT on the allowlist signs up PENDING ==='
+\echo '=== 15. an address not on the allowlist signs up live, and unaffiliated ==='
+-- The allowlist is vestigial after 0015: it used to be the only way past the
+-- .edu rule, and there is no .edu rule left. It is kept because it costs
+-- nothing and admins may still have entries in it.
 insert into auth.users (id, email) values ('99999999-9999-9999-9999-999999999999', 'randomer@gmail.com');
 select display_name, status from profiles where id = '99999999-9999-9999-9999-999999999999';
+select count(*) as memberships from club_memberships
+ where user_id = '99999999-9999-9999-9999-999999999999';
 
 \echo ''
 \echo '=== 16. a member CANNOT read or write the allowlist ==='
@@ -112,14 +139,21 @@ insert into allowed_emails (email) values ('me@gmail.com');
 reset role;
 
 \echo ''
-\echo '=== 17. .edu at a KNOWN school is approved automatically ==='
+\echo '=== 17. a recognised school domain buys NO chapter access ==='
+-- This is the point of the reframe, stated as a test. psu.edu is a school
+-- NCBO runs a chapter at, and a psu.edu signup still lands with no school,
+-- no club and no membership. Only a lead grants those.
 reset role;
 insert into auth.users (id, email) values ('66666666-6666-6666-6666-666666666666', 'newkid@psu.edu');
 select display_name, status, (school_id is not null) as school_linked
   from profiles where id = '66666666-6666-6666-6666-666666666666';
+select count(*) as memberships from club_memberships
+ where user_id = '66666666-6666-6666-6666-666666666666';
 
 \echo ''
-\echo '=== 18. .edu at an UNKNOWN school lands in the queue ==='
+\echo '=== 18. an unrecognised school domain is treated identically ==='
+-- Same result as 17, which is the honest outcome: the database has no opinion
+-- about either address, so it does not pretend to.
 insert into auth.users (id, email) values ('77777777-7777-7777-7777-777777777777', 'student@ohio-state.edu');
 select display_name, status, (school_id is not null) as school_linked
   from profiles where id = '77777777-7777-7777-7777-777777777777';
@@ -131,28 +165,29 @@ insert into auth.users (id, email) values ('88888888-8888-8888-8888-888888888888
 select display_name, status from profiles where id = '88888888-8888-8888-8888-888888888888';
 
 \echo ''
-\echo '=== 20. a pending user CANNOT approve themselves ==='
+\echo '=== 20. nobody can hand themselves an account status ==='
 set role authenticated;
 set test.uid = '77777777-7777-7777-7777-777777777777';
 update profiles set status = 'approved' where id = '77777777-7777-7777-7777-777777777777';
 
 \echo ''
-\echo '=== 21. a pending user CANNOT read the board, but CAN see their own row ==='
-select count(*) as channels_visible_to_pending from channels;
-select count(*) as posts_visible_to_pending from post_feed;
+\echo '=== 21. an unaffiliated user CAN read the open surfaces ==='
+-- Deliberately open, and this is the test that says so. Gating the whole app
+-- behind verification kills signup conversion, so browsing, the calendar, Q&A
+-- and club discovery are open to anybody with an account. What verification
+-- gates is chapter membership, and that is tested in 02_membership.sql.
+select count(*) as channels_visible from channels;
+select count(*) > 0 as clubs_discoverable from club_directory;
 select status as own_status_visible from profiles where id = '77777777-7777-7777-7777-777777777777';
 
 \echo ''
-\echo '=== 22. a pending user CANNOT post ==='
-insert into questions (author_id, body) values ('77777777-7777-7777-7777-777777777777', 'let me in');
+\echo '=== 22. an unaffiliated user CAN ask a question ==='
+insert into questions (author_id, body) values ('77777777-7777-7777-7777-777777777777', 'how do I find a club');
 
 \echo ''
-\echo '=== 23. an admin CAN approve them, and then the board opens up ==='
-set test.uid = '44444444-4444-4444-4444-444444444444';
-update profiles set status = 'approved', approved_at = now(), approved_by = auth.uid()
-  where id = '77777777-7777-7777-7777-777777777777';
-set test.uid = '77777777-7777-7777-7777-777777777777';
-select count(*) as channels_visible_after_approval from channels;
+\echo '=== 23. but they are on NOBODY''s roster ==='
+select count(*) as rosters_containing_them
+  from club_memberships where user_id = '77777777-7777-7777-7777-777777777777';
 reset role;
 
 \echo ''
@@ -172,13 +207,15 @@ update profiles
    set full_name = 'Sam Rivera', display_name = 'Sam', class_year = 'Junior',
        major = 'Kinesiology', lifting_experience = '3–5 years', is_adult = true
  where id = '77777777-7777-7777-7777-777777777777';
-select is_onboarded(p) as onboarded_after_the_form
-  from profiles p where id = '77777777-7777-7777-7777-777777777777';
+-- The by-id overload, not `is_onboarded(p)`: a whole-row reference needs
+-- SELECT on every column of the table, and `email` is held back from
+-- `authenticated` by `restrict_columns()`.
+select is_onboarded('77777777-7777-7777-7777-777777777777'::uuid) as onboarded_after_the_form;
 
 \echo ''
 \echo '=== 26. an unfinished profile does NOT count as onboarded ==='
-select is_onboarded(p) as onboarded_with_no_form_filled_in
-  from profiles p where id = '55555555-5555-5555-5555-555555555555';
+select is_onboarded('55555555-5555-5555-5555-555555555555'::uuid)
+         as onboarded_with_no_form_filled_in;
 
 \echo ''
 \echo '=== 27. nobody can make the 18+ attestation for someone else ==='
@@ -238,7 +275,13 @@ update profiles set status = 'pending', approved_at = null
               'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
 \echo ''
-\echo '=== 33. a club lead CAN approve a pending account at their own school ==='
+\echo '=== 33. the account-level approval queue no longer decides anything ==='
+-- Kept, retitled, and its expectation corrected. This queue was already dead
+-- before 0015: the lead here leads no club, so `my_led_clubs()` is empty and
+-- the write was refused (UPDATE 0) on the baseline too. 0015 finished the job
+-- by making the account status stop meaning "waiting to be let in" at all.
+-- The queue that does decide something is club-scoped and lives in
+-- 02_membership.sql, tests 4 through 9.
 set role authenticated;
 set test.uid = '11111111-1111-1111-1111-111111111111';   -- alex@pitt.edu, club_lead
 update profiles set status = 'approved', approved_at = now(), approved_by = auth.uid()
@@ -499,7 +542,7 @@ select logo_path as after_advisor_write from site_settings;
 reset role;
 
 \echo ''
-\echo '=== 61. email is NOT selectable by a member, through any path ==='
+\echo '=== 61. MUST FAIL: email is NOT selectable by a member, through any path ==='
 set role authenticated;
 set test.uid = '22222222-2222-2222-2222-222222222222';
 -- Column privilege, not RLS: this is a hard refusal, not an empty result.
@@ -512,7 +555,7 @@ select * from get_admin_members();
 select * from get_club_roster((select id from clubs limit 1));
 
 \echo ''
-\echo '=== 63. leadership is club-scoped: two clubs, one lead ==='
+\echo '=== 63. leadership is club-scoped: two clubs at two schools, one lead ==='
 -- `reset role` alone is not enough: auth.uid() reads a GUC, so the privilege
 -- guard still saw a member and refused the fixture writes.
 reset role;
@@ -521,10 +564,11 @@ insert into auth.users (id, email) values
   ('dddd0000-0000-0000-0000-00000000000d', 'leadA@pitt.edu'),
   ('eeee0000-0000-0000-0000-00000000000e', 'memberA@pitt.edu'),
   ('ffff0000-0000-0000-0000-00000000000f', 'memberB@pitt.edu');
--- A second club at the SAME school, so only club scope can tell them apart.
-insert into clubs (school_id, name, status)
-select id, 'Second Pitt Club', 'Active' from schools where domain = 'pitt.edu';
-
+-- Two clubs at two DIFFERENT universities. Before 0015 this fixture built a
+-- second club at Pitt, which the 1:1 unique index now forbids outright: a
+-- university has exactly one club, so the only way two clubs can exist is at
+-- two schools. That makes this the acceptance case from 2.2 as well as a
+-- scoping test, since Purdue is somebody else's chapter.
 update profiles set role = 'club_lead', status = 'approved',
        club_id = (select id from clubs where name = 'Fitness and Bodybuilding Club')
  where id = 'dddd0000-0000-0000-0000-00000000000d';
@@ -532,7 +576,7 @@ update profiles set status = 'approved',
        club_id = (select id from clubs where name = 'Fitness and Bodybuilding Club')
  where id = 'eeee0000-0000-0000-0000-00000000000e';
 update profiles set status = 'approved',
-       club_id = (select id from clubs where name = 'Second Pitt Club')
+       club_id = (select id from clubs where name = 'Purdue Bodybuilding Club')
  where id = 'ffff0000-0000-0000-0000-00000000000f';
 
 insert into club_leads (club_id, name, profile_id, ordinal)
@@ -548,7 +592,7 @@ select leads_club_of('eeee0000-0000-0000-0000-00000000000e') as leads_own_club_m
 select leads_club_of('ffff0000-0000-0000-0000-00000000000f') as leads_other_club_member;
 
 \echo ''
-\echo '=== 64. a lead CAN edit their own club''s member, NOT the other club''s ==='
+\echo '=== 64. a lead CAN edit their own club''s member, NOT another chapter''s ==='
 update profiles set division = 'Bikini' where id = 'eeee0000-0000-0000-0000-00000000000e';
 select division as own_club_edited from profiles where id = 'eeee0000-0000-0000-0000-00000000000e';
 update profiles set division = 'Should not stick' where id = 'ffff0000-0000-0000-0000-00000000000f';
@@ -556,10 +600,10 @@ select coalesce(division, 'untouched') as other_club_untouched
   from profiles where id = 'ffff0000-0000-0000-0000-00000000000f';
 
 \echo ''
-\echo '=== 65. a lead CAN read their own club''s emails, NOT the other club''s ==='
+\echo '=== 65. a lead CAN read their own club''s emails, NOT another chapter''s ==='
 select count(*) as own_roster_rows
   from get_club_roster((select id from clubs where name = 'Fitness and Bodybuilding Club'));
-select count(*) from get_club_roster((select id from clubs where name = 'Second Pitt Club'));
+select count(*) from get_club_roster((select id from clubs where name = 'Purdue Bodybuilding Club'));
 
 \echo ''
 \echo '=== 66. a lead CANNOT promote themselves to admin or remove an account ==='

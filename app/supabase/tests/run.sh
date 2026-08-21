@@ -32,4 +32,8 @@ for m in $(ls "$HERE"/../migrations/*.sql | sort); do
   echo "applying $(basename "$m")"
   psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -q -v ON_ERROR_STOP=1 -f "$m"
 done
-psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -f "$HERE/01_rls.sql"
+for t in "$HERE"/[0-9][0-9]_*.sql; do
+  case "$(basename "$t")" in 00_*) continue ;; esac
+  echo ""; echo "### $(basename "$t")"
+  psql -h "$DIR" -p 5433 -U "$(whoami)" -d "$PSQL_DB" -f "$t"
+done
