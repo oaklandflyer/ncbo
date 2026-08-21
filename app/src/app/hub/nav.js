@@ -93,7 +93,12 @@ function Standing({ role, school }) {
     .trim()
     .split(/\s+/)[0];
 
-  const label = [role.replace('_', ' '), shortSchool].filter(Boolean).join(' · ');
+  /* `role` has a default and a NOT NULL, so this cannot be null today. It is
+     coerced anyway because a nav bar is on every single page: if a later
+     migration ever relaxes that column, the failure is the entire app rather
+     than one screen, and that is too much to wager on a constraint holding. */
+  const label = [String(role || 'member').replace('_', ' '), shortSchool]
+    .filter(Boolean).join(' · ');
 
   return (
     <span className="truncate font-display text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-meta">
