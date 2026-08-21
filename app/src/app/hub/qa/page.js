@@ -155,7 +155,7 @@ export default async function QA() {
 
       <Section>
         <SectionTitle count={open > 0 ? `${open} open` : null}>Questions</SectionTitle>
-        <Board questions={rows} channels={channels || []} />
+        <Board questions={rows} channels={channels || []} canModerate={moderates} />
       </Section>
 
       {mine?.length > 0 && (
