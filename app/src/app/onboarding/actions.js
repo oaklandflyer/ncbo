@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { CLASS_YEARS, EXPERIENCE, GRAD_YEARS, CHAT_PLATFORMS, FOUND_VIA } from './options';
+import { EXPERIENCE_PHASES } from '@/lib/membership';
 
 /**
  * Save the onboarding form, and apply to a chapter if there is one.
@@ -43,6 +44,7 @@ export async function saveOnboarding(prev, formData) {
   const chatHandle = text('group_chat_handle', 120);
   const foundVia = text('found_via', 120);
   const referredBy = text('referred_by_user_id', 64);
+  const phase = text('experience_phase', 40);
   const isAdult = formData.get('is_adult') === 'on';
 
   if (!fullName) return { error: 'We need your name.', focus: 'full_name' };
@@ -55,6 +57,9 @@ export async function saveOnboarding(prev, formData) {
   if (!experience) return { error: 'Pick how long you have been training.', focus: 'lifting_experience' };
   if (!EXPERIENCE.includes(experience)) return { error: 'Pick an option from the list.', focus: 'lifting_experience' };
   if (!major) return { error: 'Tell us what you study.', focus: 'major' };
+  if (phase && !EXPERIENCE_PHASES.some((p) => p.value === phase)) {
+    return { error: 'Pick one of the three from the list.', focus: 'experience_phase' };
+  }
   if (chatPlatform && !CHAT_PLATFORMS.includes(chatPlatform)) {
     return { error: 'Pick a group chat from the list.', focus: 'group_chat_platform' };
   }
@@ -76,6 +81,7 @@ export async function saveOnboarding(prev, formData) {
       class_year: classYear,
       lifting_experience: experience,
       major,
+      experience_phase: phase || null,
       is_adult: true,
     })
     .eq('id', user.id);

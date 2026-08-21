@@ -168,10 +168,35 @@ function ProfileModal({ state, onClose, closeRef }) {
               />
             </dl>
 
-            {/* Competition history has no table yet. Rather than an empty
-                panel that implies the feature exists and this person has done
-                nothing, the section is absent until there is something in it.
-                See the PR for what the standings table would need. */}
+            {/* Absent rather than empty when there is nothing to show: a
+                "no results" panel implies this person tried and did not
+                place, which is a different claim from having not competed. */}
+            {state.history?.length > 0 && (
+              <div className="mt-5 border-t border-edge pt-5">
+                <p className="font-display text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-meta">
+                  Competition history
+                </p>
+                <ul className="mt-3 grid list-none gap-2">
+                  {state.history.slice(0, 5).map((h, i) => (
+                    <li key={`${h.competition_name}-${i}`} className="flex items-baseline justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate text-[0.95rem] text-ink">
+                          {h.competition_name}
+                        </span>
+                        <span className="block text-[0.82rem] text-meta">
+                          {new Date(`${h.starts_on}T12:00:00`).getFullYear()}
+                          {h.division ? ` · ${h.division}` : ''}
+                          {h.federation ? ` · ${h.federation}` : ''}
+                        </span>
+                      </span>
+                      <span className="shrink-0 font-display text-[0.9rem] font-bold text-ink">
+                        {h.is_overall ? 'Overall' : h.placement ? `${h.placement}` : 'Competed'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
               <Link

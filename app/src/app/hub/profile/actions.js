@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { EXPERIENCE_PHASES } from '@/lib/membership';
 
 /** Instagram and TikTok both allow letters, digits, dot and underscore. */
 const HANDLE = /^[A-Za-z0-9._]+$/;
@@ -38,7 +39,12 @@ export async function saveProfile(prev, formData) {
   }
 
   const home_region = String(formData.get('home_region') || '').trim() || null;
+  const experience_phase = String(formData.get('experience_phase') || '').trim() || null;
   const division = String(formData.get('division') || '').trim() || null;
+
+  if (experience_phase && !EXPERIENCE_PHASES.some((p) => p.value === experience_phase)) {
+    return { error: 'Pick one of the three.' };
+  }
 
   if (home_region && home_region.length > 80) {
     return { error: 'Keep the region short, like "Greater Pittsburgh, PA".' };
@@ -57,7 +63,7 @@ export async function saveProfile(prev, formData) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      home_region, division, instagram_handle, tiktok_handle,
+      home_region, division, instagram_handle, tiktok_handle, experience_phase,
       is_alumni: isAlumni, alumni_since,
     })
     .eq('id', user.id);
