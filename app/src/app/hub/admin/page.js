@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient, getProfile } from '@/lib/supabase/server';
-import { canReview, canManageRoles, reviewScope } from '@/lib/review';
-import { Page, PageHero, Section, SectionTitle, Empty, Card, Meta, Badge, AlumniBadge } from '@/app/ui';
+import { getViewerContext } from '@/lib/viewer';
+import { Page, PageHero, Section, SectionTitle, Empty, Card, Meta, Badge, AlumniBadge, btnGhost, btnSmall } from '@/app/ui';
 import { publicBase } from '@/lib/branding';
 import MemberRow from './member-row';
 import PendingRow from './pending-row';
@@ -10,12 +11,21 @@ import Branding from './branding';
 
 export default async function Admin() {
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
   if (!profile) redirect('/login');
-  if (!canReview(profile)) redirect('/hub');
 
-  const scope = reviewScope(profile);
-  const manages = canManageRoles(profile);
+  /* Admins run the organisation; club leads work their school's applications.
+     Scope comes from the clubs they lead, not from their own `school_id` —
+     which is exactly the value that was null and locked leads out. */
+  const manages = viewer.isAdmin;
+  const scope = viewer.isAdmin
+    ? { kind: 'global' }
+    : viewer.isClubLead
+      ? { kind: 'school', schoolIds: viewer.ledSchoolIds }
+      : { kind: 'none' };
+
+  if (scope.kind === 'none') redirect('/hub');
 
   // A club lead's queue is their own school. The `.eq` is what shapes the
   // page; the policy is what makes it true — a lead who removed the filter by
@@ -24,31 +34,20 @@ export default async function Admin() {
     .select('id, display_name, schools(name), created_at')
     .eq('status', 'pending')
     .order('created_at');
-  if (scope.kind === 'school') pendingQuery = pendingQuery.eq('school_id', scope.schoolId);
+  if (scope.kind === 'school') pendingQuery = pendingQuery.in('school_id', scope.schoolIds);
 
-  /* A club lead's roster: the approved members of their own school. This is
-     the dashboard half of the portal — the queue above is only the people
-     still knocking. Admins get the full member table further down instead. */
-  const rosterQuery = scope.kind === 'school'
-    ? supabase.from('profiles')
-        .select('id, display_name, role, division, home_region, club_id, is_alumni, alumni_since, instagram_handle, tiktok_handle, schools(name), clubs(name)')
-        .eq('status', 'approved')
-        .eq('school_id', scope.schoolId)
-        .order('display_name')
-    : Promise.resolve({ data: null });
-
-  const [{ data: members }, { data: clubs }, { data: waiting }, { data: roster }, { data: settings }] = await Promise.all([
+  const [{ data: members }, { data: clubs }, { data: waiting }, { data: settings }] = await Promise.all([
     manages
       ? supabase.from('profiles')
           .select('id, display_name, role, club_id, division, home_region, is_alumni, alumni_since, instagram_handle, tiktok_handle, schools(name)')
           .eq('status', 'approved')
+          .is('deleted_at', null)
           .order('display_name')
       : Promise.resolve({ data: null }),
     manages
       ? supabase.from('clubs').select('id, name, schools(name)').order('name')
       : Promise.resolve({ data: null }),
     pendingQuery,
-    rosterQuery,
     manages
       ? supabase.from('site_settings').select('logo_path, hero_path').eq('id', true).single()
       : Promise.resolve({ data: null }),
@@ -101,48 +100,21 @@ export default async function Admin() {
         )}
       </Section>
 
-      {scope.kind === 'school' && (
+      {viewer.isClubLead && (
         <Section band>
-          <SectionTitle count={roster?.length ? `${roster.length}` : null}>
+          <SectionTitle
+            action={
+              <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/roster">
+                Open roster
+              </Link>
+            }
+          >
             Your roster
           </SectionTitle>
-          <p className="mb-6 max-w-[620px] text-[0.98rem] text-body">
-            Everyone approved at your school. You can correct their details and mark
-            graduates as alumni — they keep their account either way. Roles and club
-            assignments are set by an NCBO admin.
+          <p className="max-w-[620px] text-[0.98rem] text-body">
+            Your club’s members, their email addresses, and the controls to keep the roster
+            current — on its own page, so it has room for them.
           </p>
-
-          {roster?.length ? (
-            <ul className="grid list-none gap-3">
-              {roster.map((m) => (
-                <li key={m.id}>
-                  <Card className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-5">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <span className="font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink">
-                          {m.display_name}
-                        </span>
-                        {m.role !== 'member' && (
-                          <Badge tone="active">{m.role.replace('_', ' ')}</Badge>
-                        )}
-                        {m.is_alumni && <AlumniBadge since={m.alumni_since} />}
-                      </div>
-                      <Meta className="mt-2">
-                        {m.clubs?.name && <span>{m.clubs.name}</span>}
-                        {m.clubs?.name && m.division && (
-                          <span aria-hidden className="text-fine">·</span>
-                        )}
-                        {m.division && <span>{m.division}</span>}
-                      </Meta>
-                    </div>
-                    <EditMember member={m} canRoster />
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Empty>Nobody is on your roster yet.</Empty>
-          )}
         </Section>
       )}
 
@@ -172,6 +144,24 @@ export default async function Admin() {
               </tbody>
             </table>
           </div>
+        </Section>
+      )}
+
+      {manages && (
+        <Section>
+          <SectionTitle
+            action={
+              <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/admin/users">
+                Open member admin
+              </Link>
+            }
+          >
+            Members &amp; accounts
+          </SectionTitle>
+          <p className="max-w-[620px] text-[0.98rem] text-body">
+            Search every account, edit any profile, and close or restore an account — with
+            email addresses, which live behind an admin-only reader.
+          </p>
         </Section>
       )}
 

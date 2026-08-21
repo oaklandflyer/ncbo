@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient, getProfile } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { getViewerContext } from '@/lib/viewer';
+import Remove from '../remove';
 import { Page, PageHero, Section, SectionTitle, Card, Empty, Badge, Meta, BackLink, VettedSeal, Credentials } from '@/app/ui';
 import AnswerForm from '../answer';
 import Moderate from '../moderate';
@@ -8,7 +10,8 @@ import Moderate from '../moderate';
 export default async function Question({ params }) {
   const { id } = await params;
   const supabase = await createClient();
-  const profile = await getProfile(supabase);
+  const viewer = await getViewerContext(supabase);
+  const profile = viewer.profile;
 
   /* The view hands a member only approved rows, so an unapproved question is
      genuinely not found for everyone except a moderator — no separate guard to
@@ -26,7 +29,7 @@ export default async function Question({ params }) {
     .eq('question_id', id)
     .order('created_at');
 
-  const canAnswer = profile.role === 'advisor' || profile.role === 'admin';
+  const canAnswer = viewer.canModerateContent;
   const count = answers?.length || 0;
 
   return (

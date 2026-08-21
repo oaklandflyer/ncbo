@@ -32,13 +32,14 @@ const ICONS = {
   profile: 'M12 12.4a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4ZM4.8 20.2c.6-3.3 3.6-5.2 7.2-5.2s6.6 1.9 7.2 5.2',
   review: 'm12 3 7.4 2.9v5.3c0 4.2-3 7.5-7.4 9.3-4.4-1.8-7.4-5.1-7.4-9.3V5.9L12 3Z',
   vault: 'M5 5.5h9.5l4.5 4.5v8.5H5v-13Zm0 4.7h14M9.5 5.5v4.7',
+  roster: 'M4 6.5h16M4 12h16M4 17.5h16M8 4.5v15',
 };
 
 /* Review is deliberately not a sixth tab: six across a 390px screen leaves
    each one narrower than a fingertip. Moderators reach the queue from their
    Profile tab, and `pendingCount` puts a badge on that tab's icon so they can
    see something is waiting without a destination being spent on it. */
-export default function TabBar({ pendingCount = 0 }) {
+export default function TabBar({ pendingCount = 0, isClubLead = false }) {
   const pathname = usePathname() || '';
 
   const tabs = [
@@ -48,7 +49,7 @@ export default function TabBar({ pendingCount = 0 }) {
        segmented control, and six tabs across a 390px screen leaves each one
        narrower than a fingertip. */
     ['/hub/qa', 'Q&A', 'qa'],
-    ['/hub/resources', 'Vault', 'vault'],
+    ...(isClubLead ? [['/hub/roster', 'Roster', 'roster']] : [['/hub/resources', 'Vault', 'vault']]),
     ['/hub/profile', 'Profile', 'profile'],
   ];
 

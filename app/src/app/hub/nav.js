@@ -101,10 +101,16 @@ function Standing({ role, school }) {
   );
 }
 
-export default function HubNav({ canReview, manages, school, role = 'member', name = '', logo = '/ncbo-crest.webp' }) {
+export default function HubNav({ canReview, manages, isClubLead = false, school, role = 'member', name = '', logo = '/ncbo-crest.webp' }) {
   const pathname = usePathname() || '';
 
-  const links = canReview ? [...LINKS, ['/hub/admin', manages ? 'Admin' : 'Review']] : LINKS;
+  /* Two different jobs, two different links: a lead runs their club's roster,
+     an admin runs the organisation. Someone who is both gets both. */
+  const links = [
+    ...LINKS,
+    ...(isClubLead ? [['/hub/roster', 'Roster']] : []),
+    ...(canReview ? [['/hub/admin', manages ? 'Admin' : 'Review']] : []),
+  ];
   const isCurrent = (href) => (href === '/hub' ? pathname === '/hub' : pathname.startsWith(href));
 
   /* Initials, not a photo: there is no avatar upload in the schema, and a
