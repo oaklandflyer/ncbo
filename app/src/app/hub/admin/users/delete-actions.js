@@ -71,8 +71,18 @@ async function runHardDelete(formData) {
 
   /* Read the caller's role from the database rather than from a viewer object
      assembled earlier in the request, and never from the form. */
+  /* No `email` in this projection, and that is not an oversight.
+     `profiles.email` is on the SELECT deny list (`restrict_columns` in
+     migration 0015), so asking for it through the caller's own session fails
+     the WHOLE statement with `42501 permission denied for table profiles` —
+     not a null column, a dead query. That is what made permanent deletion
+     refuse for every admin who tried it.
+
+     The address is not lost: `getUser()` already returned it from
+     `auth.users`, which is where it actually lives and which needs no
+     privilege on `profiles` at all. */
   const { data: caller, error: callerError } = await supabase
-    .from('profiles').select('id, role, display_name, email').eq('id', user.id).maybeSingle();
+    .from('profiles').select('id, role, display_name').eq('id', user.id).maybeSingle();
 
   if (callerError) return { error: `Could not read your own profile: ${describeError(callerError)}` };
   if (!caller) return { error: 'Your profile could not be found.' };
@@ -117,7 +127,7 @@ async function runHardDelete(formData) {
 
   const { error: logError } = await admin.from('admin_audit_log').insert({
     actor_user_id: caller.id,
-    actor_email: caller.email,
+    actor_email: user.email || null,
     actor_display: caller.display_name,
     target_user_id: targetId,
     target_email: target.email,
