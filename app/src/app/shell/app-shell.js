@@ -7,6 +7,7 @@ import { resolveClubScope } from '@/lib/scope';
 import AccountStatus from '@/app/hub/status';
 import SchemaError from '@/app/hub/schema-error';
 import Sidebar from './sidebar';
+import { ProfilePopupProvider } from '@/app/hub/profile-popup/popup';
 import TopBar from './top-bar';
 import TabBar from './tab-bar';
 import ScopeSwitcher from './scope-switcher';
@@ -70,7 +71,22 @@ export default async function AppShell({ children, searchParams }) {
   }
 
 
+  /*
+   * The popup provider wraps every signed-in route, and it has to be here
+   * rather than on the pages that use it.
+   *
+   * `UserChip` is rendered by the directory, the roster, both leaderboards,
+   * the Q&A board, the admin table and the hub itself. Mounting the provider
+   * per page means seven places to remember; mounting it once means none. It
+   * was mounted in none of them, so every one of those chips was a button
+   * that did nothing when tapped.
+   *
+   * A Server Component rendering a Client Component around `children` costs
+   * nothing: the children stay server-rendered and only the provider crosses
+   * the boundary.
+   */
   return (
+    <ProfilePopupProvider>
     <div className="relative min-h-screen bg-page font-body text-[17px] leading-relaxed text-ink antialiased">
       <TopBar
         institution={viewer.membership?.shortName || null}
@@ -83,5 +99,6 @@ export default async function AppShell({ children, searchParams }) {
 
       <TabBar tabs={tabs} nav={nav} aggregate={aggregate} scopeSwitcher={switcher} />
     </div>
+    </ProfilePopupProvider>
   );
 }

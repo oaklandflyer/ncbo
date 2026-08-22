@@ -22,11 +22,20 @@ import { academicLevelLabel } from '@/lib/academicYear';
  */
 const PopupContext = createContext(null);
 
+/**
+ * The opener, or null when there is no provider above.
+ *
+ * It used to return a no-op function instead, and that is precisely how this
+ * feature shipped broken: `ProfilePopupProvider` was mounted nowhere, every
+ * `useProfilePopup()` got the no-op, and every chip in the app rendered as an
+ * underlined button that did nothing at all when tapped. Silent, and in the
+ * one shape that looks like it works.
+ *
+ * Returning null lets `UserChip` render plain text instead, so the same
+ * mistake shows up as a missing affordance rather than a dead one.
+ */
 export function useProfilePopup() {
-  const open = useContext(PopupContext);
-  /* Rendered outside the provider (a route that has not been wrapped yet):
-     the chip stays a plain name rather than throwing. */
-  return open || (() => {});
+  return useContext(PopupContext);
 }
 
 export function ProfilePopupProvider({ children }) {
@@ -253,7 +262,10 @@ function Fact({ label, value }) {
 export function UserChip({ userId, name, className = '', children }) {
   const open = useProfilePopup();
 
-  if (!userId) {
+  /* No id, or no provider above. Either way this is a name, not a control:
+     rendering a button that cannot open anything is worse than rendering
+     text, because it invites a tap that does nothing. */
+  if (!userId || !open) {
     return <span className={className}>{children || name}</span>;
   }
 
