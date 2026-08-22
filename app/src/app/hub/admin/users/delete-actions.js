@@ -4,6 +4,7 @@ import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, hardDeleteAvailable } from '@/lib/supabase/admin';
+import { describeError, isForeignKeyViolation } from '@/lib/errorDetail';
 
 /**
  * Destroy an account permanently.
@@ -31,11 +32,31 @@ import { createAdminClient, hardDeleteAvailable } from '@/lib/supabase/admin';
 const ACTION = 'hard_delete_user';
 
 export async function hardDeleteUser(prev, formData) {
+  /* Everything is wrapped, because an uncaught throw in a Server Action does
+     not reach `useActionState`: React returns a generic error and the panel
+     shows nothing at all. That is how an irreversible operation came to
+     "not work" with no explanation anywhere. Any surprise is reported here
+     with enough detail to act on. */
+  try {
+    return await runHardDelete(formData);
+  } catch (err) {
+    console.error('[ncbo] hard delete threw', {
+      message: err?.message, code: err?.code, stack: err?.stack,
+    });
+    return { error: `Permanent deletion failed: ${describeError(err)}` };
+  }
+}
+
+async function runHardDelete(formData) {
   const targetId = String(formData.get('target_id') || '');
   const confirmation = String(formData.get('confirm_email') || '').trim();
 
   if (!hardDeleteAvailable()) {
-    return { error: 'Permanent deletion is not configured on this deployment.' };
+    return {
+      error: 'SUPABASE_SERVICE_ROLE_KEY is not set on this deployment, so permanent '
+        + 'deletion cannot run. Add it in the Vercel project settings for both Preview '
+        + 'and Production, then redeploy. Nothing was changed.',
+    };
   }
   if (!targetId) return { error: 'No account was named.' };
 
@@ -50,10 +71,16 @@ export async function hardDeleteUser(prev, formData) {
 
   /* Read the caller's role from the database rather than from a viewer object
      assembled earlier in the request, and never from the form. */
-  const { data: caller } = await supabase
+  const { data: caller, error: callerError } = await supabase
     .from('profiles').select('id, role, display_name, email').eq('id', user.id).maybeSingle();
 
-  if (!caller || caller.role !== 'admin') return { error: 'Forbidden.' };
+  if (callerError) return { error: `Could not read your own profile: ${describeError(callerError)}` };
+  if (!caller) return { error: 'Your profile could not be found.' };
+  /* Says which role, because "Forbidden" on a screen only admins can open is
+     a message that tells the reader nothing about what went wrong. */
+  if (caller.role !== 'admin') {
+    return { error: `Only a global admin can delete permanently. Your role is ${caller.role}.` };
+  }
   if (caller.id === targetId) {
     return { error: 'You cannot permanently delete your own account from here.' };
   }
@@ -62,12 +89,13 @@ export async function hardDeleteUser(prev, formData) {
      refused request never holds it. */
   const admin = createAdminClient();
 
-  const { data: target } = await admin
+  const { data: target, error: targetError } = await admin
     .from('profiles')
     .select('id, display_name, email, status, role')
     .eq('id', targetId)
     .maybeSingle();
 
+  if (targetError) return { error: `Could not read that account: ${describeError(targetError)}` };
   if (!target) return { error: 'That account no longer exists.' };
 
   /* Already soft-removed only. Permanent deletion is the second step of a
@@ -101,8 +129,10 @@ export async function hardDeleteUser(prev, formData) {
   /* A deletion with no audit row does not happen. This is the one failure here
      that stops the whole operation. */
   if (logError) {
-    console.error('[ncbo] audit write failed, deletion aborted', { targetId, message: logError.message });
-    return { error: 'The audit log could not be written, so nothing was deleted.' };
+    console.error('[ncbo] audit write failed, deletion aborted', { targetId, error: logError });
+    return {
+      error: `The audit log could not be written, so nothing was deleted: ${describeError(logError)}`,
+    };
   }
 
   await purgeStorage(admin, targetId);
@@ -111,8 +141,18 @@ export async function hardDeleteUser(prev, formData) {
      in place, which is exactly what this operation is not. */
   const { error: deleteError } = await admin.auth.admin.deleteUser(targetId);
   if (deleteError) {
-    console.error('[ncbo] hard delete failed after audit write', { targetId, message: deleteError.message });
-    return { error: `The account was not deleted: ${deleteError.message}. The attempt is in the audit log.` };
+    console.error('[ncbo] hard delete failed after audit write', { targetId, error: deleteError });
+    /* 23503 is a foreign key violation, and it is the one failure here that a
+       code change fixes rather than a retry. Naming it saves the next person
+       the hour it costs to work out that "Database error deleting user" means
+       a table somewhere still points at this row. */
+    const fk = isForeignKeyViolation(deleteError);
+    return {
+      error: fk
+        ? `A table still references this account, so the database refused the delete: ${describeError(deleteError)}. `
+          + 'This needs a migration, not a retry. The attempt is in the audit log.'
+        : `The account was not deleted: ${describeError(deleteError)}. The attempt is in the audit log.`,
+    };
   }
 
   revalidatePath('/hub/admin/users');

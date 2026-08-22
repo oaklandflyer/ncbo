@@ -30,7 +30,11 @@ function HardDelete({ user, onDone }) {
 
   const matches = !!user.email && typed.trim().toLowerCase() === String(user.email).toLowerCase();
 
-  useEffect(() => { if (state?.ok) onDone?.(); }, [state, onDone]);
+  /* Depends on the flag, not on `state` and `onDone`. `onDone` is an inline
+     arrow recreated every render, so the old deps re-ran this on every render
+     and called it repeatedly once the delete had succeeded. */
+  const succeeded = Boolean(state?.ok);
+  useEffect(() => { if (succeeded) onDone?.(); }, [succeeded]);
 
   return (
     <div className="mt-4 w-full rounded-[8px] border border-danger bg-[rgba(180,50,74,0.05)] p-5">
@@ -92,7 +96,9 @@ function HardDelete({ user, onDone }) {
   );
 }
 
-function UserEditor({ user, clubs, schools, isSelf, canHardDelete = false }) {
+function UserEditor({
+  user, clubs, schools, isSelf, canHardDelete = false, hardDeleteConfigured = false,
+}) {
   const [state, action, pending] = useActionState(adminUpdateUser, {});
   const [removeState, removeAction, removing] = useActionState(adminRemoveUser, {});
   const [restoreState, restoreAction, restoring] = useActionState(adminRestoreUser, {});
@@ -122,7 +128,7 @@ function UserEditor({ user, clubs, schools, isSelf, canHardDelete = false }) {
             REMOVED state, and not yourself. Restore sits beside it on purpose,
             so the reversible option is never further away than the
             irreversible one. */}
-        {removed && canHardDelete && !isSelf && (
+        {removed && canHardDelete && !isSelf && hardDeleteConfigured && (
           <button
             type="button"
             onClick={() => setPurging((v) => !v)}
@@ -132,6 +138,19 @@ function UserEditor({ user, clubs, schools, isSelf, canHardDelete = false }) {
           </button>
         )}
       </div>
+
+      {/* The control used to be hidden when the deployment had no service-role
+          key, which meant the feature "did not work" and nothing anywhere said
+          why: an admin looking at a removed account saw no button and no
+          reason for its absence. A disabled control that explains itself is
+          always better than a missing one. */}
+      {removed && canHardDelete && !isSelf && !hardDeleteConfigured && (
+        <p className={`mt-2 w-full ${fineprint}`}>
+          Permanent deletion is unavailable: this deployment has no
+          {' '}<code className="font-mono text-[0.82rem]">SUPABASE_SERVICE_ROLE_KEY</code>.
+          Add it to the Vercel project for Preview and Production, then redeploy.
+        </p>
+      )}
 
       {purging && <HardDelete user={user} onDone={() => setPurging(false)} />}
 
@@ -269,7 +288,9 @@ function UserEditor({ user, clubs, schools, isSelf, canHardDelete = false }) {
   );
 }
 
-export default function UserTable({ users, clubs, schools, viewerId, canHardDelete = false }) {
+export default function UserTable({
+  users, clubs, schools, viewerId, canHardDelete = false, hardDeleteConfigured = false,
+}) {
   const [query, setQuery] = useState('');
   const [role, setRole] = useState('');
   const [club, setClub] = useState('');
@@ -352,6 +373,7 @@ export default function UserTable({ users, clubs, schools, viewerId, canHardDele
                     schools={schools}
                     isSelf={u.id === viewerId}
                     canHardDelete={canHardDelete}
+                    hardDeleteConfigured={hardDeleteConfigured}
                   />
                 </div>
               </Card>
