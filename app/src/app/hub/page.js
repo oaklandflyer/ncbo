@@ -9,6 +9,7 @@ import {
   btnGhost, btnSmall, fineprint,
 } from '@/app/ui';
 import { UserChip } from './profile-popup/popup';
+import Tutorial from './tutorial';
 import {
   UpcomingShows, RankingsPanel, AskPanel, NewJoinersPanel, BeginnerPanel, LeaguePanel,
 } from './home/panels';
@@ -142,6 +143,18 @@ export default async function Hub() {
 
   return (
     <Page>
+      {/* Once per device, and only ever on this page: the dashboard is where
+          somebody lands after signing up, and an overlay that could appear on
+          any route is one that appears at the wrong moment.
+
+          The workout tracker is listed only for the people who can see it, so
+          the tour does not describe a tab that is not there. */}
+      <Tutorial
+        extraSteps={viewer.isAdmin
+          ? [['Workout', 'Log a session set by set. Only you can see it, and it survives a reload.']]
+          : []}
+      />
+
       <PageHero
         eyebrow={chapter || 'NCBO'}
         title={hero.title}

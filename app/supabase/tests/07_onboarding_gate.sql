@@ -28,17 +28,20 @@ insert into auth.users (id, email) values
 
 update public.profiles set
   full_name = 'A Student', display_name = 'Student', lifting_experience = '1-2 years',
-  major = 'Kinesiology', is_adult = true, affiliation = 'student', grad_year = 2028
+  major = 'Kinesiology', home_region = 'Greater Pittsburgh, PA',
+  is_adult = true, affiliation = 'student', grad_year = 2028
  where id = 'e1110000-0000-0000-0000-0000000e1111';
 
 update public.profiles set
   full_name = 'A Coach', display_name = 'Coach', lifting_experience = '5+ years',
-  major = 'n/a', is_adult = true, affiliation = 'affiliate', grad_year = null
+  major = 'n/a', home_region = 'Columbus, OH',
+  is_adult = true, affiliation = 'affiliate', grad_year = null
  where id = 'e2220000-0000-0000-0000-0000000e2222';
 
 update public.profiles set
   full_name = 'Half Way', display_name = 'Half', lifting_experience = '1-2 years',
-  major = 'Physics', is_adult = true, affiliation = null, grad_year = null
+  major = 'Physics', home_region = 'Erie, PA',
+  is_adult = true, affiliation = null, grad_year = null
  where id = 'e3330000-0000-0000-0000-0000000e3333';
 
 \echo '=== 1. a complete student is finished ==='
@@ -100,6 +103,61 @@ update public.profiles set role = 'admin'
    database refuses the direct write that Phase 3 as briefed called for. */
 update public.profiles set school_id = (select id from public.universities limit 1)
  where id = 'e1110000-0000-0000-0000-0000000e1111';
+
+reset role;
+set test.uid = '';
+
+\echo '=== 11. a hometown is required, of students and affiliates alike ==='
+/* home_region has existed since 0001 and the profile editor already called it
+   "Hometown region". Onboarding never asked, so it stayed null until somebody
+   went looking, and the directory groups by it. There is deliberately no
+   second `hometown` column. */
+update public.profiles set home_region = null
+ where id = 'e1110000-0000-0000-0000-0000000e1111';
+select public.is_onboarded('e1110000-0000-0000-0000-0000000e1111'::uuid) as student_no_hometown;
+-- expect f
+
+update public.profiles set home_region = null
+ where id = 'c0000000-0000-0000-0000-00000000c001';
+select public.is_onboarded('e2220000-0000-0000-0000-0000000e2222'::uuid) as affiliate_has_one;
+-- expect t: the affiliate still has theirs
+
+\echo '=== 12. and there is no second hometown column to disagree with it ==='
+select count(*) as duplicate_columns
+  from information_schema.columns
+ where table_schema = 'public' and table_name = 'profiles'
+   and column_name in ('hometown', 'home_town');
+-- expect 0
+
+-- ── ghosts ──────────────────────────────────────────────────────────────────
+\echo '=== 13. a ghost account does NOT appear in the member directory ==='
+/* Supabase creates a profile the instant somebody completes OAuth, and under
+   open signup they are already `approved`. Somebody who signed in with Google
+   and closed the tab was a blank card in the Network tab. */
+insert into auth.users (id, email) values
+  ('e9990000-0000-0000-0000-0000000e9999', 'ghost@example.com');
+
+set role authenticated;
+set test.uid = 'e2220000-0000-0000-0000-0000000e2222';
+select count(*) as ghost_in_directory from public.member_directory
+ where id = 'e9990000-0000-0000-0000-0000000e9999';
+-- expect 0
+
+\echo '=== 14. and a finished member still does ==='
+select count(*) as real_member_in_directory from public.member_directory
+ where id = 'e2220000-0000-0000-0000-0000000e2222';
+-- expect 1
+
+\echo '=== 15. half-finished is still out: the filter is is_onboarded, not "has a name" ==='
+reset role;
+set test.uid = '';
+update public.profiles set full_name = 'Half A Ghost', display_name = 'Half'
+ where id = 'e9990000-0000-0000-0000-0000000e9999';
+set role authenticated;
+set test.uid = 'e2220000-0000-0000-0000-0000000e2222';
+select count(*) as still_hidden from public.member_directory
+ where id = 'e9990000-0000-0000-0000-0000000e9999';
+-- expect 0
 
 reset role;
 set test.uid = '';

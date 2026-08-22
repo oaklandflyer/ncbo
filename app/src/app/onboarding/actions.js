@@ -45,6 +45,7 @@ export async function saveOnboarding(prev, formData) {
   const leadsChapter = choice === 'lead';
   const experience = text('lifting_experience', 40);
   const major = text('major', 120);
+  const homeRegion = text('home_region', 80);
   const universityId = text('university_id', 64);
   const gradYear = text('grad_year', 8);
   const chatPlatform = text('group_chat_platform', 40);
@@ -77,6 +78,11 @@ export async function saveOnboarding(prev, formData) {
   if (!experience) return { error: 'Pick how long you have been training.', focus: 'lifting_experience' };
   if (!EXPERIENCE.includes(experience)) return { error: 'Pick an option from the list.', focus: 'lifting_experience' };
   if (!major) return { error: 'Tell us what you study.', focus: 'major' };
+  /* An area, not an address. Asked here rather than left to the profile
+     editor, where it stayed null until somebody went looking: it is what the
+     directory groups by, and a directory grouped by a field nobody filled in
+     groups everybody under "unknown". */
+  if (!homeRegion) return { error: 'Where are you from?', focus: 'home_region' };
   if (phase && !EXPERIENCE_PHASES.some((p) => p.value === phase)) {
     return { error: 'Pick one of the three from the list.', focus: 'experience_phase' };
   }
@@ -100,6 +106,7 @@ export async function saveOnboarding(prev, formData) {
       display_name: displayName,
       lifting_experience: experience,
       major,
+      home_region: homeRegion,
       experience_phase: phase || null,
       affiliation,
       /* Null for an affiliate rather than absent, so re-answering the question

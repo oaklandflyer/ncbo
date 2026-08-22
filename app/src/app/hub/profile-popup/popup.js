@@ -6,6 +6,7 @@ import { loadPublicProfile } from './actions';
 import { affiliationLabel, badgesFor, clubRoleLabel, phaseLabel } from '@/lib/membership';
 import { Badge, VettedSeal, Credentials, Meta, buttonReset, btnGhost, btnSmall, fineprint } from '@/app/ui';
 import { initials } from '@/lib/monogram';
+import { academicLevelLabel } from '@/lib/academicYear';
 
 /**
  * The profile popup, and the chip that opens it.
@@ -158,7 +159,8 @@ function ProfileModal({ state, onClose, closeRef }) {
             <dl className="mt-5 grid gap-x-5 gap-y-3 border-t border-edge pt-5 sm:grid-cols-2">
               <Fact label="Experience" value={phaseLabel(p.experience_phase)} />
               <Fact label="Division" value={p.division} />
-              <Fact label="Home region" value={p.home_region} />
+              <Fact label="Hometown" value={p.home_region} />
+              <Fact label="Level" value={academicLevelLabel(p.academic_level)} />
               <Fact
                 label="Role at chapter"
                 value={p.club_role ? clubRoleLabel(p.club_role) : null}
