@@ -19,6 +19,7 @@ const student = {
   display_name: 'Drew',
   lifting_experience: '1–2 years',
   major: 'Kinesiology',
+  home_region: 'Greater Pittsburgh, PA',
   affiliation: 'student',
   grad_year: 2027,
 };
@@ -66,7 +67,7 @@ test('the 18+ attestation is required and cannot be faked with a truthy value', 
 });
 
 test('every text field is required, and whitespace is not an answer', () => {
-  for (const key of ['full_name', 'display_name', 'lifting_experience', 'major']) {
+  for (const key of ['full_name', 'display_name', 'lifting_experience', 'major', 'home_region']) {
     assert.equal(isOnboarded({ ...student, [key]: '' }), false, key);
     assert.equal(isOnboarded({ ...student, [key]: '   ' }), false, `${key} whitespace`);
     assert.deepEqual(missingFields({ ...student, [key]: '  ' }), [key]);
@@ -121,4 +122,19 @@ test('the profile query still carries the columns the surfaces render', async ()
   for (const field of ['status', 'role', 'club_id', 'is_alumni', 'academic_level', 'experience_phase']) {
     assert.ok(source.includes(`'${field}'`), `${field} dropped from the profile select`);
   }
+});
+
+test('hometown is required, and is home_region rather than a second column', () => {
+  /* `home_region` has existed since 0001 and the profile editor already
+     labelled it "Hometown region". A second `hometown` column would be two
+     columns holding one fact, which is the trap the audit answers document at
+     §1 for clubs.school_id and clubs.university_id. */
+  assert.equal(isOnboarded({ ...student, home_region: null }), false);
+  assert.deepEqual(missingFields({ ...student, home_region: '' }), ['home_region']);
+  assert.equal(isOnboarded(student), true);
+});
+
+test('an affiliate needs a hometown too', () => {
+  /* Unlike a graduation year: a coach is from somewhere. */
+  assert.equal(isOnboarded({ ...affiliate, home_region: null }), false);
 });

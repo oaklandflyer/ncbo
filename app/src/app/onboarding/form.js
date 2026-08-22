@@ -55,6 +55,7 @@ const FIELD_LABELS = {
   grad_year: 'expected graduation',
   lifting_experience: 'training for',
   major: 'major',
+  home_region: 'your hometown',
   is_adult: 'the 18 or over confirmation',
 };
 
@@ -194,6 +195,20 @@ export default function OnboardingForm({
             <option value="" disabled>Pick one</option>
             {EXPERIENCE.map((e) => <option key={e} value={e}>{e}</option>)}
           </select>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className={fieldLabel} htmlFor="home_region">Hometown<Req /></label>
+          <input
+            id="home_region" name="home_region" type="text" required maxLength={80}
+            placeholder="Greater Pittsburgh, PA"
+            defaultValue={profile?.home_region || ''}
+            className={field}
+          />
+          <p className={`mt-2 ${fineprint}`}>
+            An area, not an address. Close enough to find somebody to train with over
+            the summer, and no closer.
+          </p>
         </div>
 
         <div>

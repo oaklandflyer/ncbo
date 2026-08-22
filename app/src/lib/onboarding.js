@@ -15,7 +15,7 @@
  * trap every account created from that point on: sent to onboarding forever,
  * by a form that no longer offers the field that would release them.
  */
-const REQUIRED = ['full_name', 'display_name', 'lifting_experience', 'major'];
+const REQUIRED = ['full_name', 'display_name', 'lifting_experience', 'major', 'home_region'];
 
 export const AFFILIATIONS = ['student', 'affiliate'];
 

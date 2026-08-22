@@ -8,6 +8,7 @@ import {
   btnPrimary, btnGhost, btnDanger, btnSmall, buttonReset, fineprint, FormMessage,
 } from '@/app/ui';
 import AcademicFields from '@/app/hub/academic-fields';
+import { UserChip } from '@/app/hub/profile-popup/popup';
 
 const ROLES = [['member', 'Member'], ['club_lead', 'Club lead'], ['advisor', 'Advisor'], ['admin', 'Admin']];
 
@@ -294,17 +295,35 @@ export default function UserTable({
   const [query, setQuery] = useState('');
   const [role, setRole] = useState('');
   const [club, setClub] = useState('');
+  /*
+   * Ghosts: signed in with Google, closed the tab, never finished. Supabase
+   * made them an account the moment OAuth returned.
+   *
+   * Hidden by default because they are noise on a roster, and behind a toggle
+   * rather than filtered out of the query, because an admin who cannot SEE a
+   * ghost cannot delete one — and deleting them is the only thing anybody
+   * wants to do with them.
+   */
+  const [showGhosts, setShowGhosts] = useState(false);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return users.filter((u) => {
+      if (!showGhosts && u.onboarded === false) return false;
       if (role && u.role !== role) return false;
       if (club && u.club_id !== club) return false;
       if (!q) return true;
       return `${u.display_name} ${u.email || ''} ${u.club_name || ''} ${u.school_name || ''}`
         .toLowerCase().includes(q);
     });
-  }, [users, query, role, club]);
+  }, [users, query, role, club, showGhosts]);
+
+  /* Counted from everybody, not from what is shown, so the label says how many
+     are being hidden rather than how many are already visible. */
+  const ghostCount = useMemo(
+    () => users.filter((u) => u.onboarded === false).length,
+    [users],
+  );
 
   return (
     <>
@@ -324,6 +343,19 @@ export default function UserTable({
           <option value="">All clubs</option>
           {clubs.map((c) => <option key={c.id} value={c.id}>{c.club_name}</option>)}
         </select>
+        <label className={`${checkline} sm:col-span-2 self-center`}>
+          <input
+            type="checkbox"
+            checked={showGhosts}
+            onChange={(e) => setShowGhosts(e.target.checked)}
+            className="h-4 w-4 accent-[#2F5FA8]"
+          />
+          <span className={fineprint}>
+            Show accounts that never finished signup
+            {ghostCount > 0 ? ` (${ghostCount})` : ''}
+          </span>
+        </label>
+
         <p className={`self-center ${fineprint}`}>
           {shown.length} of {users.length}
         </p>
@@ -338,9 +370,18 @@ export default function UserTable({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span className="font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink">
-                        {u.display_name}
-                      </span>
+                      {/* The same popup the Network and the roster use, not a
+                          second modal. It is enforced by projection:
+                          `get_public_profile` returns only what a summary may
+                          show, so no component here can leak an email by
+                          rendering one more field. */}
+                      <UserChip
+                        userId={u.id}
+                        className="font-display text-[1.05rem] font-bold uppercase tracking-[0.02em] text-ink"
+                      >
+                        {u.display_name || <span className="text-fine">No name yet</span>}
+                      </UserChip>
+                      {u.onboarded === false && <Badge tone="pending">Never finished signup</Badge>}
                       {u.role !== 'member' && <Badge tone="active">{u.role.replace('_', ' ')}</Badge>}
                       {u.verified && <VettedSeal />}
                       {u.is_alumni_effective && <AlumniBadge since={u.alumni_since} />}
