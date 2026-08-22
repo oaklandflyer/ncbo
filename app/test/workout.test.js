@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   emptySet, newExercise, applySetUpdate, appendSet, removeSet,
-  completedOnly, workoutTotals, elapsed,
+  completedOnly, workoutTotals, elapsed, sanitiseWorkoutData, isoOrNull,
 } from '../src/lib/workout.js';
 
 /*
@@ -139,4 +139,114 @@ test('elapsed never goes negative on a clock that disagrees', () => {
 test('elapsed handles a missing or unparseable start', () => {
   assert.equal(elapsed(null), null);
   assert.equal(elapsed('not a date'), null);
+});
+
+/*
+ * The server-side sanitiser.
+ *
+ * Everything it receives came from a browser, and the database's only
+ * structural check is `jsonb_typeof(workout_data) = 'array'` — which
+ * `[{"anything": "at all"}]` satisfies. So this rebuilds the document rather
+ * than validating it in place, and these tests are about what it refuses to
+ * carry through.
+ */
+
+test('it rebuilds the document, dropping fields nobody asked for', () => {
+  const dirty = [{
+    exercise_id: null,
+    exercise_name: 'Bench',
+    sets: [{ weight: 100, reps: 5, completed: true, secret: 'do not store me' }],
+    injected: { anything: 'at all' },
+  }];
+  const clean = sanitiseWorkoutData(dirty);
+  assert.deepEqual(Object.keys(clean[0]).sort(), ['exercise_id', 'exercise_name', 'sets']);
+  assert.deepEqual(Object.keys(clean[0].sets[0]).sort(), ['completed', 'reps', 'weight']);
+});
+
+test('an empty string is null, not zero, on the server too', () => {
+  /* The same Number('') === 0 trap as the client. Checked in both places
+     because the client is not the only thing that can call the action. */
+  const clean = sanitiseWorkoutData([
+    { exercise_name: 'Bench', sets: [{ weight: '', reps: '', completed: true }] },
+  ]);
+  assert.strictEqual(clean[0].sets[0].weight, null);
+  assert.strictEqual(clean[0].sets[0].reps, null);
+});
+
+test('NaN, Infinity and negatives become null', () => {
+  const clean = sanitiseWorkoutData([{
+    exercise_name: 'Bench',
+    sets: [
+      { weight: 'heavy', reps: 5 },
+      { weight: Infinity, reps: 5 },
+      { weight: -50, reps: 5 },
+      { weight: 1e9, reps: 5 },
+    ],
+  }]);
+  for (const set of clean[0].sets) assert.strictEqual(set.weight, null);
+});
+
+test('completed is only ever a real boolean', () => {
+  /* "false", 0 and 1 are all things a hand-built request could send. Anything
+     that is not exactly true is not a completed set. */
+  const clean = sanitiseWorkoutData([{
+    exercise_name: 'Bench',
+    sets: [{ completed: 'true' }, { completed: 1 }, { completed: true }, { completed: 'false' }],
+  }]);
+  assert.deepEqual(clean[0].sets.map((s) => s.completed), [false, false, true, false]);
+});
+
+test('a forged exercise_id that is not a uuid becomes null', () => {
+  const clean = sanitiseWorkoutData([
+    { exercise_id: "'; drop table exercises; --", exercise_name: 'Bench', sets: [{ reps: 5 }] },
+  ]);
+  assert.strictEqual(clean[0].exercise_id, null);
+});
+
+test('a real uuid survives', () => {
+  const id = '3f2504e0-4f89-11d3-9a0c-0305e82c3301';
+  const clean = sanitiseWorkoutData([{ exercise_id: id, exercise_name: 'Bench', sets: [{ reps: 5 }] }]);
+  assert.strictEqual(clean[0].exercise_id, id);
+});
+
+test('names are bounded, and so are the arrays', () => {
+  /* workout_data has no size limit of its own, and a JSONB column will
+     happily store a megabyte of somebody else's idea of a workout. */
+  const clean = sanitiseWorkoutData([{
+    exercise_name: 'x'.repeat(5000),
+    sets: Array.from({ length: 500 }, () => ({ reps: 1 })),
+  }]);
+  assert.equal(clean[0].exercise_name.length, 120);
+  assert.equal(clean[0].sets.length, 60);
+
+  const many = sanitiseWorkoutData(
+    Array.from({ length: 500 }, () => ({ exercise_name: 'Bench', sets: [{ reps: 1 }] })),
+  );
+  assert.equal(many.length, 60);
+});
+
+test('an exercise with no sets is dropped rather than stored empty', () => {
+  const clean = sanitiseWorkoutData([
+    { exercise_name: 'Bench', sets: [] },
+    { exercise_name: 'Squat', sets: [{ reps: 5 }] },
+    { exercise_name: 'Rows' },
+  ]);
+  assert.equal(clean.length, 1);
+  assert.equal(clean[0].exercise_name, 'Squat');
+});
+
+test('junk in, empty array out, never a throw', () => {
+  /* The action inserts whatever comes back, so a throw here would be a 500
+     on the one screen somebody is mid-workout on. */
+  for (const input of [null, undefined, 'a string', 42, {}, [null], [undefined], [[]]]) {
+    assert.doesNotThrow(() => sanitiseWorkoutData(input), `threw on ${JSON.stringify(input)}`);
+    assert.ok(Array.isArray(sanitiseWorkoutData(input)));
+  }
+});
+
+test('isoOrNull parses what it can and refuses what it cannot', () => {
+  assert.equal(isoOrNull('2026-08-22T10:00:00.000Z'), '2026-08-22T10:00:00.000Z');
+  assert.equal(isoOrNull('not a date'), null);
+  assert.equal(isoOrNull(null), null);
+  assert.equal(isoOrNull(''), null);
 });

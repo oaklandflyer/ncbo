@@ -122,3 +122,59 @@ select count(*) as workouts_left from public.workout_sessions
 
 reset role;
 set test.uid = '';
+
+-- ── what phase 2 writes ─────────────────────────────────────────────────────
+\echo '=== 14. a completed session inserts in one statement ==='
+/* What saveWorkoutSession does: status completed, both timestamps, the whole
+   document at once. No in_progress row is ever written, because the live
+   session lives in the browser until it is finished. */
+insert into auth.users (id, email) values
+  ('c0000000-0000-0000-0000-00000000c004', 'phase2@example.com');
+insert into public.club_memberships (user_id, club_id, status, role)
+select 'c0000000-0000-0000-0000-00000000c004', c.id, 'active', 'member'
+  from public.clubs c where c.name = 'Purdue Bodybuilding Club';
+
+set role authenticated;
+set test.uid = 'c0000000-0000-0000-0000-00000000c004';
+
+insert into public.workout_sessions (profile_id, start_time, end_time, status, workout_data)
+values ('c0000000-0000-0000-0000-00000000c004', now() - interval '1 hour', now(), 'completed',
+  '[{"exercise_id": null, "exercise_name": "Barbell Back Squat",
+     "sets": [{"weight": 225, "reps": 5, "completed": true},
+              {"weight": 225, "reps": 5, "completed": true},
+              {"weight": 225, "reps": 4, "completed": true}]},
+    {"exercise_id": null, "exercise_name": "Romanian Deadlift",
+     "sets": [{"weight": 185, "reps": 8, "completed": true}]}]'::jsonb);
+
+select status,
+       jsonb_array_length(workout_data) as exercises,
+       (select sum(jsonb_array_length(ex -> 'sets'))
+          from jsonb_array_elements(workout_data) ex) as sets
+  from public.workout_sessions where profile_id = 'c0000000-0000-0000-0000-00000000c004';
+-- expect completed | 2 | 4
+
+\echo '=== 15. total volume is computable from the document ==='
+/* The cost of the JSONB model, paid: this needs traversal rather than a
+   GROUP BY. Worth knowing it is possible before anybody needs it. */
+select sum((s ->> 'weight')::numeric * (s ->> 'reps')::numeric) as volume
+  from public.workout_sessions w,
+       jsonb_array_elements(w.workout_data) ex,
+       jsonb_array_elements(ex -> 'sets') s
+ where w.profile_id = 'c0000000-0000-0000-0000-00000000c004';
+-- expect 4630  (225x5 + 225x5 + 225x4 + 185x8)
+
+\echo '=== 16. MUST FAIL: a completed session cannot be logged for somebody else ==='
+insert into public.workout_sessions (profile_id, start_time, end_time, status, workout_data)
+values ('c0000000-0000-0000-0000-00000000c002', now(), now(), 'completed', '[]'::jsonb);
+
+\echo '=== 17. finishing twice in a row is fine: no one-active conflict ==='
+/* The partial unique index only covers in_progress, so back-to-back sessions
+   do not collide. */
+insert into public.workout_sessions (profile_id, start_time, end_time, status, workout_data)
+values ('c0000000-0000-0000-0000-00000000c004', now(), now(), 'completed', '[]'::jsonb);
+select count(*) as sessions from public.workout_sessions
+ where profile_id = 'c0000000-0000-0000-0000-00000000c004';
+-- expect 2
+
+reset role;
+set test.uid = '';
