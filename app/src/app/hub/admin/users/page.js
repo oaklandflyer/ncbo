@@ -55,7 +55,8 @@ export default async function AdminUsers() {
             clubs={clubs || []}
             schools={schools || []}
             viewerId={viewer.userId}
-            canHardDelete={viewer.isAdmin && hardDeleteAvailable()}
+            canHardDelete={viewer.isAdmin}
+            hardDeleteConfigured={hardDeleteAvailable()}
           />
         ) : (
           <Empty>No accounts yet.</Empty>
