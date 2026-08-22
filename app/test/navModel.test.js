@@ -53,7 +53,7 @@ test('an admin does NOT get the moderation group, only the admin one', () => {
      /moderate/questions, both badged for the same queue — and the More tab
      showed twice the work that existed. */
   const nav = navModel(admin, counts);
-  assert.deepEqual(groupIds(nav), ['main', 'club', 'admin', 'account']);
+  assert.deepEqual(groupIds(nav), ['main', 'club', 'training', 'admin', 'account']);
   assert.ok(!groupIds(nav).includes('moderation'));
 
   const questionItems = nav.flatMap((g) => g.items).filter((i) => i.href === '/moderate/questions');
@@ -118,4 +118,43 @@ test('an admin with no request and no clubs of their own scopes to nothing', () 
   assert.deepEqual(resolveClubScope(admin, null), {
     clubId: null, canSwitch: true, reason: 'none',
   });
+});
+
+/*
+ * The dark launch.
+ *
+ * `navModel` is the only thing that decides what anybody can navigate to, so
+ * it is the only place a gate like this can be checked. A link added beside
+ * it in a layout would be a second answer to the same question, which is how
+ * the tab bar and the top bar disagreed about the review queue.
+ */
+
+test('only an admin sees the workout tab', () => {
+  for (const [name, viewer] of [['member', member], ['lead', lead], ['advisor', advisor]]) {
+    const items = navModel(viewer, counts).flatMap((g) => g.items);
+    assert.equal(
+      items.filter((i) => i.href === '/hub/workout').length, 0,
+      `a ${name} should not see the workout tab`,
+    );
+  }
+
+  const adminItems = navModel(admin, counts).flatMap((g) => g.items);
+  assert.equal(adminItems.filter((i) => i.href === '/hub/workout').length, 1);
+});
+
+test('the workout tab is not on the phone tab bar', () => {
+  /* Five destinations, and a dark-launched feature does not get one of them.
+     It lives behind More until it is real. */
+  const nav = navModel(admin, counts);
+  const workout = nav.flatMap((g) => g.items).find((i) => i.id === 'workout');
+  assert.ok(workout, 'the item should exist for an admin');
+  assert.notEqual(workout.tab, true);
+  assert.equal(mobileTabs(nav).filter((t) => t.id === 'workout').length, 0);
+});
+
+test('the workout tab carries no badge, so it cannot inflate the More count', () => {
+  const before = sumBadges(navModel(admin, counts));
+  const workout = navModel(admin, counts).flatMap((g) => g.items).find((i) => i.id === 'workout');
+  assert.equal(workout.badge, undefined);
+  assert.equal(sumBadges(navModel(admin, counts)), before);
 });
