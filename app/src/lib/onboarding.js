@@ -19,6 +19,25 @@ const REQUIRED = ['full_name', 'display_name', 'lifting_experience', 'major'];
 
 export const AFFILIATIONS = ['student', 'affiliate'];
 
+/**
+ * Every column `isOnboarded` reads.
+ *
+ * Exported because the query that feeds it has to select all of them, and
+ * that is not a thing to leave to memory. It was left to memory once:
+ * `affiliation` became required without being added to `getProfileResult`'s
+ * select, so it arrived `undefined`, the check failed for everybody, and the
+ * app bounced signed-in members between /hub and /onboarding forever. The
+ * form appeared to lose their answers each time, because it was re-rendering
+ * empty rather than reloading anything.
+ *
+ * `test/onboarding.test.js` asserts the select string contains every name in
+ * here, which is what makes the next such omission a red test rather than a
+ * lockout.
+ */
+export const ONBOARDING_FIELDS = [
+  ...REQUIRED, 'is_adult', 'affiliation', 'grad_year',
+];
+
 export function isOnboarded(profile) {
   if (!profile || profile.is_adult !== true) return false;
   if (!REQUIRED.every((key) => String(profile[key] || '').trim() !== '')) return false;

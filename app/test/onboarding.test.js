@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isOnboarded, missingFields } from '../src/lib/onboarding.js';
+import { isOnboarded, missingFields, ONBOARDING_FIELDS } from '../src/lib/onboarding.js';
 
 /*
  * The rule is written twice: here and in `public.is_onboarded(public.profiles)`.
@@ -84,4 +84,41 @@ test('a null profile is not onboarded, and does not throw', () => {
   assert.equal(isOnboarded(undefined), false);
   assert.equal(isOnboarded({}), false);
   assert.deepEqual(missingFields(null), ['everything']);
+});
+
+/*
+ * The lockout this file's last test guards against actually shipped, and none
+ * of the tests above caught it, because every one of them hands `isOnboarded`
+ * an object built in the test. The bug was one layer out: `affiliation` became
+ * required without being added to the query that reads a profile, so it
+ * arrived `undefined` from the database, the check failed for everybody, and
+ * signed-in members bounced between /hub and /onboarding forever. The form
+ * looked like it was losing their answers; it was re-rendering empty.
+ *
+ * So this reads the real source file. A unit test over a hand-built object
+ * cannot see a missing column, and that is exactly the gap that let it out.
+ */
+test('every field isOnboarded reads is selected by the profile query', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../src/lib/supabase/server.js', import.meta.url), 'utf8');
+
+  const start = source.indexOf('const PROFILE_COLUMNS');
+  assert.notEqual(start, -1, 'PROFILE_COLUMNS is gone; the select is hand-listed again');
+  const block = source.slice(start, source.indexOf('.join(', start));
+
+  for (const field of ONBOARDING_FIELDS) {
+    const named = new RegExp(`['"\`]${field}['"\`]`).test(block);
+    const spread = block.includes('...ONBOARDING_FIELDS');
+    assert.ok(named || spread, `${field} is required by isOnboarded but not selected`);
+  }
+});
+
+test('the profile query still carries the columns the surfaces render', async () => {
+  /* Not exhaustive, and not trying to be: these are the ones whose absence
+     produces a silently wrong screen rather than a crash. */
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../src/lib/supabase/server.js', import.meta.url), 'utf8');
+  for (const field of ['status', 'role', 'club_id', 'is_alumni', 'academic_level', 'experience_phase']) {
+    assert.ok(source.includes(`'${field}'`), `${field} dropped from the profile select`);
+  }
 });

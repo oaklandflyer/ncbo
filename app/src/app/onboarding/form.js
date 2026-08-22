@@ -47,20 +47,62 @@ function Opt() {
  * "what is your group chat handle" honestly when they know a human is about to
  * match it against a list, and carelessly when it looks like data collection.
  */
-export default function OnboardingForm({ email, defaultName, universities }) {
+/** Field name to the words on the label, for the "still needed" banner. */
+const FIELD_LABELS = {
+  full_name: 'your full name',
+  display_name: 'your full name',
+  affiliation: 'which describes you',
+  grad_year: 'expected graduation',
+  lifting_experience: 'training for',
+  major: 'major',
+  is_adult: 'the 18 or over confirmation',
+};
+
+function stillNeeded(missing) {
+  const words = [...new Set(missing.map((f) => FIELD_LABELS[f] || f))];
+  if (words.length === 0) return null;
+  if (words.length === 1) return words[0];
+  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
+}
+
+export default function OnboardingForm({
+  email, defaultName, universities, profile = null, returning = false, missing = [],
+}) {
   const [state, action, pending] = useActionState(saveOnboarding, {});
   const [chapter, setChapter] = useState(null);
+  const needed = returning ? stillNeeded(missing) : null;
   /* Defaults to student, which is what the overwhelming majority are and what
      every account before this question existed answered implicitly. */
-  const [affiliation, setAffiliation] = useState('student');
+  const [affiliation, setAffiliation] = useState(
+    /* Prefilled from what was saved last time. Somebody sent back here has
+       already answered these once, and re-typing them is the part that made
+       the redirect loop feel like data loss rather than a missing field. */
+    profile?.affiliation === 'affiliate' ? 'affiliate' : 'student',
+  );
 
   return (
     <form action={action}>
+      {/* A returning member is here because the shell sent them back, and
+          until this existed it did so silently: the form re-rendered empty and
+          it looked like the app had discarded their answers. It had not. One
+          field was missing and nothing said which. */}
+      {needed && (
+        <div role="status" className="mb-6 rounded-[8px] border border-brand bg-brand-wash px-5 py-4">
+          <p className="font-display text-[0.9rem] font-bold uppercase tracking-[0.04em] text-ink">
+            Almost there
+          </p>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-body">
+            Your answers are saved. We still need {needed} before you can go through.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={fieldLabel} htmlFor="full_name">Your full name<Req /></label>
           <input
             id="full_name" name="full_name" type="text" required maxLength={120}
+            defaultValue={profile?.full_name || defaultName || ''}
             autoComplete="name" defaultValue={defaultName || ''}
             autoFocus={!defaultName}
             className={field}
@@ -132,7 +174,10 @@ export default function OnboardingForm({ email, defaultName, universities }) {
         {affiliation !== 'affiliate' && (
           <div>
             <label className={fieldLabel} htmlFor="grad_year">Expected graduation<Req /></label>
-            <select id="grad_year" name="grad_year" required defaultValue="" className={field}>
+            <select
+              id="grad_year" name="grad_year" required className={field}
+              defaultValue={profile?.grad_year ? String(profile.grad_year) : ''}
+            >
               <option value="" disabled>Pick one</option>
               {gradYearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -142,7 +187,8 @@ export default function OnboardingForm({ email, defaultName, universities }) {
         <div>
           <label className={fieldLabel} htmlFor="lifting_experience">Training for<Req /></label>
           <select
-            id="lifting_experience" name="lifting_experience" required defaultValue=""
+            id="lifting_experience" name="lifting_experience" required
+            defaultValue={profile?.lifting_experience || ''}
             className={field}
           >
             <option value="" disabled>Pick one</option>
@@ -154,6 +200,7 @@ export default function OnboardingForm({ email, defaultName, universities }) {
           <label className={fieldLabel} htmlFor="major">Major<Req /></label>
           <input
             id="major" name="major" type="text" required maxLength={120}
+            defaultValue={profile?.major || ''}
             placeholder="Mechanical engineering, undecided, …"
             className={field}
           />
