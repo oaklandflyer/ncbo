@@ -25,11 +25,19 @@ import {
 
 const STORAGE_KEY = 'ncbo.workout.v1';
 
+/** The default rest between sets. 90 seconds is the usual accessory default. */
+export const REST_SECONDS = 90;
+
 const EMPTY = {
   isActive: false,
   startTime: null,
   sessionId: null,
   exercises: [],
+  /* An absolute end time, not a remaining count. A countdown stored as
+     "62 seconds left" is wrong the moment the tab is backgrounded, because
+     nothing decrements it while the phone is asleep. An end timestamp is
+     still correct when the screen comes back on. */
+  restEndsAt: null,
 };
 
 export const useWorkoutStore = create()(
@@ -66,10 +74,24 @@ export const useWorkoutStore = create()(
       })),
 
       /* `updateSet(exerciseIndex, setIndex, patch)`. A partial patch, so a
-         screen can tick `completed` without restating weight and reps. */
-      updateSet: (exerciseIndex, setIndex, patch) => set((s) => ({
-        exercises: applySetUpdate(s.exercises, exerciseIndex, setIndex, patch),
-      })),
+         screen can tick `completed` without restating weight and reps.
+         
+         Ticking a set starts the rest timer, and that lives here rather than
+         in the screen so it cannot be forgotten by whichever component next
+         renders a set row. Only on the transition to ticked: correcting the
+         weight on an already-finished set is not the start of a rest. */
+      updateSet: (exerciseIndex, setIndex, patch) => set((s) => {
+        const was = s.exercises[exerciseIndex]?.sets?.[setIndex]?.completed === true;
+        const nowTicked = patch?.completed === true && !was;
+        return {
+          exercises: applySetUpdate(s.exercises, exerciseIndex, setIndex, patch),
+          restEndsAt: nowTicked ? Date.now() + REST_SECONDS * 1000 : s.restEndsAt,
+        };
+      }),
+
+      /** Start, restart, or dismiss the rest clock by hand. */
+      startRest: (seconds = REST_SECONDS) => set({ restEndsAt: Date.now() + seconds * 1000 }),
+      clearRest: () => set({ restEndsAt: null }),
 
       addSet: (exerciseIndex) => set((s) => ({
         exercises: appendSet(s.exercises, exerciseIndex),
@@ -116,6 +138,10 @@ export const useWorkoutStore = create()(
         startTime: s.startTime,
         sessionId: s.sessionId,
         exercises: s.exercises,
+        /* Persisted deliberately. Reloading mid-rest should resume the same
+           countdown, and an absolute end time is still true after a reload
+           where a remaining-seconds value would not be. */
+        restEndsAt: s.restEndsAt,
       }),
       onRehydrateStorage: () => (state) => state?.setHasHydrated(true),
     },

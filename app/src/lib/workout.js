@@ -127,3 +127,60 @@ export function elapsed(startTime, now = Date.now()) {
   const pad = (n) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
+
+/**
+ * The workout document, made safe to store.
+ *
+ * The client sends this. Everything in it is therefore a claim, and the
+ * database's only structural check is `jsonb_typeof(workout_data) = 'array'`,
+ * which a hostile or simply broken client passes trivially with
+ * `[{"anything": "at all"}]`.
+ *
+ * So the server rebuilds the document from scratch rather than validating in
+ * place: only the six fields that belong in it survive, each coerced to the
+ * type it is supposed to be. A field nobody expected cannot ride along into
+ * storage and surface later in whatever screen renders it.
+ *
+ * Bounded on purpose. A workout is not a place to store a megabyte, and
+ * `workout_data` has no size limit of its own.
+ */
+const MAX_EXERCISES = 60;
+const MAX_SETS = 60;
+const MAX_NAME = 120;
+
+export function sanitiseWorkoutData(input) {
+  if (!Array.isArray(input)) return [];
+
+  return input.slice(0, MAX_EXERCISES).map((ex) => ({
+    exercise_id: isUuid(ex?.exercise_id) ? ex.exercise_id : null,
+    exercise_name: String(ex?.exercise_name ?? 'Exercise').slice(0, MAX_NAME),
+    sets: (Array.isArray(ex?.sets) ? ex.sets : []).slice(0, MAX_SETS).map((set) => ({
+      /* The same rule as the client, applied again here: an empty input is
+         null, not zero. `Number('')` is 0, so a cleared field would otherwise
+         be stored as a real set of zero reps at zero weight. */
+      weight: finiteOrNull(set?.weight),
+      reps: finiteOrNull(set?.reps),
+      completed: set?.completed === true,
+    })),
+  })).filter((ex) => ex.sets.length > 0);
+}
+
+function finiteOrNull(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const n = Number(value);
+  /* Rejects NaN and Infinity, and anything a lifter could not have done. */
+  if (!Number.isFinite(n) || n < 0 || n > 100000) return null;
+  return n;
+}
+
+function isUuid(value) {
+  return typeof value === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/** An ISO timestamp, or null. Used to refuse a start time from the future. */
+export function isoOrNull(value) {
+  if (!value) return null;
+  const t = new Date(value).getTime();
+  return Number.isFinite(t) ? new Date(t).toISOString() : null;
+}
