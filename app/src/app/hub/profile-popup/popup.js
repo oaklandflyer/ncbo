@@ -197,25 +197,20 @@ function ProfileModal({ state, onClose, closeRef }) {
               </div>
             )}
 
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+            {/* One action, full width. There was a disabled "Message" button
+                beside this, left as a placeholder for a feature that is not
+                built. A permanently greyed-out control is not a promise, it is
+                a dead end somebody taps once and remembers as broken. When
+                messaging exists it can have a button; until then the card is
+                honest about what it does. */}
+            <div className="mt-6">
               <Link
                 href={`/hub/network?member=${p.id}`}
-                className={`${btnGhost} ${btnSmall} text-center`}
+                className={`${btnGhost} ${btnSmall} block text-center`}
                 onClick={onClose}
               >
                 View full profile
               </Link>
-              {/* Messaging is not built in this pass. The hook is here, and
-                  it is disabled rather than hidden so the shape of the card
-                  does not change on the day it starts working. */}
-              <button
-                type="button"
-                disabled
-                title="Messaging is not switched on yet."
-                className={`${btnGhost} ${btnSmall} cursor-not-allowed text-center opacity-45`}
-              >
-                Message
-              </button>
             </div>
 
             <button
