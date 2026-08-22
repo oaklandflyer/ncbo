@@ -83,6 +83,30 @@ export function navModel(viewer, counts = {}) {
     });
   }
 
+  /*
+   * Dark launch. The workout tracker is built and gated: an admin can reach
+   * it, nobody else can see that it exists.
+   *
+   * Gated here rather than in the layout, because this function is the only
+   * thing that decides what anybody can navigate to, and a link added beside
+   * it would be a second answer to that question. It was two disagreeing
+   * answers once already.
+   *
+   * Worth being clear about what this is and is not: it hides the door, not
+   * the room. `/hub/workout` is reachable by URL, and the row-level security
+   * on `workout_sessions` is what actually protects anything — a member who
+   * guesses the path sees their own empty tracker, which is harmless.
+   */
+  if (isAdmin) {
+    groups.push({
+      id: 'training',
+      label: 'Training',
+      items: [
+        { id: 'workout', href: '/hub/workout', label: 'Workout', icon: 'log' },
+      ],
+    });
+  }
+
   if (isAdmin) {
     groups.push({
       id: 'admin',
