@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { ONBOARDING_FIELDS } from '@/lib/onboarding';
 
 /**
  * Supabase client for Server Components, Server Actions, and Route Handlers.
@@ -49,13 +50,36 @@ export async function createClient() {
  * at all any more, so asking for it would fail the whole query; a member's own
  * address comes from their session, below.
  */
+/**
+ * What a profile read selects.
+ *
+ * Built from `ONBOARDING_FIELDS` rather than hand-listed, because leaving a
+ * required field out of this string does not fail loudly: the column arrives
+ * `undefined`, `isOnboarded` returns false, and every signed-in member is
+ * redirected to onboarding forever by a form that appears to lose their
+ * answers. That shipped once. The list cannot drift now, and
+ * `test/onboarding.test.js` checks the rest of the string too.
+ */
+const PROFILE_COLUMNS = [
+  'id', 'display_name', 'full_name', 'class_year', 'lifting_experience', 'major',
+  'is_adult', 'experience_phase', 'role', 'status', 'club_id', 'school_id',
+  'division', 'home_region', 'instagram_handle', 'tiktok_handle', 'verified',
+  'credentials', 'is_alumni', 'alumni_since', 'grad_year', 'grad_year_inferred',
+  'academic_level', 'affiliation',
+  /* Deduplicated, so adding a field to ONBOARDING_FIELDS that is already here
+     does not produce `col, col` and a PostgREST error. */
+  ...ONBOARDING_FIELDS,
+].filter((c, i, all) => all.indexOf(c) === i)
+  .concat(['universities(name, short_name)', 'clubs(name)'])
+  .join(', ');
+
 export async function getProfileResult(supabase) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { signedIn: false, profile: null, error: null };
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, full_name, class_year, lifting_experience, major, is_adult, experience_phase, role, status, club_id, school_id, division, home_region, instagram_handle, tiktok_handle, verified, credentials, is_alumni, alumni_since, grad_year, grad_year_inferred, academic_level, universities(name, short_name), clubs(name)')
+    .select(PROFILE_COLUMNS)
     .eq('id', user.id)
     .single();
 

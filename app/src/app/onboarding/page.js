@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfileResult } from '@/lib/supabase/server';
-import { isOnboarded } from '@/lib/onboarding';
+import { isOnboarded, missingFields } from '@/lib/onboarding';
 import { AuthPage, AuthHeading } from '@/app/ui';
 import OnboardingForm from './form';
 import SchemaError from '@/app/hub/schema-error';
@@ -32,6 +32,16 @@ export default async function Onboarding() {
   // Nothing left to collect. Don't make anyone fill in a form twice.
   if (isOnboarded(profile)) redirect('/hub');
 
+  /* Somebody who has filled this in before and is back here did not choose to
+     be. Something they gave is missing, and until this said which, the loop
+     was silent: the shell sent them here, the form re-rendered empty, and it
+     looked like the app had thrown their answers away.
+
+     `full_name` is the tell. It is the first required field and nothing else
+     writes it, so a profile that has one has been through this form. */
+  const returning = Boolean(String(profile.full_name || '').trim());
+  const missing = returning ? missingFields(profile) : [];
+
   /* Every active school, with its one club or nulls. Fetched here rather than
      searched from the client per keystroke: it is a few hundred rows, it
      changes about once a semester, and a round trip per character on a phone
@@ -52,6 +62,9 @@ export default async function Onboarding() {
 
       <div className="mt-9">
         <OnboardingForm
+        profile={profile}
+        returning={returning}
+        missing={missing}
           email={profile.email}
           defaultName={profile.full_name}
           universities={universities || []}
