@@ -2,10 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useWorkoutStore, REST_SECONDS } from '@/store/useWorkoutStore';
-import { buttonReset } from '@/app/ui';
+
+/* Two resets rather than the shared `buttonReset`, and the difference is one
+   declaration. `bg-transparent` lands after the colour utilities in Tailwind's
+   output, so it quietly wins over any `bg-*` set on the same button — which is
+   why a blue "Finish" came out grey. Buttons that paint themselves use the
+   reset without it; buttons that are text only keep it, because without
+   preflight a bare <button> is the browser's own grey. */
+const BTN = 'cursor-pointer appearance-none border-0 bg-transparent p-0';
+const BTN_SOLID = 'cursor-pointer appearance-none border-0 p-0';
 
 /**
- * The rest clock, pinned above the tab bar.
+ * The rest clock, inline.
+ *
+ * It used to be a card pinned above the tab bar, which is the obvious place
+ * and the wrong one: a floating bar covers the sets underneath it and gives no
+ * answer to "rest from which set?" on a screen where three exercises are
+ * open at once. Strong puts the bar in the list, directly under the set that
+ * started it, so the countdown is attached to the thing it counts. This is
+ * that: the caller renders it after the row it belongs to.
  *
  * It reads an absolute end time from the store and derives the remaining
  * seconds on each tick. That is the important part: a countdown held as
@@ -17,7 +32,7 @@ import { buttonReset } from '@/app/ui';
  * The interval exists only to re-render. It is not the source of truth, so a
  * dropped tick costs a frame rather than a second.
  */
-export default function RestTimer() {
+export default function RestBar() {
   const restEndsAt = useWorkoutStore((s) => s.restEndsAt);
   const startRest = useWorkoutStore((s) => s.startRest);
   const clearRest = useWorkoutStore((s) => s.clearRest);
@@ -39,54 +54,37 @@ export default function RestTimer() {
     <div
       role="timer"
       aria-live="off"
-      className="fixed inset-x-0 bottom-[76px] z-[300] px-4 lg:bottom-4 lg:left-[264px] lg:right-4"
+      className="relative my-1 overflow-hidden rounded-md bg-blue-500 py-1 text-center font-bold text-white"
     >
-      <div className={`overflow-hidden rounded-[10px] border shadow-brand ${
-        done ? 'border-brand bg-brand text-white' : 'border-edge bg-surface'
-      }`}
-      >
-        {/* A bar rather than only a number: mid-set, at arm's length, the
-            proportion is readable in a way two digits are not. */}
-        <div className="h-1 w-full bg-band">
-          <div
-            className={`h-full transition-[width] duration-200 ease-linear ${done ? 'bg-white' : 'bg-brand'}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+      {/* The fill drains right to left behind the digits. Mid-set, at arm's
+          length, the proportion is readable in a way two digits are not. */}
+      <div
+        aria-hidden
+        className="absolute inset-y-0 left-0 bg-blue-400 transition-[width] duration-200 ease-linear"
+        style={{ width: `${pct}%` }}
+      />
 
-        <div className="flex items-center gap-3 px-4 py-3">
-          <span className={`font-display text-[1.35rem] font-extrabold tabular-nums ${done ? 'text-white' : 'text-ink'}`}>
-            {done ? 'Rest over' : format(remaining)}
-          </span>
+      <div className="relative flex items-center justify-between px-2 text-[0.78rem] tracking-[0.06em]">
+        <button
+          type="button"
+          onClick={() => startRest(remaining + 30)}
+          className={`${BTN} px-2 py-1 font-bold text-white/90 tabular-nums`}
+        >
+          +30s
+        </button>
 
-          <span className={`text-[0.82rem] ${done ? 'text-white/80' : 'text-meta'}`}>
-            {done ? 'Next set' : 'Resting'}
-          </span>
+        <span className="tabular-nums">
+          {done ? 'REST OVER' : `REST ${format(remaining)}`}
+        </span>
 
-          <div className="ml-auto flex items-center gap-1">
-            {/* +30 rather than a picker: adding time is the only adjustment
-                anybody makes mid-rest, and it has to work with one thumb. */}
-            <button
-              type="button"
-              onClick={() => startRest(remaining + 30)}
-              className={`${buttonReset} min-h-[40px] rounded-[6px] px-3 font-display text-[0.76rem] font-bold uppercase tracking-[0.1em] ${
-                done ? 'text-white' : 'text-brand'
-              }`}
-            >
-              +30s
-            </button>
-            <button
-              type="button"
-              onClick={clearRest}
-              aria-label="Dismiss rest timer"
-              className={`${buttonReset} min-h-[40px] rounded-[6px] px-3 font-display text-[0.76rem] font-bold uppercase tracking-[0.1em] ${
-                done ? 'text-white' : 'text-meta'
-              }`}
-            >
-              Done
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={clearRest}
+          aria-label="Skip rest"
+          className={`${BTN} px-2 py-1 font-bold text-white/90`}
+        >
+          SKIP
+        </button>
       </div>
     </div>
   );
