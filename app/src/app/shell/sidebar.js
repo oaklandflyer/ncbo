@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavIcon } from './icons';
 import { NavBadge } from './badge';
+import ThemeToggle from '@/app/theme/toggle';
 
 /**
  * The desktop sidebar.
@@ -52,6 +53,13 @@ export default function Sidebar({ nav, scopeSwitcher = null }) {
           </div>
         ))}
       </nav>
+
+      {/* The drawer carries this on a phone, and a desktop has no drawer. A
+          setting reachable on one form factor and not the other is a setting
+          half the people who want it cannot find. */}
+      <div className="border-t border-edge px-3 py-4">
+        <ThemeToggle />
+      </div>
     </aside>
   );
 }

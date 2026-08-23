@@ -13,6 +13,9 @@ export const ICONS = {
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2-1.2L14.6 3H9.4L9 5.7a7.4 7.4 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2 1.2l.4 2.7h5.2l.4-2.7a7.4 7.4 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.07-.4.1-.8.1-1.2Z',
   profile: 'M12 12.4a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4ZM4.8 20.2c.6-3.3 3.6-5.2 7.2-5.2s6.6 1.9 7.2 5.2',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
+  /* The middle button. Same stroke as the rest so it does not read as a
+     different icon set, only as a bigger one. */
+  plus: 'M12 5v14M5 12h14',
 };
 
 export function NavIcon({ name, active = false, size = 22 }) {

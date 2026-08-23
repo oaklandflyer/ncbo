@@ -74,7 +74,7 @@ export default function Tutorial({ extraSteps = [] }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="tutorial-title"
-      className="fixed inset-0 z-[500] flex items-end justify-center bg-ink/50 p-4 backdrop-blur-[2px] sm:items-center"
+      className="fixed inset-0 z-[500] flex items-end justify-center bg-black/50 p-4 backdrop-blur-[2px] sm:items-center"
     >
       <div className="w-full max-w-[520px] rounded-[12px] border border-edge bg-surface p-6 shadow-brand sm:p-8">
         <div className="flex items-center gap-3">

@@ -18,7 +18,7 @@ import Avatar from '@/app/brand/avatar';
  */
 export default function TopBar({ institution = null, name = '' }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-[200] h-[60px] border-b border-edge bg-white/90 shadow-brand-sm backdrop-blur-[12px]">
+    <header className="fixed inset-x-0 top-0 z-[200] h-[60px] border-b border-edge bg-surface/90 shadow-brand-sm backdrop-blur-[12px]">
       <div className="flex h-full items-center gap-4 px-5 sm:px-8 lg:px-6">
         {/* The seal below `lg`, the full lockup above it. The wordmark stacks
             "NCBO" over two subtitle lines, and below roughly 44px of total

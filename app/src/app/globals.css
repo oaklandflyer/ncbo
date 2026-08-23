@@ -27,6 +27,14 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* Class-based dark mode. Tailwind v4 has no config file, so the variant is
+   declared here: `dark:` applies inside `.dark`, which one inline script in
+   the document head puts on <html> before the first paint.
+
+   `:where()` keeps the variant at zero specificity, so `dark:bg-zinc-900`
+   still loses to a later utility the way every other variant does. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* ── Extracted from assets/styles.css — the marketing site's own values ──
      Surfaces run light: page ground, alternating band, white card, raised
@@ -68,6 +76,56 @@
 
   --spacing-nav: 72px;   /* --navh: fixed nav height, sticky bars park below */
 }
+
+/* ── dark mode ────────────────────────────────────────────────────────────
+   The same token names, different values. Every surface in this app is
+   painted with `bg-surface`, `border-edge`, `text-ink` and friends rather
+   than with literal colours, so redefining the variables here is what turns
+   the whole app dark — forty screens, none of which had to be rewritten.
+
+   Unlayered on purpose. `@theme` emits its variables into the theme layer, and
+   an unlayered rule beats any layer, so these win wherever `.dark` is on the
+   tree without depending on source order inside a layer.
+
+   The values are the workout tracker's palette, because that screen shipped
+   first and is the reference for what dark means here: zinc rather than the
+   navy the marketing site uses, and blue-500 as the accent that carries in a
+   dark room. Light is untouched — it is still the site's own palette.        */
+.dark {
+  --color-page:    #09090B;   /* zinc-950 */
+  --color-band:    #18181B;   /* zinc-900 — alternating bands and hovers */
+  --color-surface: #18181B;   /* zinc-900 — cards */
+  --color-raised:  #27272A;   /* zinc-800 — wells */
+  --color-edge:    #27272A;   /* zinc-800 — hairlines */
+
+  --color-brand:       #3B82F6;   /* blue-500 */
+  --color-brand-light: #60A5FA;   /* blue-400 */
+  /* `brand-deep` is the *higher contrast* end of the accent, so on a dark
+     ground it has to get lighter, not darker. Reading it as "darker blue"
+     is how a dark theme ends up with unreadable badges. */
+  --color-brand-deep:  #93C5FD;   /* blue-300 */
+  --color-brand-wash:  rgba(59, 130, 246, 0.16);
+
+  --color-ink:  #FFFFFF;
+  --color-body: #D4D4D8;   /* zinc-300 */
+  --color-dim:  #A1A1AA;   /* zinc-400 */
+  --color-meta: #A1A1AA;   /* zinc-400 */
+  --color-fine: #71717A;   /* zinc-500 */
+
+  --color-danger: #F87171;
+
+  --shadow-brand:    0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  --shadow-brand-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.6);
+
+  /* Form controls, scrollbars and the space past the end of a scroll come
+     from the UA, and only this tells it which set to draw. */
+  color-scheme: dark;
+}
+
+/* The legacy sheet paints the body deep navy and the shell paints `bg-page`
+   over it. In dark mode the two disagree at the edges — rubber-band scroll on
+   iOS shows navy under a zinc app — so the ground is stated once here. */
+.dark body { background: var(--color-page); color: var(--color-ink); }
 
 @layer legacy {
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }

@@ -31,6 +31,22 @@ export default async function Network() {
     .select('id, club_name, status, school_name, state, member_count, leads')
     .order('club_name');
 
+  /* Season points and lifetime volume, for the two stats on a person's card.
+     `national_rankings` is public — it is the leaderboard everybody already
+     sees. `my_workout_totals` is not: it returns the viewer's own row and
+     nothing else, which is why lifetime volume appears on your own card and
+     on nobody else's. Making it a column of the directory would mean widening
+     a policy the tracker deliberately wrote narrow. */
+  const season = new Date().getFullYear();
+  const [{ data: seasonPoints }, { data: myTotals }] = await Promise.all([
+    supabase.from('national_rankings').select('user_id, points, rank').eq('season', season),
+    supabase.from('my_workout_totals').select('total_volume').maybeSingle(),
+  ]);
+
+  const cupPoints = Object.fromEntries(
+    (seasonPoints || []).map((r) => [r.user_id, Math.round(Number(r.points) || 0)]),
+  );
+
   const { data: members } = await supabase
     .from('member_directory')
     .select('id, display_name, role, division, home_region, verified, credentials, club_name, school_name, school_state, instagram_handle, tiktok_handle, is_alumni, alumni_since, is_alumni_effective, grad_year, academic_level')
@@ -47,7 +63,13 @@ export default async function Network() {
 
       <Section>
         {members?.length || clubs?.length ? (
-          <Directory members={members} clubs={clubs || []} />
+          <Directory
+            members={members}
+            clubs={clubs || []}
+            cupPoints={cupPoints}
+            viewerId={profile.id}
+            viewerLifetime={Number(myTotals?.total_volume || 0)}
+          />
         ) : (
           <Empty>
             The directory is empty. If that’s a surprise, the schema migration hasn’t been

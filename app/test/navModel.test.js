@@ -142,14 +142,28 @@ test('only an admin sees the workout tab', () => {
   assert.equal(adminItems.filter((i) => i.href === '/hub/workout').length, 1);
 });
 
-test('the workout tab is not on the phone tab bar', () => {
-  /* Five destinations, and a dark-launched feature does not get one of them.
-     It lives behind More until it is real. */
-  const nav = navModel(admin, counts);
-  const workout = nav.flatMap((g) => g.items).find((i) => i.id === 'workout');
-  assert.ok(workout, 'the item should exist for an admin');
+test('the middle tab is an action, and the workout tracker stays dark-launched', () => {
+  /* The bar's middle seat is a write, not a destination: Workout for anybody
+     who has the tracker, "Log a result" for everybody else. The dark launch is
+     unchanged by that — the button only appears because `navModel` already
+     granted the item, so a member still cannot see that the tracker exists. */
+  const adminTabs = mobileTabs(navModel(admin, counts));
+  assert.equal(adminTabs[2].id, 'workout');
+  assert.equal(adminTabs[2].center, true);
+
+  const memberTabs = mobileTabs(navModel(member, counts));
+  assert.equal(memberTabs[2].id, 'log');
+  assert.equal(memberTabs.filter((t) => t.id === 'workout').length, 0);
+
+  /* And it is still not a plain tab: nothing renders it as one of the four
+     destinations, whatever else changes about the bar. */
+  const workout = navModel(admin, counts).flatMap((g) => g.items).find((i) => i.id === 'workout');
   assert.notEqual(workout.tab, true);
-  assert.equal(mobileTabs(nav).filter((t) => t.id === 'workout').length, 0);
+});
+
+test('the tab bar leads with Hub and Calendar and ends with Network and More', () => {
+  const tabs = mobileTabs(navModel(member, counts));
+  assert.deepEqual(tabs.map((t) => t.id), ['hub', 'calendar', 'log', 'network', 'more']);
 });
 
 test('the workout tab carries no badge, so it cannot inflate the More count', () => {
