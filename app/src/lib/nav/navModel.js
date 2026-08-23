@@ -13,8 +13,20 @@
  * what lets the server serialise the result straight into a client drawer.
  */
 
-/** The five destinations the phone's tab bar can hold. Six is one too many. */
-export const MOBILE_TABS = ['hub', 'calendar', 'log', 'rankings', 'more'];
+/**
+ * The five the phone's tab bar can hold, in order, with the middle seat
+ * reserved for an action rather than a destination.
+ *
+ * Six is one too many, so Rankings and Q&A moved behind More. What earns the
+ * middle is the thing somebody opens the app standing up to do: start a
+ * workout if they have the tracker, log a result if they do not. Both are a
+ * plus sign, both are the only write on this bar, and neither is a place you
+ * browse to.
+ */
+export const MOBILE_TABS = ['hub', 'calendar', 'center', 'network', 'more'];
+
+/** What the middle button does, most specific first. */
+export const CENTER_CANDIDATES = ['workout', 'log'];
 
 /**
  * @param {object} viewer   from getViewerContext()
@@ -159,11 +171,26 @@ export function badgeAriaLabel(count, subject = 'item') {
   return `${count} ${subject}${count === 1 ? '' : 's'} needing attention`;
 }
 
-/** The five tab-bar entries, in order, drawn from the model. */
+/**
+ * The five tab-bar entries, in order, drawn from the model.
+ *
+ * Nothing is invented here. A tab appears only if `navModel` already granted
+ * the destination behind it, which is what keeps the bar and the drawer from
+ * ever disagreeing about who can reach what — the bug this whole module
+ * exists to prevent. The middle seat picks the first action the viewer
+ * actually has, and is dropped rather than faked if they have none.
+ */
 export function mobileTabs(nav) {
   const items = (nav || []).flatMap((g) => g.items || []);
-  return MOBILE_TABS.filter((id) => id === 'more' || items.some((i) => i.id === id))
-    .map((id) => (id === 'more'
-      ? { id: 'more', label: 'More', icon: 'more' }
-      : items.find((i) => i.id === id)));
+  const center = CENTER_CANDIDATES
+    .map((id) => items.find((i) => i.id === id))
+    .find(Boolean);
+
+  return MOBILE_TABS
+    .map((id) => {
+      if (id === 'more') return { id: 'more', label: 'More', icon: 'more' };
+      if (id === 'center') return center ? { ...center, center: true, icon: 'plus' } : null;
+      return items.find((i) => i.id === id) || null;
+    })
+    .filter(Boolean);
 }

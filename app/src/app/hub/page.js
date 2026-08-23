@@ -6,13 +6,19 @@ import { getViewerContext } from '@/lib/viewer';
 import { affiliationLabel, phaseLabel } from '@/lib/membership';
 import {
   Page, PageHero, Section, SectionTitle, Stat, Stats, Badge, Empty, Meta,
-  btnGhost, btnSmall, fineprint,
+  btnGhost, btnSmall, fineprint, wrap,
 } from '@/app/ui';
 import { UserChip } from './profile-popup/popup';
 import Tutorial from './tutorial';
 import {
   UpcomingShows, RankingsPanel, AskPanel, NewJoinersPanel, BeginnerPanel, LeaguePanel,
+  showDate,
 } from './home/panels';
+import {
+  WidgetGrid, ChapterCupWidget, NextUpWidget, TrainingWidget,
+} from './home/widgets';
+import { fetchUpcomingEvents } from '@/lib/gcal';
+import { sessionSummary, daysOut } from '@/lib/workoutSummary';
 
 /**
  * Home, in three arrangements.
@@ -55,8 +61,10 @@ export default async function Hub() {
   const season = new Date().getFullYear();
   const canAnswer = viewer.canModerateContent;
 
-  const [clubmates, joiners, shows, rankings, chapters, topQuestions, openQuestions, pendingCount] =
-    await Promise.all([
+  const [
+    clubmates, joiners, shows, rankings, chapters, topQuestions, openQuestions, pendingCount,
+    clubCalendar, lastSession, myTotals,
+  ] = await Promise.all([
       /* The roster reads `member_directory`, whose club comes from an active
          membership and nothing else. See the roster audit in 0016. */
       membership?.clubId
@@ -109,6 +117,30 @@ export default async function Hub() {
         ? supabase.from('club_memberships').select('id', { count: 'exact', head: true })
             .eq('status', 'pending').in('club_id', viewer.ledClubIds)
         : Promise.resolve({ count: 0 }),
+
+      /* The chapter's own calendar, for the Next Up widget. Two narrow columns
+         rather than the whole club row: this is here to answer "is there a
+         calendar and may I read it", and nothing else on this page needs the
+         rest. */
+      membership?.clubId
+        ? supabase.from('clubs').select('gcal_id, gcal_published').eq('id', membership.clubId).maybeSingle()
+        : Promise.resolve({ data: null }),
+
+      /* The last finished session, for the Training widget. One row, because
+         the widget describes one workout. */
+      supabase.from('workout_sessions')
+        .select('id, start_time, end_time, workout_data')
+        .eq('status', 'completed')
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+
+      /* Lifetime volume as a single number. The view does the JSONB traversal
+         in Postgres — the alternative is shipping every workout document to a
+         phone to add them up, which is a few hundred KB to render one stat.
+         `security_invoker` means it can only ever return the viewer's own row;
+         see the policy tests in supabase/tests/11_workout_totals.sql. */
+      supabase.from('my_workout_totals').select('sessions, total_volume').maybeSingle(),
     ]);
 
   const roster = clubmates.data || [];
@@ -121,6 +153,55 @@ export default async function Hub() {
   /* My own rank, if I have one. Worth surfacing above everything else for the
      competing persona: a number that moved is the reason to come back. */
   const myRank = (rankings.data || []).find((r) => r.user_id === profile.id);
+
+  /* ── the widget row ───────────────────────────────────────────────────
+     Three answers, above everything else, for all three personas: where my
+     chapter stands, what is next, and what I last did. The reading material
+     the phases reorder is still below — this is the part somebody checks
+     between classes without scrolling. */
+
+  const chapterTable = chapters.data || [];
+  const myChapter = membership?.clubId
+    ? chapterTable.find((c) => c.club_id === membership.clubId)
+    : null;
+  const cupLeader = chapterTable[0]
+    ? { chapter: chapterTable[0].chapter, points: chapterTable[0].points, runnerUpPoints: chapterTable[1]?.points ?? null }
+    : null;
+
+  /* The chapter's own calendar beats the national one when there is a live
+     one to read: "training at 6" is nearer than a show in March. Fetched
+     after the parallel batch because it depends on its result, and skipped
+     entirely when the chapter has not published a calendar — which also means
+     no Google round trip on most people's home screen. */
+  const calendarLive = !!(clubCalendar?.data?.gcal_id && clubCalendar.data.gcal_published);
+  const { events: chapterEvents } = calendarLive
+    ? await fetchUpcomingEvents(clubCalendar.data.gcal_id, { max: 3 })
+    : { events: [] };
+
+  const nextEvent = chapterEvents?.[0] || null;
+  const nextShow = competitions[0] || null;
+  const nextUp = nextEvent
+    ? {
+      kind: 'Next up',
+      title: nextEvent.title,
+      when: eventWhen(nextEvent),
+      where: nextEvent.location,
+      days: daysOut(nextEvent.start),
+      href: '/hub/calendar',
+    }
+    : nextShow && {
+      kind: 'Next show',
+      title: nextShow.name,
+      when: showDate(nextShow.starts_on),
+      where: [nextShow.city, nextShow.state].filter(Boolean).join(', ') || null,
+      days: daysOut(nextShow.starts_on),
+      href: '/hub/calendar',
+    };
+
+  /* The tracker is still dark-launched, so the widget follows the same gate
+     the nav does rather than inventing a second answer to who can see it. */
+  const lastWorkout = viewer.isAdmin ? sessionSummary(lastSession?.data) : null;
+  const lifetimeVolume = viewer.isAdmin ? Number(myTotals?.data?.total_volume || 0) : 0;
 
   const hero = {
     new_to_lifting: {
@@ -184,6 +265,25 @@ export default async function Hub() {
           </div>
         )}
       </PageHero>
+
+      {/* Tighter than a Section, and deliberately not one: the widget row is
+          the top of the page's own rhythm, not a band of its own. */}
+      <div className={`${wrap} pb-1 pt-6`}>
+        <WidgetGrid>
+          {myChapter && (
+            <ChapterCupWidget
+              season={season}
+              rank={myChapter.rank}
+              chapter={myChapter.chapter || membership?.clubName}
+              points={myChapter.points}
+              leader={cupLeader}
+              contributed={myRank?.points || 0}
+            />
+          )}
+          <NextUpWidget {...(nextUp || {})} />
+          {viewer.isAdmin && <TrainingWidget last={lastWorkout} lifetime={lifetimeVolume} />}
+        </WidgetGrid>
+      </div>
 
       {/* ── the three arrangements ───────────────────────────────────────── */}
 
@@ -262,6 +362,17 @@ export default async function Hub() {
       </Section>
     </Page>
   );
+}
+
+/** A Google Calendar event's start, as a person reads it. */
+function eventWhen(event) {
+  if (!event?.start) return null;
+  const date = new Date(event.start);
+  if (!Number.isFinite(date.getTime())) return null;
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+    ...(event.allDay ? {} : { hour: 'numeric', minute: '2-digit' }),
+  });
 }
 
 /** The member's own chapter roster, shared by all three arrangements. */

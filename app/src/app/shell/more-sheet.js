@@ -8,6 +8,7 @@ import { Seal } from '@/app/brand/marks';
 import { NavIcon } from './icons';
 import { NavBadge } from './badge';
 import { buttonReset } from '@/app/ui';
+import ThemeToggle from '@/app/theme/toggle';
 
 /**
  * The mobile drawer.
@@ -93,7 +94,7 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
 
   const drawer = open && (
     <div
-      className="fixed inset-0 z-[400] flex items-end bg-ink/45 backdrop-blur-[2px] lg:hidden"
+      className="fixed inset-0 z-[400] flex items-end bg-black/50 backdrop-blur-[2px] lg:hidden"
       onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
     >
       <div
@@ -145,6 +146,13 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
           </div>
         ))}
 
+        {/* Below the destinations, above Close: it is a setting, not a place,
+            and putting it at the top would push the queues off the first
+            screenful on a small phone. */}
+        <div className="mb-6 border-t border-edge pt-5">
+          <ThemeToggle />
+        </div>
+
         <button
           ref={closeRef}
           type="button"
@@ -165,13 +173,17 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
         onClick={() => setOpen(true)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-[3px] px-1 py-2 text-meta"
+        /* `buttonReset` and not just layout classes: preflight is off, so a
+           bare <button> keeps the browser's grey box. It was invisible enough
+           against a white bar to survive this long, and unmistakable the
+           moment the bar went dark. */
+        className={`${buttonReset} flex min-h-[56px] flex-1 flex-col items-center justify-center gap-[3px] px-1 py-2 text-meta`}
       >
         <span className="relative flex h-[26px] w-[34px] items-center justify-center rounded-full">
           <NavIcon name="more" />
           {aggregate > 0 && (
             <span className="pointer-events-none absolute -right-[6px] -top-[6px]">
-              <NavBadge count={aggregate} subject="item" className="border border-white" />
+              <NavBadge count={aggregate} subject="item" className="border border-surface" />
             </span>
           )}
         </span>
