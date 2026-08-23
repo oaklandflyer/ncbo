@@ -10,6 +10,7 @@ import {
 } from '@/app/ui';
 import SignOut from '../sign-out';
 import PushToggle from '@/app/push/toggle';
+import InstallPrompt from '@/app/hub/install';
 import { initials } from '@/lib/monogram';
 import { academicLine, isAlumniEffective } from '@/lib/academicYear';
 
@@ -177,8 +178,9 @@ export default async function Profile() {
           into disagreeing about what the toggle does. */}
       <Section>
         <SectionTitle>Notifications</SectionTitle>
-        <Card className="p-5 sm:p-6">
+        <Card className="grid gap-5 p-5 sm:p-6">
           <PushToggle />
+          <InstallPrompt variant="inline" />
         </Card>
       </Section>
 

@@ -1,52 +1,73 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { btnPrimary, btnSmall, buttonReset, fineprint } from '@/app/ui';
+import {
+  detectPlatform, isStandalone, needsManualInstall, dismissalActive,
+} from '@/lib/install';
+import { btnPrimary, btnGhost, btnSmall, buttonReset, fineprint } from '@/app/ui';
 
 /**
- * The install prompt.
+ * "Install the app", for the browsers that will not say it themselves.
  *
- * Three things it has to get right, none of which are obvious:
+ * Chrome on Android promotes installation on its own: it fires
+ * `beforeinstallprompt`, shows a mini-infobar and carries an Install item in
+ * its menu. **Safari does none of that and offers no API to ask with.** So on
+ * an iPhone the app is only ever installed by somebody who already knew about
+ * Share ▸ Add to Home Screen — which is nobody — and this component is the
+ * whole of the difference.
  *
- *   · It must not appear in an already-installed copy. `display-mode:
- *     standalone` is how a PWA knows it is one — without that check, every
- *     member who installed it would be told to install it.
- *   · Chrome fires `beforeinstallprompt` and lets you call `prompt()` later.
- *     iOS Safari fires nothing and has no API, so the only honest thing to
- *     offer there is the Share-sheet instructions.
- *   · A dismissal has to stick. It is remembered in localStorage, wrapped in
- *     try/catch because private mode throws on write.
+ * It matters more than a nicety now: iOS grants push notifications only to an
+ * installed PWA, so an iPhone member who never installs can never be notified.
+ *
+ * Two shapes, one behaviour:
+ *
+ *   `banner` — the interruption. Dismissible, and the dismissal lapses after
+ *              thirty days rather than never: "not now" is not "never".
+ *   `inline` — a row in the More sheet and on the profile, which never
+ *              disappears, so somebody who dismissed the banner (or who has
+ *              just been told push needs an installed app) still has a way in.
  */
 const KEY = 'ncbo.install.dismissed';
 
-export default function InstallPrompt() {
+export default function InstallPrompt({ variant = 'banner' }) {
   const [show, setShow] = useState(false);
+  const [platform, setPlatform] = useState('other');
   const [deferred, setDeferred] = useState(null);
-  const [ios, setIos] = useState(false);
 
   useEffect(() => {
-    const standalone = window.matchMedia?.('(display-mode: standalone)').matches
-      || window.navigator.standalone === true;
-    if (standalone) return undefined;
+    if (isStandalone()) return undefined;
 
-    try { if (localStorage.getItem(KEY)) return undefined; } catch { /* private mode */ }
+    const detected = detectPlatform({
+      userAgent: navigator.userAgent,
+      maxTouchPoints: navigator.maxTouchPoints,
+      platform: navigator.platform,
+    });
+    setPlatform(detected);
 
-    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
-      && !/crios|fxios/i.test(window.navigator.userAgent);
+    /* The inline row is a setting, not an interruption: it ignores the
+       dismissal and shows as soon as we know the app is not installed. */
+    if (variant === 'inline') {
+      setShow(true);
+    } else {
+      let dismissed = false;
+      try { dismissed = dismissalActive(localStorage.getItem(KEY)); } catch { /* private mode */ }
+      if (dismissed) return undefined;
+    }
 
+    /* Chromium hands over its own prompt, which is a real install button
+       rather than instructions. Captured whatever the variant, so the inline
+       row on a Mac in Chrome can offer the button too. */
     const onPrompt = (e) => {
       e.preventDefault();
       setDeferred(e);
-      setShow(true);
+      if (variant === 'banner') setShow(true);
     };
     window.addEventListener('beforeinstallprompt', onPrompt);
 
-    /* Safari never fires the event, so the banner is shown on its own after a
-       beat — long enough that it doesn't land on top of a page still
-       painting. */
+    /* Safari fires nothing, ever, so the banner has to decide for itself to
+       appear. After a beat, so it does not land on a page still painting. */
     let timer;
-    if (isIos) {
-      setIos(true);
+    if (variant === 'banner' && needsManualInstall(detected)) {
       timer = setTimeout(() => setShow(true), 1200);
     }
 
@@ -54,11 +75,13 @@ export default function InstallPrompt() {
       window.removeEventListener('beforeinstallprompt', onPrompt);
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [variant]);
 
   function dismiss() {
     setShow(false);
-    try { localStorage.setItem(KEY, '1'); } catch { /* nothing to do */ }
+    /* The timestamp, not a flag: `dismissalActive` needs to know when, and the
+       old code wrote "1", which is why a dismissal used to be forever. */
+    try { localStorage.setItem(KEY, String(Date.now())); } catch { /* nothing to do */ }
   }
 
   async function install() {
@@ -66,10 +89,32 @@ export default function InstallPrompt() {
     deferred.prompt();
     await deferred.userChoice;
     setDeferred(null);
-    dismiss();
+    if (variant === 'banner') dismiss();
+    else setShow(false);
   }
 
   if (!show) return null;
+
+  const steps = <Steps platform={platform} />;
+
+  if (variant === 'inline') {
+    return (
+      <div>
+        <p className="pb-2 font-display text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-meta">
+          Install the app
+        </p>
+        <div className="rounded-[8px] border border-edge bg-raised/60 px-4 py-3">
+          <p className="text-[0.95rem] text-body">Keep NCBO on your home screen</p>
+          <div className={`mt-1 ${fineprint}`}>{steps}</div>
+          {deferred && (
+            <button type="button" onClick={install} className={`${btnGhost} ${btnSmall} mt-3`}>
+              Install
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -81,7 +126,9 @@ export default function InstallPrompt() {
       <div className="rounded-[8px] border border-edge bg-surface p-5 shadow-brand">
         <div className="flex items-start justify-between gap-4">
           <p className="font-display text-[1rem] font-extrabold uppercase leading-tight text-ink">
-            Install the NCBO App to your homescreen for the best experience.
+            {platform === 'macos-safari'
+              ? 'Keep the NCBO App in your Dock.'
+              : 'Install the NCBO App to your homescreen for the best experience.'}
           </p>
           <button
             type="button"
@@ -96,22 +143,60 @@ export default function InstallPrompt() {
           </button>
         </div>
 
-        {ios ? (
-          <p className={`mt-3 ${fineprint}`}>
-            Tap the Share button in Safari, then <b className="font-semibold text-body">Add to
-            Home Screen</b>. It opens full-screen, without the address bar.
-          </p>
-        ) : (
-          <>
-            <p className={`mt-3 ${fineprint}`}>
-              It opens full-screen and loads faster, with no address bar in the way.
-            </p>
-            <button type="button" onClick={install} className={`${btnPrimary} ${btnSmall} mt-4`}>
-              Install
-            </button>
-          </>
+        <div className={`mt-3 ${fineprint}`}>{steps}</div>
+
+        {deferred && (
+          <button type="button" onClick={install} className={`${btnPrimary} ${btnSmall} mt-4`}>
+            Install
+          </button>
         )}
       </div>
     </div>
   );
+}
+
+/**
+ * What to actually do, per platform.
+ *
+ * Named controls in the order the person will meet them, because "add to home
+ * screen" is only obvious to somebody who has done it before. The notification
+ * line is on the iOS branches on purpose: it is the one platform where
+ * installing is a prerequisite rather than a preference, and saying so is what
+ * turns a nag into a reason.
+ */
+function Steps({ platform }) {
+  if (platform === 'ios-safari') {
+    return (
+      <>
+        Tap <Control>Share</Control> at the bottom of Safari, then{' '}
+        <Control>Add to Home Screen</Control>. It opens full-screen, and it is the only
+        way an iPhone can send you notifications.
+      </>
+    );
+  }
+
+  if (platform === 'ios-other') {
+    return (
+      <>
+        Open this page in <Control>Safari</Control>, tap <Control>Share</Control>, then{' '}
+        <Control>Add to Home Screen</Control>. iOS only installs from Safari, and only an
+        installed copy can send you notifications.
+      </>
+    );
+  }
+
+  if (platform === 'macos-safari') {
+    return (
+      <>
+        In Safari&rsquo;s menu bar, choose <Control>File ▸ Add to Dock</Control>. It opens in
+        its own window, without the address bar.
+      </>
+    );
+  }
+
+  return <>It opens full-screen and loads faster, with no address bar in the way.</>;
+}
+
+function Control({ children }) {
+  return <b className="font-semibold text-body">{children}</b>;
 }

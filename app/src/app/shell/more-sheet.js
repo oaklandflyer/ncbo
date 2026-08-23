@@ -10,6 +10,7 @@ import { NavBadge } from './badge';
 import { buttonReset } from '@/app/ui';
 import ThemeToggle from '@/app/theme/toggle';
 import PushToggle from '@/app/push/toggle';
+import InstallPrompt from '@/app/hub/install';
 
 /**
  * The mobile drawer.
@@ -156,6 +157,11 @@ export default function MoreSheet({ nav, aggregate = 0, scopeSwitcher = null }) 
               per-device preference this browser remembers, not a fact about
               the account. */}
           <PushToggle />
+          {/* Under push, and that order is the argument: iOS grants
+              notifications only to an installed copy, so somebody who has just
+              been told the toggle is unavailable reads the fix immediately
+              below it. Renders nothing at all once the app is installed. */}
+          <InstallPrompt variant="inline" />
         </div>
 
         <button
