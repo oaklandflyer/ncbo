@@ -34,6 +34,7 @@ export const CENTER_CANDIDATES = ['workout', 'log'];
  */
 export function navModel(viewer, counts = {}) {
   const pendingEntries = counts.pendingEntries || 0;
+  const pendingApplications = counts.pendingApplications || 0;
   const pendingQuestions = counts.pendingQuestions || 0;
   const allPendingQuestions = counts.allPendingQuestions || 0;
 
@@ -67,6 +68,11 @@ export function navModel(viewer, counts = {}) {
       id: 'club',
       label: 'Your chapter',
       items: [
+        /* First in the group, and badged. An application nobody sees is
+           somebody who signed up, was never approved, and shows in the Network
+           with no chapter — which is how the queue came to be missing for a
+           release without anyone noticing. */
+        { id: 'club-applications', href: '/club/applications', label: 'Applications', icon: 'applications', badge: pendingApplications },
         { id: 'club-entries', href: '/club/entries', label: 'Verify results', icon: 'check', badge: pendingEntries },
         { id: 'club-roster', href: '/club/roster', label: 'Roster', icon: 'roster' },
         { id: 'club-settings', href: '/club/settings', label: 'Club settings', icon: 'settings' },

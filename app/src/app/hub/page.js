@@ -61,6 +61,16 @@ export default async function Hub() {
   const season = new Date().getFullYear();
   const canAnswer = viewer.canModerateContent;
 
+  /* Applications waiting on this viewer. An admin is included, unscoped: they
+     can open any chapter's queue, and at a chapter with no lead appointed they
+     are the only person who can — so counting only led clubs showed an admin
+     zero while people sat waiting. */
+  const applicationsWaiting = () => {
+    const q = supabase.from('club_memberships')
+      .select('id', { count: 'exact', head: true }).eq('status', 'pending');
+    return viewer.isAdmin ? q : q.in('club_id', viewer.ledClubIds);
+  };
+
   const [
     clubmates, joiners, shows, rankings, chapters, topQuestions, openQuestions, pendingCount,
     clubCalendar, lastSession, myTotals,
@@ -113,10 +123,7 @@ export default async function Hub() {
         ? supabase.from('question_feed').select('id', { count: 'exact', head: true }).eq('answered', false)
         : Promise.resolve({ count: 0 }),
 
-      viewer.isClubLead
-        ? supabase.from('club_memberships').select('id', { count: 'exact', head: true })
-            .eq('status', 'pending').in('club_id', viewer.ledClubIds)
-        : Promise.resolve({ count: 0 }),
+      canReview(viewer) ? applicationsWaiting() : Promise.resolve({ count: 0 }),
 
       /* The chapter's own calendar, for the Next Up widget. Two narrow columns
          rather than the whole club row: this is here to answer "is there a
@@ -242,7 +249,7 @@ export default async function Hub() {
         lead={hero.lead}
         actions={
           canReview(viewer) && pendingCount.count > 0 ? (
-            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/club/queue">
+            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/club/applications">
               {pendingCount.count} waiting
             </Link>
           ) : null

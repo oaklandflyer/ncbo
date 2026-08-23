@@ -53,6 +53,9 @@ export default function ApplicationCard({ application, clubId }) {
               {a.vouch_count} vouch{a.vouch_count === 1 ? '' : 'es'}
             </Badge>
           )}
+          {a.claimed_lead && (
+            <Badge tone="pending">Says they run this chapter</Badge>
+          )}
           {a.escalation_level > 0 && (
             <Badge tone="forming">
               {a.escalation_level === 2 ? 'With Club Relations' : 'Escalated'}
@@ -81,6 +84,18 @@ export default function ApplicationCard({ application, clubId }) {
       {a.student_id_photo_path && (
         <p className={`mt-3 ${fineprint}`}>
           A student ID photo was uploaded. Open it from the storage bucket to check it.
+        </p>
+      )}
+
+      {/* 0032 records the claim at signup and nothing showed it until now.
+          It matters most at a chapter whose lead has never been appointed:
+          there, the only person who can act on this queue is an admin, and
+          approving grants membership, never leadership — an admin appoints a
+          lead from the roster afterwards. */}
+      {a.claimed_lead && (
+        <p className={`mt-4 rounded-[6px] bg-band px-4 py-3 ${fineprint}`}>
+          They said they run this chapter. Approving adds them as a member;
+          making them the lead is a separate step on the roster, and an admin's.
         </p>
       )}
 

@@ -12,7 +12,7 @@ const lead = { isAdmin: false, isClubLead: true, canModerateContent: false, ledC
 const advisor = { isAdmin: false, isClubLead: false, canModerateContent: true, ledClubIds: [] };
 const admin = { isAdmin: true, isClubLead: false, canModerateContent: true, ledClubIds: [] };
 
-const counts = { pendingEntries: 3, pendingQuestions: 4, allPendingQuestions: 7 };
+const counts = { pendingEntries: 3, pendingQuestions: 4, allPendingQuestions: 7, pendingApplications: 2 };
 const ids = (nav) => nav.flatMap((g) => g.items.map((i) => i.id));
 const groupIds = (nav) => nav.map((g) => g.id);
 
@@ -21,6 +21,7 @@ test('a member gets the main group and their profile, and nothing gated', () => 
   assert.deepEqual(groupIds(nav), ['main', 'account']);
   assert.ok(ids(nav).includes('log'));
   assert.ok(!ids(nav).includes('club-entries'));
+  assert.ok(!ids(nav).includes('club-applications'));
   assert.ok(!ids(nav).includes('moderate-questions'));
   assert.ok(!ids(nav).includes('admin-users'));
 });
@@ -36,7 +37,28 @@ test('a lead gets the club group, badged with their own pending entries', () => 
   assert.deepEqual(groupIds(nav), ['main', 'club', 'account']);
   const entries = nav.flatMap((g) => g.items).find((i) => i.id === 'club-entries');
   assert.equal(entries.badge, 3);
-  assert.equal(sumBadges(nav), 3);
+  assert.equal(sumBadges(nav), 5);
+});
+
+/* The regression this file exists to catch a second time. `/hub/club/queue`
+   was the membership queue, the nav rebuild pointed it at `/club/entries`, and
+   for a release approving somebody into a chapter could not be done at all:
+   every applicant stayed pending and showed in the Network with no chapter. */
+test('a lead and an admin both get the applications queue, at its own route', () => {
+  for (const viewer of [lead, admin]) {
+    const applications = navModel(viewer, counts)
+      .flatMap((g) => g.items).find((i) => i.id === 'club-applications');
+    assert.ok(applications, 'the applications queue is in the nav');
+    assert.equal(applications.href, '/club/applications');
+    assert.equal(applications.badge, 2);
+  }
+});
+
+test('the applications and results queues are two destinations, never one', () => {
+  const items = navModel(lead, counts).flatMap((g) => g.items);
+  const applications = items.find((i) => i.id === 'club-applications');
+  const entries = items.find((i) => i.id === 'club-entries');
+  assert.notEqual(applications.href, entries.href);
 });
 
 test('an advisor gets moderation scoped to their own queue', () => {
@@ -63,8 +85,8 @@ test('an admin does NOT get the moderation group, only the admin one', () => {
 
 test('the admin aggregate counts each queue once', () => {
   const nav = navModel(admin, counts);
-  // 3 pending entries + 7 org-wide questions. Not 3 + 4 + 7.
-  assert.equal(sumBadges(nav), 10);
+  // 2 applications + 3 pending entries + 7 org-wide questions. Not 3 + 4 + 7.
+  assert.equal(sumBadges(nav), 12);
 });
 
 test('badge display caps at 99+ and disappears at zero', () => {

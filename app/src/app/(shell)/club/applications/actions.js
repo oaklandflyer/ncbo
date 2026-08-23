@@ -43,8 +43,13 @@ export async function decideApplication(prev, formData) {
 
   if (error) return { error: error.message };
 
-  revalidatePath('/hub/club/queue');
-  revalidatePath('/hub/roster');
+  revalidatePath('/club/applications');
+  revalidatePath('/club/roster');
+  /* The hub carries the same count in its hero, and the Network is where the
+     approval actually shows: an approved member leaves "No club yet" only once
+     `member_directory` is read again. */
+  revalidatePath('/hub');
+  revalidatePath('/hub/network');
   return { ok: decision === 'approve' ? 'Approved.' : 'Declined.' };
 }
 
@@ -74,7 +79,7 @@ export async function askApplicant(prev, formData) {
 
   if (error) return { error: error.message };
 
-  revalidatePath('/hub/club/queue');
+  revalidatePath('/club/applications');
   return { ok: 'Sent to the applicant.' };
 }
 
@@ -101,7 +106,7 @@ export async function setCoLeadRole(prev, formData) {
 
   if (error) return { error: error.message };
 
-  revalidatePath('/hub/club/queue');
-  revalidatePath('/hub/roster');
+  revalidatePath('/club/applications');
+  revalidatePath('/club/roster');
   return { ok: makeCoLead ? 'Co-lead added.' : 'Co-lead stepped down.' };
 }
