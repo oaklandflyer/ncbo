@@ -103,12 +103,32 @@ npm install
 npm run dev
 ```
 
-### 6. Deploy
+### 6. Push notification keys
+
+```sh
+npm run push:keys
+```
+
+Prints a VAPID pair and where each half goes. Nothing is written to disk: the
+private key signs pushes on behalf of the whole organisation, and a generated
+key that lands in a file is a key that gets committed. Put both in
+`.env.local`, and both in Vercel.
+
+The pair is permanent in practice. A subscription is bound to the public key
+it was created with, so regenerating invalidates every row in
+`push_subscriptions` and every member has to turn the toggle back on.
+
+### 7. Deploy
 
 Import the repo into Vercel with **Root Directory set to `app`**. Add the
-three variables from `.env.example` as environment variables, with
+variables from `.env.example` as environment variables, with
 `NEXT_PUBLIC_SITE_URL` set to the production origin. Point
 `app.thencbo.org` at it and add that origin to Supabase's redirect URLs.
+
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` is read at build time, so add it before the
+deploy that should have working notifications — an existing deployment will
+not pick it up. Without it the toggle renders disabled and says so, rather
+than failing when somebody taps it.
 
 ---
 
