@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src middleware.js",
+    "lint": "eslint src middleware.js public/sw.js scripts/generate-vapid-keys.mjs",
+    "push:keys": "node scripts/generate-vapid-keys.mjs",
     "db:status": "supabase migration list",
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
@@ -22,6 +23,7 @@
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
     "sharp": "^0.35.3",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

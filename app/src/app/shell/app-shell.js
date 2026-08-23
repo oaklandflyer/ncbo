@@ -10,6 +10,7 @@ import Sidebar from './sidebar';
 import { ProfilePopupProvider } from '@/app/hub/profile-popup/popup';
 import TopBar from './top-bar';
 import TabBar from './tab-bar';
+import InstallPrompt from '@/app/hub/install';
 import ScopeSwitcher from './scope-switcher';
 
 /**
@@ -99,6 +100,14 @@ export default async function AppShell({ children, searchParams }) {
       <div className="pb-24 pt-[60px] lg:pb-0 lg:pl-[248px]">{children}</div>
 
       <TabBar tabs={tabs} nav={nav} aggregate={aggregate} scopeSwitcher={switcher} />
+
+      {/* Mounted here because this is the one shell, and it was mounted in
+          `hub/layout.js` until that file was gutted in the nav rebuild — the
+          component survived, the render did not, and nothing has offered the
+          app since. Android hid the regression: Chrome promotes installation
+          on its own, so only Safari users noticed, and on Safari this banner
+          is the only mechanism that exists. */}
+      <InstallPrompt />
     </div>
     </ProfilePopupProvider>
   );

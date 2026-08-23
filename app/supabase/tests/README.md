@@ -99,6 +99,19 @@ worked. Fourteen tests.
 | 13 | No club means `lapsed` and off the roster — never a deleted row, which would erase the decision |
 | 14 | The lead's own path through `decide_membership()` is unchanged, and it too ends the "No club yet" state |
 
+### 13_push_subscriptions.sql
+
+Web push subscriptions, which are owner-scoped: a subscription is the means of
+sending somebody a notification. Ten tests.
+
+| # | Behaviour |
+|---|---|
+| 1, 2 | One row per browser — a phone and a laptop are two — and re-registering the same browser refreshes that row rather than adding a second |
+| 3–5 | Another member reads none of them, cannot register a device against somebody else's account, and deletes nothing that is not theirs |
+| 6 | A shared browser moves to whoever turned it on last. Without `save_push_subscription()` the second person's insert hits the first person's row, RLS correctly refuses, and that device never rings for anybody again |
+| 7 | An admin reads every subscription, for support |
+| 8–10 | Turning it off deletes the row; subscribing signed out is refused; a deleted account takes its devices with it |
+
 ## The harness mirrors Supabase's grants
 
 `run.sh` issues Supabase's own blanket grants and default privileges before

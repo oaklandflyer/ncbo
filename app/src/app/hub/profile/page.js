@@ -9,6 +9,8 @@ import {
   VettedSeal, Credentials, SocialLinks, AlumniBadge, fineprint, btnGhost, btnSmall,
 } from '@/app/ui';
 import SignOut from '../sign-out';
+import PushToggle from '@/app/push/toggle';
+import InstallPrompt from '@/app/hub/install';
 import { initials } from '@/lib/monogram';
 import { academicLine, isAlumniEffective } from '@/lib/academicYear';
 
@@ -167,6 +169,19 @@ export default async function Profile() {
             </li>
           ))}
         </ul>
+      </Section>
+
+      {/* The same switch the phone's More sheet carries. That sheet is
+          `lg:hidden`, so without this a member on a laptop has no way to turn
+          notifications on at all — and a laptop is where half of them read
+          this app. One component, rendered twice, so the two can never drift
+          into disagreeing about what the toggle does. */}
+      <Section>
+        <SectionTitle>Notifications</SectionTitle>
+        <Card className="grid gap-5 p-5 sm:p-6">
+          <PushToggle />
+          <InstallPrompt variant="inline" />
+        </Card>
       </Section>
 
       <Section>
