@@ -9,6 +9,9 @@ export const ICONS = {
   vault: 'M5 5.5h9.5l4.5 4.5v8.5H5v-13Zm0 4.7h14M9.5 5.5v4.7',
   check: 'm5 12.5 4.5 4.5L19 7.5',
   roster: 'M4 6.5h16M4 12h16M4 17.5h16M8 4.5v15',
+  /* A person and a plus: somebody asking to join, which is neither the roster
+     they are not on yet nor the tick that verifies a result. */
+  applications: 'M10 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3.5 20c.5-3 3-4.8 6.5-4.8M17.5 14.5v6M14.5 17.5h6',
   clubs: 'M4 20V9l8-5 8 5v11M9 20v-6h6v6',
   settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2-1.2L14.6 3H9.4L9 5.7a7.4 7.4 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2 1.2l.4 2.7h5.2l.4-2.7a7.4 7.4 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.07-.4.1-.8.1-1.2Z',
   profile: 'M12 12.4a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4ZM4.8 20.2c.6-3.3 3.6-5.2 7.2-5.2s6.6 1.9 7.2 5.2',

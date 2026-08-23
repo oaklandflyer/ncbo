@@ -395,6 +395,12 @@ export default function UserTable({
                       )}
                       {removed && <Badge tone="forming">Removed</Badge>}
                       {u.status === 'pending' && <Badge tone="pending">Pending</Badge>}
+                      {/* Account status and membership status are different
+                          answers, and this is the one that explains why a
+                          fully approved account is on no roster. */}
+                      {u.membership_status === 'pending' && (
+                        <Badge tone="pending">Application waiting</Badge>
+                      )}
                     </div>
 
                     <p className="mt-2 break-all text-[0.95rem] text-body">

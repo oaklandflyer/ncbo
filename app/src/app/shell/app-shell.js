@@ -52,6 +52,7 @@ export default async function AppShell({ children, searchParams }) {
       pendingEntries: navCounts[0].pending_entries,
       pendingQuestions: navCounts[0].pending_questions,
       allPendingQuestions: navCounts[0].all_pending_questions,
+      pendingApplications: navCounts[0].pending_applications,
     };
   }
 

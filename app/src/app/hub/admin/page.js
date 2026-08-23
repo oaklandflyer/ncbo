@@ -70,7 +70,7 @@ export default async function Admin() {
         <SectionTitle
           count={waitingSomewhere.length ? `${waitingSomewhere.length} chapter${waitingSomewhere.length === 1 ? '' : 's'}` : null}
           action={
-            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/club/queue">
+            <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/club/applications">
               Open a queue
             </Link>
           }
@@ -90,7 +90,7 @@ export default async function Admin() {
             {waitingSomewhere.map((c) => (
               <li key={c.id}>
                 <Link
-                  href={`/hub/club/queue?club=${c.id}`}
+                  href={`/club/applications?club=${c.id}`}
                   className="flex items-center justify-between gap-4 rounded-[8px] border border-edge bg-surface px-5 py-4 hover:bg-band"
                 >
                   <span className="font-display text-[1rem] font-bold uppercase tracking-[0.02em] text-ink">

@@ -84,6 +84,21 @@ Eighteen tests.
 | 13, 14 | An ordinary member cannot add a show; a club lead can |
 | 15–18 | The Q&A starter library is 30 answered questions, attributed to the Coaching Desk rather than a named advisor, and clearable in one statement |
 
+### 12_approval_surface.sql
+
+The two ways somebody gets into a chapter, after the release where neither
+worked. Fourteen tests.
+
+| # | Behaviour |
+|---|---|
+| 1 | The queue carries `claimed_lead`, so "I run this chapter" reaches the reviewer |
+| 2–5 | Where the pending applications are, and the nav count, both scoped to what the caller may act on: an admin sees every chapter, a lead sees theirs, a member sees none |
+| 6, 7 | `admin_place_member()` is admin-only — a member cannot place themselves, and a club lead cannot place somebody even at their own club |
+| 8–11 | The bug, end to end: a pending applicant shows in the directory as **"No club yet"**, an admin places them, and the directory, the membership and the `profiles` mirror all agree afterwards |
+| 12 | A chapter that had no approver has one, so its queue stops being unworkable |
+| 13 | No club means `lapsed` and off the roster — never a deleted row, which would erase the decision |
+| 14 | The lead's own path through `decide_membership()` is unchanged, and it too ends the "No club yet" state |
+
 ## The harness mirrors Supabase's grants
 
 `run.sh` issues Supabase's own blanket grants and default privileges before

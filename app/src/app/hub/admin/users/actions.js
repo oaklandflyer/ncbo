@@ -43,7 +43,6 @@ export async function adminUpdateUser(prev, formData) {
   const patch = {
     display_name: text(formData.get('display_name'), 80) || 'Member',
     role: String(formData.get('role') || 'member'),
-    club_id: String(formData.get('club_id') || '') || null,
     school_id: String(formData.get('school_id') || '') || null,
     ...academic.patch,
     division: text(formData.get('division'), 60),
@@ -67,8 +66,66 @@ export async function adminUpdateUser(prev, formData) {
   const { error } = await supabase.from('profiles').update(patch).eq('id', id);
   if (error) return { error: error.message };
 
+  /* The club is deliberately NOT in the patch above.
+     `profiles.club_id` has been a derived mirror since 0015 — the trigger
+     rewrites it from `club_memberships` — so assigning a club by writing it
+     here changed nothing anybody could see: the roster, the Network and the
+     headcount all read the membership, and the member stayed under "No club
+     yet" until the next membership write silently reverted the column. The
+     membership is the fact, and `admin_place_member()` writes it. */
+  const placement = await placeInClub(supabase, id, formData);
+  if (placement.error) return placement;
+
   revalidatePath('/hub/admin/users');
   revalidatePath('/hub/network');
+  revalidatePath('/club/applications');
+  revalidatePath('/club/roster');
+  return { ok: true };
+}
+
+/**
+ * The club dropdown on the editor, applied to the membership.
+ *
+ * Only when it actually changes something. Saving an unrelated edit — a
+ * TikTok handle — must not turn a *pending* application into an approved
+ * membership behind the reviewing lead's back: that decision belongs on the
+ * applications queue, where the applicant's answers are in front of whoever
+ * makes it. So a submission that names the club the member is already
+ * attached to is a no-op, whatever the state of that attachment.
+ */
+async function placeInClub(supabase, id, formData) {
+  const club = String(formData.get('club_id') || '') || null;
+  const role = String(formData.get('role') || 'member') === 'club_lead' ? 'club_lead' : 'member';
+
+  /* Every state, not just the active one: a pending applicant's editor shows
+     their chapter in the dropdown, and comparing against actives only would
+     read that unchanged value as a move and approve them. */
+  const { data: rows } = await supabase
+    .from('club_memberships')
+    .select('club_id, role, status')
+    .eq('user_id', id)
+    .in('status', ['active', 'pending']);
+
+  const current = (rows || []).find((m) => m.status === 'active')
+    || (rows || []).find((m) => m.status === 'pending')
+    || null;
+
+  const clubUnchanged = (current?.club_id || null) === club;
+  const roleUnchanged = !current || current.status !== 'active' || current.role === role
+    || (role === 'member' && current.role === 'co_lead');
+
+  if (clubUnchanged && roleUnchanged) return { ok: true };
+  if (!club && !current) return { ok: true };
+
+  const { error } = await supabase.rpc('admin_place_member', {
+    target: id,
+    club,
+    new_role: role,
+  });
+
+  if (error) {
+    return { error: `The profile saved, but the club did not: ${error.message}` };
+  }
   return { ok: true };
 }
 
