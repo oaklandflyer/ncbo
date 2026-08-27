@@ -5,6 +5,7 @@ import { resolveClubScope } from '@/lib/scope';
 import { Page, PageHero, Section, SectionTitle, Meta, Empty } from '@/app/ui';
 import ClubLogoForm from './logo-form';
 import CalendarSettings from './settings';
+import ChapterLeadsForm from './leads-form';
 
 export const metadata = { title: 'Club settings · NCBO' };
 
@@ -36,10 +37,23 @@ export default async function ClubSettings({ searchParams }) {
     );
   }
 
-  const { data: club } = await supabase
-    .from('clubs')
-    .select('id, name, logo_url, gcal_id, gcal_timezone, gcal_published')
-    .eq('id', scope.clubId).maybeSingle();
+  /* The lead entries alongside the club. A failure costs the panel, never the
+     page: the RPC refuses anybody who does not lead this chapter, and an admin
+     arriving via `?club=` on a chapter they do not lead is a legitimate reader
+     that `is_admin()` lets through. */
+  const [{ data: club }, { data: leadEntries, error: leadError }] = await Promise.all([
+    supabase
+      .from('clubs')
+      .select('id, name, logo_url, gcal_id, gcal_timezone, gcal_published')
+      .eq('id', scope.clubId).maybeSingle(),
+    supabase.rpc('get_club_lead_entries', { target_club: scope.clubId }),
+  ]);
+
+  if (leadError) {
+    console.error('[ncbo] club lead entries failed', {
+      code: leadError.code, message: leadError.message,
+    });
+  }
 
   if (!club) {
     return (
@@ -60,6 +74,23 @@ export default async function ClubSettings({ searchParams }) {
 
       <Section>
         <ClubLogoForm club={club} />
+      </Section>
+
+      {/* Above the calendar, because this is the one somebody arrives here to
+          fix: the "Led by …" line on the Network directory is the most public
+          thing a chapter says about itself, and it has been naming people who
+          were never on the app. */}
+      <Section>
+        <SectionTitle count={leadEntries?.length || null}>Chapter leads</SectionTitle>
+        <Meta className="-mt-3 mb-6 max-w-[620px]">
+          The names members see under your chapter on the Network tab. Only entries with a
+          live account are shown there — add a lead by promoting them from your roster.
+        </Meta>
+        <ChapterLeadsForm
+          clubId={scope.clubId}
+          entries={leadEntries || []}
+          isAdmin={viewer.isAdmin}
+        />
       </Section>
 
       {/* Beneath the logo rather than above it: the logo is a one-off a lead
