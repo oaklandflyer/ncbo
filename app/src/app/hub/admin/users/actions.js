@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
 import { parseAcademic } from '@/lib/academicYear';
+import { notifyMembershipApproved } from '@/lib/push';
 
 /**
  * Account management is admin-only — not moderator-only. An advisor moderates
@@ -117,6 +118,13 @@ async function placeInClub(supabase, id, formData) {
   if (clubUnchanged && roleUnchanged) return { ok: true };
   if (!club && !current) return { ok: true };
 
+  /* Captured before the write, because afterwards there is no way to tell an
+     approval from a transfer: both end with one active membership. Somebody
+     with no active membership who now has one has been let in; somebody moved
+     between chapters has not, and must not be told their account was
+     approved. */
+  const wasActive = (rows || []).some((m) => m.status === 'active');
+
   const { error } = await supabase.rpc('admin_place_member', {
     target: id,
     club,
@@ -126,6 +134,12 @@ async function placeInClub(supabase, id, formData) {
   if (error) {
     return { error: `The profile saved, but the club did not: ${error.message}` };
   }
+
+  /* The same notification the applications queue sends, so a member cannot
+     tell which route admitted them. Its result is ignored on purpose — see
+     `@/lib/push`: the placement has happened either way. */
+  if (club && !wasActive) await notifyMembershipApproved(id);
+
   return { ok: true };
 }
 
