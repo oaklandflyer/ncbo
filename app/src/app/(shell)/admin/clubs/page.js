@@ -22,7 +22,7 @@ export default async function AdminClubs() {
 
   const { data: clubs } = await supabase
     .from('club_directory')
-    .select('id, club_name, short_name, school_name, status, member_count, pending_count, approver_count')
+    .select('id, club_name, short_name, school_name, status, member_count, pending_count, approver_count, orphan_lead_count')
     .order('short_name');
 
   return (
@@ -49,6 +49,19 @@ export default async function AdminClubs() {
                     </Meta>
                   </div>
                   <Meta className="mt-1">{c.school_name} · {c.status}</Meta>
+
+                  {/* The seeded names, and the ones deleted accounts left
+                      behind. The directory already hides them; this is how an
+                      admin finds the chapters that still carry them, since a
+                      hidden row is by definition not visible where the bug was
+                      reported. */}
+                  {c.orphan_lead_count > 0 && (
+                    <p className="mt-3 rounded-[6px] border-l-[3px] border-l-edge bg-band px-3 py-2 text-[0.92rem] text-body">
+                      {c.orphan_lead_count} lead {c.orphan_lead_count === 1 ? 'entry names' : 'entries name'}
+                      {' '}somebody with no live account. Hidden from the directory; clear
+                      {' '}{c.orphan_lead_count === 1 ? 'it' : 'them'} in Settings.
+                    </p>
+                  )}
 
                   {c.approver_count <= 1 && (
                     <p className="mt-3 rounded-[6px] border-l-[3px] border-l-danger bg-band px-3 py-2 text-[0.92rem] text-body">

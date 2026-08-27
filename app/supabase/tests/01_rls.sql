@@ -539,7 +539,14 @@ select count(*) as answer_still_recoverable
 \echo ''
 \echo '=== 55. the roster is one club per school, pipelines included ==='
 select status, count(*) from club_directory group by status order by status;
-select count(*) as clubs_with_leads from club_directory where array_length(leads, 1) > 0;
+/* Since 0041 `leads` names only people with a live, approved profile, and
+   this fixture database has none behind the seeded names — so 0 published and
+   a non-zero orphan count is the CORRECT reading here, not a regression. It is
+   also the shape production is in: the seed named eleven real people who never
+   signed up. `15_club_lead_directory.sql` proves a linked lead IS published. */
+select count(*) as clubs_with_published_leads
+  from club_directory where array_length(leads, 1) > 0;
+select sum(orphan_lead_count)::int as orphan_lead_rows from club_directory;
 reset role;
 
 \echo ''
