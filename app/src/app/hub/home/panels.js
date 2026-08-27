@@ -91,87 +91,104 @@ export function UpcomingShows({ competitions, heading = 'On the calendar', lead 
 }
 
 /**
- * National rankings, top five each.
+ * National rankings — chapters first, and by a clear margin.
  *
- * The thing no single chapter can build for itself, and the reason somebody at
- * Iowa opens this on a quiet Tuesday.
+ * This panel used to be two equal columns, Lifters on the left and Chapters on
+ * the right, which on a phone meant the individual leaderboard came first and
+ * the Chapter Cup was the thing below it you had to scroll for. Beta read that
+ * exactly as it was laid out: as an app about ranking individuals, with the
+ * chapter standings as a footnote.
+ *
+ * They are not equal. The Chapter Cup is the competition NCBO actually runs —
+ * the thing no single chapter can build for itself, and the reason somebody at
+ * Iowa opens this on a quiet Tuesday. So it gets the full width, the larger
+ * type and the top of the panel, and individual athletes sit beneath it as
+ * what they are: the contributions the chapter standings are made of.
  */
 export function RankingsPanel({ rankings, season, chapters }) {
+  const hasChapters = chapters?.length > 0;
+  const hasLifters = rankings?.length > 0;
+
   return (
     <Section band>
       <SectionTitle
         action={
-          <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/hub/rankings">
-            Full rankings
+          <Link className={`${btnGhost} ${btnSmall} bg-surface`} href="/rankings/clubs">
+            Full standings
           </Link>
         }
       >
-        {season} rankings
+        {season} Chapter Cup
       </SectionTitle>
 
-      {rankings?.length ? (
-        <div className="grid gap-5 md:grid-cols-2">
-          <div>
-            <p className="mb-3 font-display text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-meta">
-              Lifters
-            </p>
-            <ol className="grid list-none gap-2">
-              {rankings.slice(0, 5).map((r) => (
-                <li
-                  key={r.user_id}
-                  className="flex items-center gap-3 rounded-[6px] border border-edge bg-surface px-4 py-3"
-                >
-                  <span className="w-6 shrink-0 font-display text-[1rem] font-bold text-brand">
-                    {r.rank}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    <UserChip userId={r.user_id} className="font-semibold text-ink">
-                      {r.display_name}
-                    </UserChip>
-                    {r.chapter && <span className="ml-2 text-[0.85rem] text-meta">{r.chapter}</span>}
-                  </span>
-                  <span className="shrink-0 font-display text-[0.9rem] font-bold text-ink">
-                    {Math.round(r.points)}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div>
-            <p className="mb-3 font-display text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-meta">
-              Chapters
-            </p>
-            {chapters?.length ? (
-              <ol className="grid list-none gap-2">
-                {chapters.slice(0, 5).map((c) => (
-                  <li
-                    key={c.club_id}
-                    className="flex items-center gap-3 rounded-[6px] border border-edge bg-surface px-4 py-3"
-                  >
-                    <span className="w-6 shrink-0 font-display text-[1rem] font-bold text-brand">
-                      {c.rank}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate font-semibold text-ink">
-                      {c.chapter}
-                    </span>
-                    <span className="shrink-0 font-display text-[0.9rem] font-bold text-ink">
-                      {Math.round(c.points)}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <Empty>No chapter has a confirmed result this season yet.</Empty>
-            )}
-          </div>
-        </div>
+      {hasChapters ? (
+        <ol className="grid list-none gap-2">
+          {chapters.slice(0, 5).map((c) => (
+            <li
+              key={c.club_id}
+              className="flex items-center gap-4 rounded-[8px] border border-edge bg-surface px-5 py-4"
+            >
+              <span className="w-8 shrink-0 font-display text-[1.35rem] font-extrabold tabular-nums text-brand">
+                {c.rank}
+              </span>
+              <span className="min-w-0 flex-1 truncate font-display text-[1.08rem] font-bold uppercase tracking-[0.02em] text-ink">
+                {c.chapter}
+              </span>
+              <span className="shrink-0 font-display text-[1.2rem] font-extrabold tabular-nums text-ink">
+                {Math.round(c.points)}
+              </span>
+            </li>
+          ))}
+        </ol>
       ) : (
-        <Empty>
-          No confirmed results this season yet. A result is entered by the lifter and
-          confirmed by their club lead, so if you have competed, add it from the calendar.
-        </Empty>
+        <Empty>No chapter has a confirmed result this season yet.</Empty>
       )}
+
+      {/* Beneath, and deliberately smaller. Individual results are how a
+          chapter earns its points, so this reads as the detail behind the
+          table above rather than a competing leaderboard. */}
+      <div className="mt-8 border-t border-edge pt-6">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <p className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-meta">
+            Top individual contributors
+          </p>
+          <Link
+            className="font-display text-[0.7rem] font-bold uppercase tracking-[0.12em] text-brand"
+            href="/rankings/athletes"
+          >
+            All athletes
+          </Link>
+        </div>
+
+        {hasLifters ? (
+          <ol className="grid list-none gap-2 md:grid-cols-2">
+            {rankings.slice(0, 4).map((r) => (
+              <li
+                key={r.user_id}
+                className="flex items-center gap-3 rounded-[6px] border border-edge bg-surface px-4 py-2.5"
+              >
+                <span className="w-5 shrink-0 font-display text-[0.85rem] font-bold tabular-nums text-meta">
+                  {r.rank}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  <UserChip userId={r.user_id} className="text-[0.95rem] font-semibold text-ink">
+                    {r.display_name}
+                  </UserChip>
+                  {r.chapter && <span className="ml-2 text-[0.82rem] text-meta">{r.chapter}</span>}
+                </span>
+                <span className="shrink-0 font-display text-[0.85rem] font-bold tabular-nums text-meta">
+                  {Math.round(r.points)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <Empty>
+            No confirmed results this season yet. A result is entered by the lifter and
+            confirmed by their club lead, so if you have competed, add it from the calendar.
+          </Empty>
+        )}
+      </div>
     </Section>
   );
 }

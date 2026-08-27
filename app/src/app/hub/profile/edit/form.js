@@ -12,7 +12,7 @@ import AcademicFields from '@/app/hub/academic-fields';
  * is read-only for a reason, so this form only carries what the database will
  * actually accept from them.
  */
-export default function EditProfileForm({ profile, divisions }) {
+export default function EditProfileForm({ profile, divisions, homeRegions = [] }) {
   const [state, action, pending] = useActionState(saveProfile, {});
 
   return (
@@ -54,17 +54,30 @@ export default function EditProfileForm({ profile, divisions }) {
         </div>
       </fieldset>
 
+      {/* A combobox, exactly like Division below it: pick one that exists, or
+          type a new one. `<datalist>` rather than a JS picker because that is
+          what the browser already does well, it needs no client state, and it
+          keeps the field a plain text input — so a region nobody has entered
+          yet is still typeable, which a <select> would forbid.
+
+          The list is what makes "Pittsburgh, PA" and "pitt" stop being two
+          regions in the Network directory's By Hometown view. */}
       <div>
         <label className={fieldLabel} htmlFor="home_region">Hometown region</label>
         <input
-          id="home_region" name="home_region" className={field}
+          id="home_region" name="home_region" className={field} list="home-region-options"
           defaultValue={profile.home_region || ''}
           placeholder="Greater Pittsburgh, PA"
           maxLength={80}
+          autoComplete="off"
         />
+        <datalist id="home-region-options">
+          {homeRegions.map((r) => <option key={r} value={r} />)}
+        </datalist>
         <p className={`mt-2 ${fineprint}`}>
           An area, not an address. Close enough to find someone to train with, and no
-          closer.
+          closer. Pick one already listed if it fits — that is what groups you with
+          everyone else from there.
         </p>
       </div>
 

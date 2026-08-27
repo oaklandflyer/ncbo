@@ -6,12 +6,14 @@ import { navModel, sumBadges, mobileTabs } from '@/lib/nav/navModel';
 import { resolveClubScope } from '@/lib/scope';
 import AccountStatus from '@/app/hub/status';
 import SchemaError from '@/app/hub/schema-error';
+import AuthUnavailable from '@/app/hub/auth-unavailable';
 import Sidebar from './sidebar';
 import { ProfilePopupProvider } from '@/app/hub/profile-popup/popup';
 import TopBar from './top-bar';
 import TabBar from './tab-bar';
 import InstallPrompt from '@/app/hub/install';
 import ScopeSwitcher from './scope-switcher';
+import SessionSync from './session-sync';
 
 /**
  * The one shell every signed-in route renders inside.
@@ -26,9 +28,16 @@ export default async function AppShell({ children, searchParams }) {
   const viewer = await getViewerContext(supabase);
   const profile = viewer.profile;
 
-  /* Three situations that must not collapse into one redirect: signed out is a
-     redirect, an unreadable profile explains itself, and only a genuinely
-     missing row sends somebody back to sign in. */
+  /* Four situations that must not collapse into one redirect: signed out is a
+     redirect, an auth server we could not reach says so and keeps the session,
+     an unreadable profile explains itself, and only a genuinely missing row
+     sends somebody back to sign in.
+
+     The second of those is new, and is the fix for the frequent logouts. It
+     used to fall into the first: one failed request to the auth host and a
+     member with a valid session was redirected to /login, where signing in
+     again could not help because nothing was wrong with their sign-in. */
+  if (viewer.authUnavailable) return <AuthUnavailable />;
   if (!viewer.signedIn) redirect('/login');
   if (viewer.profileError) return <SchemaError error={viewer.profileError} />;
   if (!profile) redirect('/login');
@@ -108,6 +117,12 @@ export default async function AppShell({ children, searchParams }) {
           on its own, so only Safari users noticed, and on Safari this banner
           is the only mechanism that exists. */}
       <InstallPrompt />
+
+      {/* Renders nothing. It exists so a browser Supabase client is alive
+          while the app is open, which is what keeps its auto-refresh timer
+          running — until this was mounted, no client was constructed anywhere
+          inside the hub and a session only ever renewed on navigation. */}
+      <SessionSync />
     </div>
     </ProfilePopupProvider>
   );

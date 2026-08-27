@@ -4,6 +4,8 @@ import { isOnboarded, missingFields } from '@/lib/onboarding';
 import { AuthPage, AuthHeading } from '@/app/ui';
 import OnboardingForm from './form';
 import SchemaError from '@/app/hub/schema-error';
+import AuthUnavailable from '@/app/hub/auth-unavailable';
+import { getHomeRegions } from '@/lib/homeRegions';
 
 export const metadata = {
   title: 'Finish your profile · NCBO',
@@ -19,11 +21,12 @@ export const metadata = {
  */
 export default async function Onboarding() {
   const supabase = await createClient();
-  const { signedIn, profile, error } = await getProfileResult(supabase);
+  const { signedIn, profile, error, authUnavailable } = await getProfileResult(supabase);
 
   /* Outside /hub, so there is no layout to explain this one. Same three-way
      split as the hub: signed out is a redirect, an unreadable profile is a
      message, and only a missing row sends somebody back to sign in. */
+  if (authUnavailable) return <AuthUnavailable />;
   if (!signedIn) redirect('/login');
   if (error) return <SchemaError error={error} />;
   if (!profile) redirect('/login');
@@ -46,10 +49,18 @@ export default async function Onboarding() {
      searched from the client per keystroke: it is a few hundred rows, it
      changes about once a semester, and a round trip per character on a phone
      on campus wifi is the difference between a picker and a wait. */
-  const { data: universities } = await supabase
-    .from('university_picker')
-    .select('id, name, short_name, state, club_id, club_name, has_chapter, chapter_state')
-    .order('name');
+  /* Alongside it, the hometown regions already on file, for the same reason:
+     a list of what exists beats a blank box, and here it is what stops
+     "Pittsburgh, PA" and "pitt" becoming two regions in the directory.
+     `get_home_regions()` is SECURITY DEFINER because this page runs before
+     approval — see migration 0039. */
+  const [{ data: universities }, homeRegions] = await Promise.all([
+    supabase
+      .from('university_picker')
+      .select('id, name, short_name, state, club_id, club_name, has_chapter, chapter_state')
+      .order('name'),
+    getHomeRegions(supabase),
+  ]);
 
   return (
     <AuthPage wide>
@@ -68,6 +79,7 @@ export default async function Onboarding() {
           email={profile.email}
           defaultName={profile.full_name}
           universities={universities || []}
+          homeRegions={homeRegions}
         />
       </div>
     </AuthPage>

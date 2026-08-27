@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatMinutes, formatVolume, daysOutLabel } from '@/lib/workoutSummary';
+import { formatMinutes, daysOutLabel } from '@/lib/workoutSummary';
 
 /**
  * The three widgets the home screen opens with.
@@ -11,7 +11,7 @@ import { formatMinutes, formatVolume, daysOutLabel } from '@/lib/workoutSummary'
  *
  * They are deliberately dumb. Each takes plain values and renders them, which
  * is what let them be laid out against real numbers (a 1,450 point leader, a
- * 9,425 lb session) before any of the queries behind them existed, and what
+ * 42-session history) before any of the queries behind them existed, and what
  * keeps the page the only file that knows how to fetch anything.
  *
  * Colour comes from the app's tokens rather than literal Tailwind palettes:
@@ -173,15 +173,22 @@ export function NextUpWidget({ title, when, days, where, href, kind = 'Next up' 
  * a workout is a thing done standing up with one hand. The summary above it is
  * there to answer "what did I do last time", which is the question that
  * decides what goes on the bar today.
+ *
+ * It counted sessions and pounds until beta said the pounds were noise. Raw
+ * volume is a number that rewards the wrong thing — it goes up fastest on the
+ * exercises that move the most weight, not the ones that build anybody — and
+ * NCBO scores members on the Chapter Cup, not on tonnage. What is left is
+ * sessions completed, which is the honest version of the same encouragement:
+ * did you show up.
  */
-export function TrainingWidget({ last, lifetime, href = '/hub/workout' }) {
+export function TrainingWidget({ last, sessions = 0, href = '/hub/workout' }) {
   return (
     <Widget
       title="Training"
       action={
-        lifetime > 0 ? (
+        sessions > 0 ? (
           <span className="font-display text-[0.7rem] font-bold uppercase tracking-[0.12em] text-meta tabular-nums">
-            {formatVolume(lifetime)} lb lifetime
+            {sessions.toLocaleString('en-US')} session{sessions === 1 ? '' : 's'}
           </span>
         ) : null
       }
@@ -192,7 +199,7 @@ export function TrainingWidget({ last, lifetime, href = '/hub/workout' }) {
             {sessionDate(last.startTime)}
           </p>
           <p className="mt-1 text-[0.85rem] tabular-nums text-meta">
-            {[formatMinutes(last.minutes), `${formatVolume(last.volume)} lb`, `${last.sets} sets`]
+            {[formatMinutes(last.minutes), `${last.sets} sets`]
               .filter(Boolean)
               .join(' · ')}
           </p>

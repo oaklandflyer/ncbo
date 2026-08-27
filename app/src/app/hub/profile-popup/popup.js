@@ -211,10 +211,17 @@ function ProfileModal({ state, onClose, closeRef }) {
                 built. A permanently greyed-out control is not a promise, it is
                 a dead end somebody taps once and remembers as broken. When
                 messaging exists it can have a button; until then the card is
-                honest about what it does. */}
+                honest about what it does.
+
+                The href is the member's own route. It used to be
+                `/hub/network?member=<id>`, and nothing read that parameter:
+                the modal closed, the directory reloaded, and you were back at
+                a list of everybody. It navigated correctly to a page that
+                ignored it, which is exactly how it got reported as a button
+                that does nothing. */}
             <div className="mt-6">
               <Link
-                href={`/hub/network?member=${p.id}`}
+                href={`/hub/network/${p.id}`}
                 className={`${btnGhost} ${btnSmall} block text-center`}
                 onClick={onClose}
               >

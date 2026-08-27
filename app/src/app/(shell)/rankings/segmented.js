@@ -8,9 +8,13 @@ import Link from 'next/link';
  * nothing and behave like the web.
  */
 export function Segmented({ current }) {
+  /* Chapter Cup first, and that order is the point rather than an accident of
+     how the two pages were written. The Cup is the competition NCBO runs;
+     Athletes is the detail behind it. A control that listed athletes first
+     told every member the opposite every time they opened this screen. */
   const tabs = [
-    ['/rankings/athletes', 'Athletes'],
     ['/rankings/clubs', 'Chapter Cup'],
+    ['/rankings/athletes', 'Athletes'],
   ];
 
   return (

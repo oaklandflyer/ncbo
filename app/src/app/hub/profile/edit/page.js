@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient, getProfileResult } from '@/lib/supabase/server';
 import { Page, PageHero, Section, SectionTitle, BackLink } from '@/app/ui';
 import EditProfileForm from './form';
+import { getHomeRegions } from '@/lib/homeRegions';
 
 /** The divisions members have already entered, offered as suggestions. */
 const FALLBACK_DIVISIONS = [
@@ -19,8 +20,12 @@ export default async function EditProfile() {
   if (!signedIn) redirect('/login');
   if (!profile) return null;
 
-  const { data: rows } = await supabase
-    .from('member_directory').select('division').not('division', 'is', null).limit(200);
+  /* Both suggestion lists in one round trip each, in parallel. Neither is
+     load-bearing: a failure costs the datalist and leaves a plain text box. */
+  const [{ data: rows }, homeRegions] = await Promise.all([
+    supabase.from('member_directory').select('division').not('division', 'is', null).limit(200),
+    getHomeRegions(supabase),
+  ]);
 
   const divisions = [...new Set([...(rows || []).map((r) => r.division), ...FALLBACK_DIVISIONS])];
 
@@ -34,7 +39,7 @@ export default async function EditProfile() {
 
       <Section>
         <SectionTitle>What other members see</SectionTitle>
-        <EditProfileForm profile={profile} divisions={divisions} />
+        <EditProfileForm profile={profile} divisions={divisions} homeRegions={homeRegions} />
       </Section>
     </Page>
   );
