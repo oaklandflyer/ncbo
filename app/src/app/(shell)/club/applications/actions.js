@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
+import { notifyMembershipApproved } from '@/lib/push';
 
 /**
  * The lead's three actions on an application: approve, deny, ask a question.
@@ -42,6 +43,25 @@ export async function decideApplication(prev, formData) {
   });
 
   if (error) return { error: error.message };
+
+  /* Told, if they asked to be. Read after the decision rather than before, so
+     a failed approval cannot produce a notification for something that did not
+     happen — and through the lead's own client, which RLS lets read this row
+     because they lead the club.
+
+     Awaited, but its result is deliberately ignored: `sendPushNotification`
+     never rejects, and the approval has already happened. A member whose
+     device is unreachable is still approved, and the lead still sees
+     "Approved." — the push is a message about the fact, not the fact. */
+  if (decision === 'approve') {
+    const { data: approved } = await ctx.supabase
+      .from('club_memberships')
+      .select('user_id')
+      .eq('id', membershipId)
+      .maybeSingle();
+
+    if (approved?.user_id) await notifyMembershipApproved(approved.user_id);
+  }
 
   revalidatePath('/club/applications');
   revalidatePath('/club/roster');
