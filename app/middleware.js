@@ -50,7 +50,14 @@ export async function middleware(request) {
      member exactly where they are. */
   const { user, unavailable } = await getUserResilient(supabase);
 
-  const guarded = ['/hub', '/onboarding']
+  /* `/club` is here as well as `/hub`. The club-lead screens live outside
+     /hub in the `(shell)` route group, so a signed-out request for one used to
+     reach the page and be redirected by the page's own guard — the same
+     destination, one wasted render later. Whether the viewer actually *leads*
+     that chapter is still decided in the page and, for real, by
+     `get_club_roster()` and the RLS policies; this only settles whether they
+     are signed in at all. */
+  const guarded = ['/hub', '/onboarding', '/club']
     .some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
   if (guarded && !unavailable && !user) {

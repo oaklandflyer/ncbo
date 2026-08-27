@@ -58,7 +58,6 @@ export default async function Hub() {
 
   const membership = viewer.membership;
   const phase = profile.experience_phase || 'new_to_bodybuilding';
-  const season = new Date().getFullYear();
   const canAnswer = viewer.canModerateContent;
 
   /* Applications waiting on this viewer. An admin is included, unscoped: they
@@ -72,7 +71,7 @@ export default async function Hub() {
   };
 
   const [
-    clubmates, joiners, shows, rankings, chapters, topQuestions, openQuestions, pendingCount,
+    clubmates, joiners, shows, athleteRows, chapterRows, topQuestions, openQuestions, pendingCount,
     clubCalendar, lastSession, myTotals,
   ] = await Promise.all([
       /* The roster reads `member_directory`, whose club comes from an active
@@ -100,17 +99,16 @@ export default async function Hub() {
         .order('starts_on')
         .limit(4),
 
-      supabase.from('national_rankings')
-        .select('user_id, display_name, chapter, shows, points, rank')
-        .eq('season', season)
-        .order('rank')
-        .limit(10),
+      /* The RPCs, not `national_rankings` / `chapter_rankings`. Those two views
+         were dropped in migration 0023 and never recreated, so every request
+         this page made for them failed and was swallowed by `|| []` — which is
+         why Home has been reporting that nobody has scored all season, and why
+         the Chapter Cup widget never appeared. `/rankings/athletes` and
+         `/rankings/clubs` have been reading these RPCs the whole time, which is
+         how the two screens came to disagree. */
+      supabase.rpc('get_athlete_rankings'),
 
-      supabase.from('chapter_rankings')
-        .select('club_id, chapter, points, rank, competing_members')
-        .eq('season', season)
-        .order('rank')
-        .limit(10),
+      supabase.rpc('get_chapter_cup_standings'),
 
       supabase.from('question_feed')
         .select('id, body, answer_count, helpful_count')
@@ -153,6 +151,25 @@ export default async function Hub() {
       supabase.from('my_workout_totals').select('sessions').maybeSingle(),
     ]);
 
+  /* The RPCs return their own column names. Mapped here, once, into the shape
+     the panels and widgets already take, rather than teaching every component
+     a second vocabulary for the same numbers. */
+  const rankings = (athleteRows.data || []).slice(0, 10).map((r) => ({
+    user_id: r.profile_id,
+    display_name: r.display_name,
+    chapter: r.chapter,
+    shows: r.entries,
+    points: r.points,
+    rank: r.rank,
+  }));
+
+  const chapters = (chapterRows.data || []).slice(0, 10).map((c) => ({
+    club_id: c.club_id,
+    chapter: c.chapter,
+    points: c.total_points,
+    rank: c.rank,
+  }));
+
   const roster = clubmates.data || [];
   const newJoiners = (joiners.data || []).map((r) => r.profiles).filter(Boolean);
   const competitions = (shows.data || []).map((c) => ({ ...c, federation: c.federations?.code }));
@@ -162,7 +179,7 @@ export default async function Hub() {
 
   /* My own rank, if I have one. Worth surfacing above everything else for the
      competing persona: a number that moved is the reason to come back. */
-  const myRank = (rankings.data || []).find((r) => r.user_id === profile.id);
+  const myRank = rankings.find((r) => r.user_id === profile.id);
 
   /* ── the widget row ───────────────────────────────────────────────────
      Three answers, above everything else, for all three personas: where my
@@ -170,7 +187,7 @@ export default async function Hub() {
      the phases reorder is still below — this is the part somebody checks
      between classes without scrolling. */
 
-  const chapterTable = chapters.data || [];
+  const chapterTable = chapters;
   const myChapter = membership?.clubId
     ? chapterTable.find((c) => c.club_id === membership.clubId)
     : null;
@@ -232,7 +249,7 @@ export default async function Hub() {
        the way NCBO actually competes. */
     competing: {
       title: myChapter
-        ? `${season}: ${myChapter.chapter || membership?.clubName} is ${ordinal(myChapter.rank)}.`
+        ? `${myChapter.chapter || membership?.clubName} is ${ordinal(myChapter.rank)}.`
         : membership?.clubName || `Welcome back, ${firstName}.`,
       lead: myRank
         ? `You are ranked ${myRank.rank} nationally, and your results are part of that standing. Here is what is on the calendar next.`
@@ -276,7 +293,7 @@ export default async function Hub() {
                 <Stat value={roster.length} label={roster.length === 1 ? 'Chapter member' : 'Chapter members'} />
               )}
               {myRank && (
-                <Stat value={Math.round(myRank.points)} label={`Your points, ${season}`} />
+                <Stat value={Math.round(myRank.points)} label="Your points" />
               )}
               {canAnswer && openQuestions.count > 0 && (
                 <Stat value={openQuestions.count} label="Questions open" />
@@ -295,7 +312,6 @@ export default async function Hub() {
         <WidgetGrid>
           {myChapter && (
             <ChapterCupWidget
-              season={season}
               rank={myChapter.rank}
               chapter={myChapter.chapter || membership?.clubName}
               points={myChapter.points}
@@ -340,7 +356,7 @@ export default async function Hub() {
             heading="On the calendar"
             lead="Work backwards from a date. Sixteen to twenty weeks is the usual first prep, and starting late is the most common way one goes wrong."
           />
-          <RankingsPanel rankings={rankings.data} chapters={chapters.data} season={season} />
+          <RankingsPanel rankings={rankings} chapters={chapters} />
           <ChapterPanel
             membership={membership}
             chapter={chapter}
@@ -354,7 +370,7 @@ export default async function Hub() {
 
       {phase === 'competing' && (
         <>
-          <RankingsPanel rankings={rankings.data} chapters={chapters.data} season={season} />
+          <RankingsPanel rankings={rankings} chapters={chapters} />
           <UpcomingShows
             competitions={competitions}
             heading="Next up"

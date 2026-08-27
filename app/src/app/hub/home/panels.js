@@ -105,7 +105,7 @@ export function UpcomingShows({ competitions, heading = 'On the calendar', lead 
  * type and the top of the panel, and individual athletes sit beneath it as
  * what they are: the contributions the chapter standings are made of.
  */
-export function RankingsPanel({ rankings, season, chapters }) {
+export function RankingsPanel({ rankings, chapters }) {
   const hasChapters = chapters?.length > 0;
   const hasLifters = rankings?.length > 0;
 
@@ -118,7 +118,10 @@ export function RankingsPanel({ rankings, season, chapters }) {
           </Link>
         }
       >
-        {season} Chapter Cup
+        {/* No year: `get_chapter_cup_standings()` has no season filter, so a
+            date here would be the heading claiming a scope the table does not
+            have. */}
+        Chapter Cup
       </SectionTitle>
 
       {hasChapters ? (

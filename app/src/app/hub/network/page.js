@@ -31,21 +31,20 @@ export default async function Network() {
     .select('id, club_name, status, school_name, state, member_count, leads')
     .order('club_name');
 
-  /* Season points, the one stat on a person's card. `national_rankings` is
-     public — it is the leaderboard everybody already sees.
+  /* Cup points, the one stat on a person's card.
+
+     `get_athlete_rankings()`, not `national_rankings`: that view was dropped
+     in migration 0023 and never recreated, so this read has been failing and
+     being swallowed ever since — which is why no card in the directory has
+     shown a points figure. The RPC is the same leaderboard `/rankings/athletes`
+     renders, so the two screens now agree by construction.
 
      There used to be a second read here, of `my_workout_totals`, for a
-     "Lifetime lb" figure. It has gone with the rest of raw volume tracking:
-     the Chapter Cup is what NCBO ranks members on, and a tonnage number beside
-     it invited a comparison between two people that only one of them could
-     even see — the totals view returns the viewer's own row and nobody
-     else's, so every other card on the page was missing it by construction. */
-  const season = new Date().getFullYear();
-  const { data: seasonPoints } = await supabase
-    .from('national_rankings').select('user_id, points, rank').eq('season', season);
+     "Lifetime lb" figure. It went with the rest of raw volume tracking. */
+  const { data: athletes } = await supabase.rpc('get_athlete_rankings');
 
   const cupPoints = Object.fromEntries(
-    (seasonPoints || []).map((r) => [r.user_id, Math.round(Number(r.points) || 0)]),
+    (athletes || []).map((r) => [r.profile_id, Math.round(Number(r.points) || 0)]),
   );
 
   const { data: members } = await supabase

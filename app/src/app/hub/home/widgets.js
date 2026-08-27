@@ -59,7 +59,7 @@ const points = (value) => Math.round(Number(value) || 0).toLocaleString('en-US')
  * show. A chapter in the lead gets its margin instead, which is the same
  * sentence pointed the other way.
  */
-export function ChapterCupWidget({ season, rank, chapter, points: total, leader, contributed }) {
+export function ChapterCupWidget({ rank, chapter, points: total, leader, contributed }) {
   const behind = leader && rank > 1 ? Math.round(leader.points - total) : null;
   const ahead = rank === 1 && leader?.runnerUpPoints != null
     ? Math.round(total - leader.runnerUpPoints)
@@ -67,7 +67,11 @@ export function ChapterCupWidget({ season, rank, chapter, points: total, leader,
 
   return (
     <Widget
-      title={`Chapter Cup · ${season}`}
+      /* No year. `get_chapter_cup_standings()` counts every approved result
+         and every active membership, with no season filter — printing "· 2026"
+         beside it would be the widget asserting a scope the number does not
+         have. The Chapter Cup page does not print one either. */
+      title="Chapter Cup"
       action={
         <Link href="/rankings/clubs" className="font-display text-[0.7rem] font-bold uppercase tracking-[0.12em] text-brand">
           Table
