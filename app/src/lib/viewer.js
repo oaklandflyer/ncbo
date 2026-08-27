@@ -25,7 +25,7 @@ import { createClient, getProfileResult } from '@/lib/supabase/server';
  * past this still meets Postgres.
  */
 const EMPTY = {
-  signedIn: false, profileError: null,
+  signedIn: false, profileError: null, authUnavailable: false,
   userId: null, role: null, profile: null,
   membership: null, memberships: [], pendingMembership: null,
   orgRoles: [], ledClubIds: [], ledClubs: [], ledSchoolIds: [],
@@ -36,13 +36,14 @@ const EMPTY = {
 
 export async function getViewerContext(supabaseArg) {
   const supabase = supabaseArg || await createClient();
-  const { signedIn, profile, error: profileError } = await getProfileResult(supabase);
+  const { signedIn, profile, error: profileError, authUnavailable } =
+    await getProfileResult(supabase);
 
   /* `signedIn` and `profile` are separate answers on purpose. A signed-in
      member whose profile could not be read is not signed out, and treating
      them as though they were is what turned a stale schema into an
      unexplained redirect loop at the sign-in page. */
-  if (!profile) return { ...EMPTY, signedIn, profileError };
+  if (!profile) return { ...EMPTY, signedIn, profileError, authUnavailable };
 
   /* Three reads rather than one join: PostgREST would embed these, but the
      membership row carries columns an ordinary member is not granted, and a

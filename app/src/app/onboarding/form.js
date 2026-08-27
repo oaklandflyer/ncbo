@@ -68,6 +68,7 @@ function stillNeeded(missing) {
 
 export default function OnboardingForm({
   email, defaultName, universities, profile = null, returning = false, missing = [],
+  homeRegions = [],
 }) {
   const [state, action, pending] = useActionState(saveOnboarding, {});
   const [chapter, setChapter] = useState(null);
@@ -101,10 +102,16 @@ export default function OnboardingForm({
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={fieldLabel} htmlFor="full_name">Your full name<Req /></label>
+          {/* One `defaultValue`. There were two — the saved name, then
+              `defaultName` — and React keeps the last, so the prefill this
+              form added for returning members never applied to the one field
+              that decides whether somebody counts as returning at all. The
+              saved value wins now, falling back to whatever the auth provider
+              gave us. */}
           <input
             id="full_name" name="full_name" type="text" required maxLength={120}
             defaultValue={profile?.full_name || defaultName || ''}
-            autoComplete="name" defaultValue={defaultName || ''}
+            autoComplete="name"
             autoFocus={!defaultName}
             className={field}
           />
@@ -197,17 +204,32 @@ export default function OnboardingForm({
           </select>
         </div>
 
+        {/* A combobox, not a bare text box. This field is why the Network
+            directory can group people by where they are from, and a blank box
+            asked at signup produced "Pittsburgh, PA", "pitt" and "Greater
+            Pittsburgh" as three separate regions of one person each.
+
+            `<datalist>` keeps it a text input, so a member from somewhere
+            nobody has listed yet can still type it — which a <select> would
+            forbid, and which matters most for exactly the people a growing
+            network has fewest of. */}
         <div className="sm:col-span-2">
           <label className={fieldLabel} htmlFor="home_region">Hometown<Req /></label>
           <input
             id="home_region" name="home_region" type="text" required maxLength={80}
+            list="home-region-options"
             placeholder="Greater Pittsburgh, PA"
             defaultValue={profile?.home_region || ''}
+            autoComplete="off"
             className={field}
           />
+          <datalist id="home-region-options">
+            {homeRegions.map((r) => <option key={r} value={r} />)}
+          </datalist>
           <p className={`mt-2 ${fineprint}`}>
             An area, not an address. Close enough to find somebody to train with over
-            the summer, and no closer.
+            the summer, and no closer. Start typing and pick one already listed if it
+            fits — that is what puts you with everyone else from there.
           </p>
         </div>
 

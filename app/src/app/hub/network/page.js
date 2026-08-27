@@ -31,17 +31,18 @@ export default async function Network() {
     .select('id, club_name, status, school_name, state, member_count, leads')
     .order('club_name');
 
-  /* Season points and lifetime volume, for the two stats on a person's card.
-     `national_rankings` is public — it is the leaderboard everybody already
-     sees. `my_workout_totals` is not: it returns the viewer's own row and
-     nothing else, which is why lifetime volume appears on your own card and
-     on nobody else's. Making it a column of the directory would mean widening
-     a policy the tracker deliberately wrote narrow. */
+  /* Season points, the one stat on a person's card. `national_rankings` is
+     public — it is the leaderboard everybody already sees.
+
+     There used to be a second read here, of `my_workout_totals`, for a
+     "Lifetime lb" figure. It has gone with the rest of raw volume tracking:
+     the Chapter Cup is what NCBO ranks members on, and a tonnage number beside
+     it invited a comparison between two people that only one of them could
+     even see — the totals view returns the viewer's own row and nobody
+     else's, so every other card on the page was missing it by construction. */
   const season = new Date().getFullYear();
-  const [{ data: seasonPoints }, { data: myTotals }] = await Promise.all([
-    supabase.from('national_rankings').select('user_id, points, rank').eq('season', season),
-    supabase.from('my_workout_totals').select('total_volume').maybeSingle(),
-  ]);
+  const { data: seasonPoints } = await supabase
+    .from('national_rankings').select('user_id, points, rank').eq('season', season);
 
   const cupPoints = Object.fromEntries(
     (seasonPoints || []).map((r) => [r.user_id, Math.round(Number(r.points) || 0)]),
@@ -67,8 +68,6 @@ export default async function Network() {
             members={members}
             clubs={clubs || []}
             cupPoints={cupPoints}
-            viewerId={profile.id}
-            viewerLifetime={Number(myTotals?.total_volume || 0)}
           />
         ) : (
           <Empty>

@@ -24,7 +24,7 @@ export default async function AthleteRankings() {
       <PageHero
         eyebrow="Rankings"
         title="Athletes."
-        lead="Every verified result across every chapter, in one table."
+        lead="Every verified result across every chapter, in one table. These are the results the Chapter Cup is scored from — the Cup is the competition, this is the detail behind it."
       >
         <div className="mt-8"><Segmented current="/rankings/athletes" /></div>
       </PageHero>

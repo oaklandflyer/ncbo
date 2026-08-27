@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { ONBOARDING_FIELDS } from '@/lib/onboarding';
+import { getUserResilient } from './auth';
 
 /**
  * Supabase client for Server Components, Server Actions, and Route Handlers.
@@ -74,8 +75,19 @@ const PROFILE_COLUMNS = [
   .join(', ');
 
 export async function getProfileResult(supabase) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { signedIn: false, profile: null, error: null };
+  /* Three answers, not two. `getUser()` returns a null user both for "no
+     session" and for "the auth server could not be reached", and collapsing
+     those into one was the second half of the frequent-logouts bug: a blip at
+     the auth host became `signedIn: false`, and every caller answers that with
+     a redirect to /login. `authUnavailable` is the third state — see
+     `@/lib/supabase/auth`. */
+  const { user, unavailable } = await getUserResilient(supabase);
+  if (unavailable) {
+    return { signedIn: false, authUnavailable: true, profile: null, error: null };
+  }
+  if (!user) {
+    return { signedIn: false, authUnavailable: false, profile: null, error: null };
+  }
 
   const { data, error } = await supabase
     .from('profiles')
@@ -98,11 +110,12 @@ export async function getProfileResult(supabase) {
     console.error('[ncbo] profile query failed', {
       code: error.code, message: error.message, hint: error.hint,
     });
-    return { signedIn: true, profile: null, error };
+    return { signedIn: true, authUnavailable: false, profile: null, error };
   }
 
   return {
     signedIn: true,
+    authUnavailable: false,
     error: null,
     /* `universities` is what the embed is called; `schools` is what fourteen
        migrations' worth of UI calls it. Aliased once here rather than renamed

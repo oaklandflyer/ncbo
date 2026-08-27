@@ -15,7 +15,7 @@ import {
   showDate,
 } from './home/panels';
 import {
-  WidgetGrid, ChapterCupWidget, NextUpWidget, TrainingWidget,
+  WidgetGrid, ChapterCupWidget, NextUpWidget, TrainingWidget, ordinal,
 } from './home/widgets';
 import { fetchUpcomingEvents } from '@/lib/gcal';
 import { sessionSummary, daysOut } from '@/lib/workoutSummary';
@@ -142,12 +142,15 @@ export default async function Hub() {
         .limit(1)
         .maybeSingle(),
 
-      /* Lifetime volume as a single number. The view does the JSONB traversal
-         in Postgres — the alternative is shipping every workout document to a
-         phone to add them up, which is a few hundred KB to render one stat.
+      /* Sessions completed, as a single number. The view counts in Postgres —
+         the alternative is shipping every workout document to a phone to
+         count them, which is a few hundred KB to render one stat.
          `security_invoker` means it can only ever return the viewer's own row;
-         see the policy tests in supabase/tests/11_workout_totals.sql. */
-      supabase.from('my_workout_totals').select('sessions, total_volume').maybeSingle(),
+         see the policy tests in supabase/tests/11_workout_totals.sql.
+         `total_volume` is deliberately not selected: nothing renders it any
+         more, and a column nobody draws is one the next person adds a widget
+         for. */
+      supabase.from('my_workout_totals').select('sessions').maybeSingle(),
     ]);
 
   const roster = clubmates.data || [];
@@ -208,7 +211,7 @@ export default async function Hub() {
   /* The tracker is still dark-launched, so the widget follows the same gate
      the nav does rather than inventing a second answer to who can see it. */
   const lastWorkout = viewer.isAdmin ? sessionSummary(lastSession?.data) : null;
-  const lifetimeVolume = viewer.isAdmin ? Number(myTotals?.data?.total_volume || 0) : 0;
+  const sessionsCompleted = viewer.isAdmin ? Number(myTotals?.data?.sessions || 0) : 0;
 
   const hero = {
     new_to_lifting: {
@@ -221,11 +224,19 @@ export default async function Hub() {
       title: membership?.clubName || `Welcome back, ${firstName}.`,
       lead: 'How prep works, what division you are, and what it costs. Answered already, not waiting on a reply.',
     },
+    /* The chapter leads, not the individual. This said "2026: you are ranked
+       3." — the single most individual-emphasising line on the home screen,
+       at the top of it, for the persona most likely to read it as the point
+       of the app. The Cup standing is the headline now and a member's own
+       rank is the sentence under it, which is the same information ordered
+       the way NCBO actually competes. */
     competing: {
-      title: myRank
-        ? `${season}: you are ranked ${myRank.rank}.`
+      title: myChapter
+        ? `${season}: ${myChapter.chapter || membership?.clubName} is ${ordinal(myChapter.rank)}.`
         : membership?.clubName || `Welcome back, ${firstName}.`,
-      lead: 'Where the network stands this season, and what is on the calendar next.',
+      lead: myRank
+        ? `You are ranked ${myRank.rank} nationally, and your results are part of that standing. Here is what is on the calendar next.`
+        : 'Where the network stands this season, and what is on the calendar next.',
     },
   }[phase];
 
@@ -257,10 +268,15 @@ export default async function Hub() {
       >
         {(roster.length > 0 || myRank || pendingCount.count > 0 || openQuestions.count > 0) && (
           <div className="mt-9 max-w-2xl">
+            {/* Chapter first, and the member's own points labelled as what
+                they are: a contribution to that chapter's total, not a
+                standing of their own that happens to sit beside it. */}
             <Stats>
-              {myRank && <Stat value={Math.round(myRank.points)} label={`Points, ${season}`} />}
               {roster.length > 0 && (
                 <Stat value={roster.length} label={roster.length === 1 ? 'Chapter member' : 'Chapter members'} />
+              )}
+              {myRank && (
+                <Stat value={Math.round(myRank.points)} label={`Your points, ${season}`} />
               )}
               {canAnswer && openQuestions.count > 0 && (
                 <Stat value={openQuestions.count} label="Questions open" />
@@ -288,7 +304,7 @@ export default async function Hub() {
             />
           )}
           <NextUpWidget {...(nextUp || {})} />
-          {viewer.isAdmin && <TrainingWidget last={lastWorkout} lifetime={lifetimeVolume} />}
+          {viewer.isAdmin && <TrainingWidget last={lastWorkout} sessions={sessionsCompleted} />}
         </WidgetGrid>
       </div>
 

@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
+import { getUserResilient } from '@/lib/supabase/auth';
 
 /**
  * Refreshes the auth session on every request and keeps unauthenticated
@@ -12,7 +13,15 @@ import { NextResponse } from 'next/server';
  * This is a redirect for the sake of the user experience, not a security
  * boundary — the real gate is row-level security in Postgres, which applies
  * whether a request comes through this app or straight from curl.
+ *
+ * That last paragraph is not a disclaimer, it is the rule this file is written
+ * to. Because nothing here protects anything, the correct answer to "I could
+ * not tell whether this person is signed in" is to let the request through and
+ * let Postgres decide — never to sign them out. `getUserResilient` in
+ * `@/lib/supabase/auth` is what tells the two apart, and the server components
+ * behind this use the same helper so both ends agree.
  */
+
 export async function middleware(request) {
   let response = NextResponse.next({ request });
 
@@ -34,12 +43,17 @@ export async function middleware(request) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  /* The error is read, not discarded. Discarding it is what made every hiccup
+     at the auth host look like a sign-out: `getUser()` answers a null user
+     both for "no session" and for "could not ask", and this file used to
+     redirect on both. `unavailable` is the third state, and it keeps the
+     member exactly where they are. */
+  const { user, unavailable } = await getUserResilient(supabase);
 
   const guarded = ['/hub', '/onboarding']
     .some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
-  if (!user && guarded) {
+  if (guarded && !unavailable && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', request.nextUrl.pathname);
@@ -52,9 +66,30 @@ export async function middleware(request) {
     return redirect;
   }
 
+  /* An unreachable auth server lets the request through rather than bouncing
+     it to /login. The page behind it reaches the same conclusion from the same
+     third state and renders `AuthUnavailable`, which says the session is
+     intact and offers a retry — instead of a sign-in screen that cannot fix a
+     network failure and invites somebody to throw a good session away.
+     `getUserResilient` has already logged the reason. */
+
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|webp)$).*)'],
+  matcher: [
+    /*
+     * `auth/callback` is excluded deliberately, and it is the second half of
+     * this fix.
+     *
+     * That route exchanges a one-time code for a session. Running this
+     * middleware in front of it meant every sign-in did a `getUser()` against
+     * whatever stale cookies the browser still had first — an extra round
+     * trip that can rotate a refresh token concurrently with the exchange
+     * about to happen, and whichever of the two writes its cookies second
+     * wins. Nothing there needs a refreshed session: the whole point of the
+     * route is that it is creating one.
+     */
+    '/((?!_next/static|_next/image|auth/callback|favicon\\.ico|.*\\.(?:svg|png|jpg|webp)$).*)',
+  ],
 };

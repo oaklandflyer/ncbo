@@ -28,7 +28,7 @@ const VIEWS = [
  * database says so — an unvetted coach gets neither, which is the whole point
  * of the seal meaning anything.
  */
-function PersonCard({ person, cupPoints, lifetime }) {
+function PersonCard({ person, cupPoints }) {
   return (
     <Card className="p-5 sm:p-5">
       <div className="flex items-start gap-4">
@@ -71,35 +71,27 @@ function PersonCard({ person, cupPoints, lifetime }) {
             <div className="mt-3"><Credentials items={person.credentials} /></div>
           )}
 
-          {/* The two numbers a member actually compares themselves on. Cup
-              points come from the public leaderboard, so they are shown for
-              anybody who has scored. Lifetime volume is a training log, which
-              in this app is private to the person who lifted it — so it
-              appears on your own card and nowhere else. Both cells are omitted
-              rather than rendered as "—": an empty stat invites the reading
-              that somebody has trained nothing. */}
-          {(cupPoints > 0 || lifetime > 0) && (
+          {/* The one number a member is compared on. Cup points come from the
+              public leaderboard, so they mean the same thing on every card
+              here.
+
+              A "Lifetime lb" stat used to sit beside this. It has gone with
+              the rest of raw volume tracking, and it was the weaker of the two
+              anyway: training logs are private to the person who lifted them,
+              so it rendered on your own card and on nobody else's — a column
+              that could never line up in a directory whose whole job is
+              comparing people. Omitted rather than rendered as "—": an empty
+              stat invites the reading that somebody has trained nothing. */}
+          {cupPoints > 0 && (
             <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-              {cupPoints > 0 && (
-                <div>
-                  <dt className="font-display text-[0.62rem] font-bold uppercase tracking-[0.14em] text-meta">
-                    Cup pts
-                  </dt>
-                  <dd className="font-display text-[1.1rem] font-extrabold leading-tight tabular-nums text-ink">
-                    {cupPoints.toLocaleString('en-US')}
-                  </dd>
-                </div>
-              )}
-              {lifetime > 0 && (
-                <div>
-                  <dt className="font-display text-[0.62rem] font-bold uppercase tracking-[0.14em] text-meta">
-                    Lifetime lb
-                  </dt>
-                  <dd className="font-display text-[1.1rem] font-extrabold leading-tight tabular-nums text-ink">
-                    {Math.round(lifetime).toLocaleString('en-US')}
-                  </dd>
-                </div>
-              )}
+              <div>
+                <dt className="font-display text-[0.62rem] font-bold uppercase tracking-[0.14em] text-meta">
+                  Cup pts
+                </dt>
+                <dd className="font-display text-[1.1rem] font-extrabold leading-tight tabular-nums text-ink">
+                  {cupPoints.toLocaleString('en-US')}
+                </dd>
+              </div>
             </dl>
           )}
 
@@ -172,9 +164,7 @@ function RegionMap({ groups, active, onPick }) {
   );
 }
 
-export default function Directory({
-  members, clubs: roster = [], cupPoints = {}, viewerId = null, viewerLifetime = 0,
-}) {
+export default function Directory({ members, clubs: roster = [], cupPoints = {} }) {
   const [view, setView] = useState('club');
   const [region, setRegion] = useState('');
   const [query, setQuery] = useState('');
@@ -286,11 +276,7 @@ export default function Directory({
             <ul className="grid list-none gap-3 md:grid-cols-2">
               {people.map((m) => (
                 <li key={m.id}>
-                  <PersonCard
-                    person={m}
-                    cupPoints={cupPoints[m.id] || 0}
-                    lifetime={m.id === viewerId ? viewerLifetime : 0}
-                  />
+                  <PersonCard person={m} cupPoints={cupPoints[m.id] || 0} />
                 </li>
               ))}
             </ul>
@@ -342,11 +328,7 @@ export default function Directory({
                     <ul className="grid list-none gap-3 md:grid-cols-2">
                       {g.people.map((m) => (
                         <li key={m.id}>
-                          <PersonCard
-                            person={m}
-                            cupPoints={cupPoints[m.id] || 0}
-                            lifetime={m.id === viewerId ? viewerLifetime : 0}
-                          />
+                          <PersonCard person={m} cupPoints={cupPoints[m.id] || 0} />
                         </li>
                       ))}
                     </ul>
