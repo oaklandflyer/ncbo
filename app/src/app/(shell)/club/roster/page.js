@@ -44,14 +44,14 @@ export default async function ClubRoster({ searchParams }) {
       <PageHero
         eyebrow={viewer.isAdmin && !viewer.ledClubIds.includes(scope.clubId) ? 'Admin view' : 'Club lead'}
         title={`${chapter} roster.`}
-        lead="Your members and their addresses. Visible to you and to NCBO admins only, never to other members."
+        lead="Your members and their addresses, and the controls to manage who is on this roster. Visible to you and to NCBO admins only, never to other members."
       />
       <Section>
         <SectionTitle count={members?.length || null}>Members</SectionTitle>
         {error ? (
           <Empty>That roster is not yours to open.</Empty>
         ) : members?.length ? (
-          <RosterTable members={members} canPromote />
+          <RosterTable members={members} canPromote viewerId={viewer.userId} />
         ) : (
           <Empty>Nobody on this roster yet.</Empty>
         )}
