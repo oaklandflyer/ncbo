@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { memo, useDeferredValue, useMemo, useState } from 'react';
 import { Card, Badge, Empty, Meta, VettedSeal, Credentials, SocialLinks, AlumniBadge, field, buttonReset } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
 import Avatar from '@/app/brand/avatar';
@@ -28,7 +28,17 @@ const VIEWS = [
  * database says so — an unvetted coach gets neither, which is the whole point
  * of the seal meaning anything.
  */
-function PersonCard({ person, cupPoints }) {
+/*
+ * One member's card, memoised.
+ *
+ * There are up to 500 of these on the page and the search box is above them,
+ * so without this every keystroke re-renders all 500 — which is the freeze
+ * that was reported. `person` comes straight out of the `members` array and so
+ * keeps its identity across renders, and `cupPoints` is a number, so the
+ * comparison is cheap and almost always says "nothing changed". Only the cards
+ * entering or leaving the filtered set do any work.
+ */
+const PersonCard = memo(function PersonCard({ person, cupPoints }) {
   return (
     <Card className="p-5 sm:p-5">
       <div className="flex items-start gap-4">
@@ -104,7 +114,7 @@ function PersonCard({ person, cupPoints }) {
       </div>
     </Card>
   );
-}
+});
 
 /**
  * The map block.
@@ -116,7 +126,9 @@ function PersonCard({ person, cupPoints }) {
  * without pretending to a precision we don't have, or shipping a tile layer
  * to a phone on stadium wifi.
  */
-function RegionMap({ groups, active, onPick }) {
+/* Memoised for the same reason: its props do not depend on the search box,
+   but it sits above one. */
+const RegionMap = memo(function RegionMap({ groups, active, onPick }) {
   const total = groups.reduce((n, g) => n + g.people.length, 0) || 1;
 
   return (
@@ -162,7 +174,7 @@ function RegionMap({ groups, active, onPick }) {
       </ul>
     </div>
   );
-}
+});
 
 export default function Directory({ members, clubs: roster = [], cupPoints = {} }) {
   const [view, setView] = useState('club');
@@ -216,8 +228,14 @@ export default function Directory({ members, clubs: roster = [], cupPoints = {} 
     });
   }, [members, roster]);
 
+  /* The filter runs against a deferred copy of the query, so React paints the
+     keystroke first and re-filters 500 members afterwards. The input stays at
+     `query` and therefore never lags behind the keyboard; only the list below
+     is allowed to be a frame behind. */
+  const deferredQuery = useDeferredValue(query);
+
   const people = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = deferredQuery.trim().toLowerCase();
     return members
       .filter((m) => (!region || m.home_region === region))
       .filter((m) => !q || `${m.display_name} ${m.division || ''} ${m.home_region || ''} ${m.club_name || ''}`
@@ -226,7 +244,7 @@ export default function Directory({ members, clubs: roster = [], cupPoints = {} 
          for — then alphabetically. */
       .sort((a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0)
         || String(a.display_name).localeCompare(String(b.display_name)));
-  }, [members, region, query]);
+  }, [members, region, deferredQuery]);
 
   return (
     <>

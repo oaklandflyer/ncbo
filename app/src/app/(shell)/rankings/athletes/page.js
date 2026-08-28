@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
+import { currentSeason } from '@/lib/season';
 import { Page, PageHero, Section, Card, Badge, Meta, Empty } from '@/app/ui';
 import { UserChip } from '@/app/hub/profile-popup/popup';
 import { Segmented, HowPointsWork, tabularNums } from '../segmented';
@@ -14,7 +15,8 @@ export default async function AthleteRankings() {
   if (!viewer.signedIn) redirect('/login');
   if (!viewer.profile) return null;
 
-  const { data: rows } = await supabase.rpc('get_athlete_rankings');
+  const season = currentSeason();
+  const { data: rows } = await supabase.rpc('get_athlete_rankings', { season_year: season });
   const lifters = rows || [];
   const me = lifters.find((l) => l.profile_id === viewer.userId);
   const meIsOffscreen = me && lifters.indexOf(me) > 9;
@@ -22,9 +24,9 @@ export default async function AthleteRankings() {
   return (
     <Page>
       <PageHero
-        eyebrow="Rankings"
+        eyebrow={`${season} season`}
         title="Athletes."
-        lead="Every verified result across every chapter, in one table. These are the results the Chapter Cup is scored from — the Cup is the competition, this is the detail behind it."
+        lead="Every verified result of this season, across every chapter, in one table. These are the results the Chapter Cup is scored from — the Cup is the competition, this is the detail behind it."
       >
         <div className="mt-8"><Segmented current="/rankings/athletes" /></div>
       </PageHero>
@@ -32,7 +34,8 @@ export default async function AthleteRankings() {
       <Section>
         {lifters.length === 0 ? (
           <Empty>
-            No verified results yet. Log one from the Log tab and your club lead verifies it.
+            No verified results this season yet. Log one from the Log tab and your club lead
+            verifies it.
           </Empty>
         ) : (
           <ol className="grid list-none gap-2">
