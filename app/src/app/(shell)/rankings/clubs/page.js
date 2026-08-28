@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerContext } from '@/lib/viewer';
+import { currentSeason } from '@/lib/season';
 import { Page, PageHero, Section, Card, Meta, Empty } from '@/app/ui';
 import { Segmented, HowPointsWork, tabularNums } from '../segmented';
 import ClubLogo from '@/app/brand/club-logo';
@@ -22,16 +23,20 @@ export default async function ChapterCup() {
   if (!viewer.signedIn) redirect('/login');
   if (!viewer.profile) return null;
 
-  const { data: rows } = await supabase.rpc('get_chapter_cup_standings');
+  /* One season. The RPC defaults to the same year the label prints, and the
+     year is passed explicitly so the heading and the numbers under it cannot
+     come from different requests. */
+  const season = currentSeason();
+  const { data: rows } = await supabase.rpc('get_chapter_cup_standings', { season_year: season });
   const standings = (rows || []).filter((c) => c.total_points > 0);
   const myClub = viewer.membership?.clubId;
 
   return (
     <Page>
       <PageHero
-        eyebrow="Rankings"
+        eyebrow={`${season} season`}
         title="Chapter Cup."
-        lead="Four ways a chapter earns: showing up, competing, crewing for each other, and answering questions."
+        lead="Four ways a chapter earns: showing up, competing, crewing for each other, and answering questions. Points reset each year."
       >
         <div className="mt-8"><Segmented current="/rankings/clubs" /></div>
       </PageHero>

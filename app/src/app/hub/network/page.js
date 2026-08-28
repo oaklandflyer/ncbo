@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient, getProfileResult } from '@/lib/supabase/server';
+import { currentSeason } from '@/lib/season';
 import { Page, PageHero, Section, Empty } from '@/app/ui';
 import Directory from './directory';
 
@@ -41,7 +42,9 @@ export default async function Network() {
 
      There used to be a second read here, of `my_workout_totals`, for a
      "Lifetime lb" figure. It went with the rest of raw volume tracking. */
-  const { data: athletes } = await supabase.rpc('get_athlete_rankings');
+  const { data: athletes } = await supabase.rpc('get_athlete_rankings', {
+    season_year: currentSeason(),
+  });
 
   const cupPoints = Object.fromEntries(
     (athletes || []).map((r) => [r.profile_id, Math.round(Number(r.points) || 0)]),
