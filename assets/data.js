@@ -9,11 +9,11 @@
 
      1. Do not publish a name, school, number, date or title that is not
         confirmed in writing. If it cannot be sourced, cut it or ask.
-     2. Anything not yet running (the season, competitions, the dues model,
-        the app) is described in forward-looking language, never as existing.
-     3. NCBO is a Pennsylvania nonprofit corporation IN FORMATION. It is not
-        a 501(c)(3). Nothing may imply donations are tax-deductible.
+     2. Anything not yet running is described in forward-looking language,
+        never as existing.
+     3. NCBO is free. No dues, no fees, no payment language anywhere.
      4. Do not publish an email address that nobody monitors.
+     5. No em dashes in published copy.
 
    The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are
    entries that are deliberately NOT published pending confirmation. Nothing
@@ -34,9 +34,9 @@ window.NCBO_DATA = {
   "org": {
     "name": "NCBO",
     "full": "National Collegiate Bodybuilding Organization",
-    "tagline": "Clubs. Competition. Community.",
-    "status": "A Pennsylvania nonprofit corporation in formation.",
-    "statusLong": "NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status; that status has not been granted, and contributions are not tax-deductible.",
+    "tagline": "Student run. Free. Built for club boards.",
+    "status": "A student-run organization. Free for every member club.",
+    "statusLong": "A student-run organization. Free for every member club.",
     "email": "thencbo@gmail.com",
     "instagram": "https://instagram.com/ncboofficial",
     "instagramHandle": "@ncboofficial",
@@ -45,16 +45,28 @@ window.NCBO_DATA = {
   },
   "nav": [
     {
-      "label": "Home",
-      "href": "index.html"
+      "label": "Clubs",
+      "href": "clubs.html"
     },
     {
-      "label": "Member Login",
-      "href": "https://hub.thencbo.org/login"
+      "label": "Why Join",
+      "href": "why-join.html"
     },
     {
-      "label": "Join NCBO",
-      "href": "join.html",
+      "label": "Start a Club",
+      "href": "start-a-club.html"
+    },
+    {
+      "label": "Resources",
+      "href": "resources.html"
+    },
+    {
+      "label": "About",
+      "href": "about.html"
+    },
+    {
+      "label": "Join the Network",
+      "href": "contact.html",
       "cta": true
     }
   ],
@@ -65,51 +77,51 @@ window.NCBO_DATA = {
     "assets/img/hero-4.jpg"
   ],
   "marquee": [
-    "Clubs",
-    "Competition",
-    "Community",
-    "Strength",
-    "Discipline",
-    "Pathway"
+    "Club boards",
+    "Shared resources",
+    "Officer handoff",
+    "Free",
+    "Student run",
+    "Network"
   ],
   "hero": {
-    "eyebrow": "Building the collegiate bodybuilding network",
+    "eyebrow": "A network of club boards",
     "title": [
-      "Collegiate",
-      "bodybuilding,",
-      "<span class='accent'>built like a real sport.</span>"
+      "The network for",
+      "collegiate bodybuilding",
+      "<span class='accent'>and fitness club boards.</span>"
     ],
-    "sub": "At an open show, “collegiate” is just an eligibility checkbox. We're building the part that's missing — a club at your school, a season to train for, and school-vs-school competition. Find your chapter and help build it.",
+    "sub": "NCBO connects the students running fitness and bodybuilding clubs across schools, so boards can ask each other for help, share what works, and hand the club off intact. Free, and 100% student run.",
     "primary": {
-      "label": "Find your club",
-      "href": "#clubs"
+      "label": "Join the Network",
+      "href": "contact.html"
     },
     "ghost": {
-      "label": "How it works",
-      "href": "#about"
+      "label": "See the clubs",
+      "href": "clubs.html"
     }
   },
   "tiles": [
     {
-      "kicker": "Chapters",
-      "title": "Find a Club",
-      "text": "See the schools with an NCBO founding chapter.",
-      "href": "#clubs",
+      "kicker": "Member clubs",
+      "title": "The Clubs",
+      "text": "Every board in the network, and how to reach them.",
+      "href": "clubs.html",
       "img": "assets/img/tile-clubs.jpg"
     },
     {
-      "kicker": "Start a Club",
-      "title": "Apply Today",
-      "text": "Bring NCBO to your campus — we'll help you build.",
-      "href": "#start",
-      "img": "assets/img/tile-start.jpg"
+      "kicker": "For boards",
+      "title": "Why Join",
+      "text": "What your board gets, and what it costs. Nothing.",
+      "href": "why-join.html",
+      "img": "assets/img/tile-join.jpg"
     },
     {
-      "kicker": "Join Now",
-      "title": "Become a Member",
-      "text": "Get plugged into a club at your school.",
-      "href": "join.html",
-      "img": "assets/img/tile-join.jpg"
+      "kicker": "No club yet",
+      "title": "Start a Club",
+      "text": "The short guide to getting one off the ground.",
+      "href": "start-a-club.html",
+      "img": "assets/img/tile-start.jpg"
     }
   ],
   "about": {
