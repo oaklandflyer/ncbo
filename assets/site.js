@@ -48,7 +48,17 @@
       </div>`;
   }
 
-  /* ---------- NAV --------------------------------------------------------- */
+  /* ---------- NAV ---------------------------------------------------------
+     The nav is built from NCBO_DATA.nav, so what is listed there is the whole
+     of the site's navigation.
+
+     Member login is deliberately absent. The hub at hub.thencbo.org and the
+     auth plumbing behind it are still live and still maintained (see app/),
+     but NCBO's public face is now the club-board network, and an individual
+     student login does not belong in it. The route is unlinked and not
+     discoverable from this site rather than removed, pending a decision on
+     what the hub is for. Do not re-add it to `nav` or the footer without
+     that decision.                                                          */
   function buildNav() {
     const host = $('#site-nav');
     if (!host || !D.nav) return;
@@ -102,24 +112,24 @@
             <div class="footer-brand">
               <img src="assets/ncbo-logo.webp" alt="NCBO crest">
               <span class="brand-word">${D.org.name}</span>
-              <p>${D.org.full} — building collegiate bodybuilding into a real sport. Clubs at your school, and a community that shows up year-round.</p>
+              <p>${D.org.full}. A free, student-run network of collegiate bodybuilding and fitness club boards.</p>
               <p class="tagline">${D.org.tagline}</p>
             </div>
             <div class="footer-col">
               <h4>Explore</h4>
               <ul>
-                <li><a href="join.html">Become a Member</a></li>
-                <li><a href="index.html#clubs">Find a Club</a></li>
-                <li><a href="index.html#start">Start a Club</a></li>
-                <li><a href="https://hub.thencbo.org/login">Member Hub</a></li>
+                <li><a href="clubs.html">The Clubs</a></li>
+                <li><a href="why-join.html">Why Join</a></li>
+                <li><a href="start-a-club.html">Start a Club</a></li>
+                <li><a href="resources.html">Resources</a></li>
               </ul>
             </div>
             <div class="footer-col">
               <h4>Organization</h4>
               <ul>
-                <li><a href="index.html#about">About</a></li>
-                <li><a href="index.html#faqs">FAQs</a></li>
+                <li><a href="about.html">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
+                <li><a href="contact.html">Join the Network</a></li>
                 <li><a href="${ig}" target="_blank" rel="noopener">Instagram ${D.org.instagramHandle || ''}</a></li>
                 ${tt ? `<li><a href="${tt}" target="_blank" rel="noopener">TikTok ${D.org.tiktokHandle || ''}</a></li>` : ''}
               </ul>
@@ -336,7 +346,7 @@
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         const msg = form.parentElement.querySelector('.nl-msg') || form.querySelector('.nl-msg');
-        if (msg) msg.textContent = "Our mailing list isn't running yet — follow " +
+        if (msg) msg.textContent = "Our mailing list isn't running yet. Follow " +
           (D.org.instagramHandle || 'us on Instagram') + " for updates in the meantime.";
       });
     });
