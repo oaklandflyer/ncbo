@@ -215,6 +215,48 @@
           </div>
         </div>`).join('');
     },
+    /* Full club directory (clubs.html). The strip above is the home page
+       preview; this is the card that carries everything a board needs to
+       reach another board: school, club name, who to talk to, Instagram,
+       and an email.
+
+       A field still reading "TODO" renders as a visible placeholder rather
+       than being hidden, so a gap in the directory is obvious on the page
+       and gets filled in. Publishing a handle or address we have not
+       confirmed is the one thing worse than a gap. */
+    clubsDirectory(el) {
+      if (!el) return 0;
+      const todo = v => !v || String(v).trim().toUpperCase() === 'TODO';
+      const clubs = D.clubs || [];
+
+      const igLine = c => todo(c.instagram)
+        ? `<span class="club-note">Instagram: TODO</span>`
+        : `<a href="https://instagram.com/${String(c.instagram).replace(/^@/, '')}" target="_blank" rel="noopener">@${String(c.instagram).replace(/^@/, '')}</a>`;
+
+      const contactLine = c => todo(c.contact)
+        ? `<span class="club-note">Board contact: TODO</span>`
+        : `<a href="mailto:${c.contact}">${c.contact}</a>`;
+
+      el.innerHTML = clubs.map(c => `
+        <div class="club-card reveal">
+          <div class="club-photo">${photoSlot(c.img, c.school + ' photo')}</div>
+          <div class="club-body">
+            <div class="club-school">${c.school}</div>
+            <div class="club-name">${c.name}${c.note ? ` <span class="club-note">· ${c.note}</span>` : ''}</div>
+            <div class="club-meta">
+              <span class="club-lead">${c.lead
+                ? `Board lead: <b>${c.lead}</b>`
+                : `<a href="contact.html">Contact us for this club</a>`}</span>
+              <span class="badge ${c.status.toLowerCase().replace(/\s+/g, '-')}">${c.status}</span>
+            </div>
+            <div class="club-meta">
+              <span class="club-lead">${igLine(c)}</span>
+              <span class="club-lead">${contactLine(c)}</span>
+            </div>
+          </div>
+        </div>`).join('');
+      return clubs.length;
+    },
     steps(el) {
       if (!el) return;
       el.innerHTML = D.joinSteps.map(s => `

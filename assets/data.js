@@ -173,6 +173,8 @@ window.NCBO_DATA = {
       "school": "University of Pittsburgh",
       "name": "Fitness and Bodybuilding Club",
       "lead": "Rachel Hare",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-pitt.jpg"
     },
@@ -181,6 +183,8 @@ window.NCBO_DATA = {
       "name": "Bodybuilding & Fitness Club",
       "note": "University Park",
       "lead": "Isabel Ward",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-pennstate.jpg"
     },
@@ -188,6 +192,8 @@ window.NCBO_DATA = {
       "school": "Purdue University",
       "name": "Purdue Bodybuilding Club",
       "lead": "Vincent Panzica",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-purdue.jpg"
     },
@@ -195,6 +201,8 @@ window.NCBO_DATA = {
       "school": "Florida State University",
       "name": "Bodybuilding and Fitness Club at FSU",
       "lead": "Eli Korta",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-fsu.jpg"
     },
@@ -202,6 +210,8 @@ window.NCBO_DATA = {
       "school": "University of Iowa",
       "name": "Bodybuilding Club at UIowa",
       "lead": "Alex Swanson",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-iowa.jpg"
     },
@@ -209,6 +219,8 @@ window.NCBO_DATA = {
       "school": "Slippery Rock University",
       "name": "Slippery Rock Fitness and Wellness Club",
       "lead": "Sean Hanley",
+      "instagram": "TODO",
+      "contact": "TODO",
       "status": "Active",
       "img": "assets/img/club-slippery-rock-university.jpg",
       "state": "PA"
