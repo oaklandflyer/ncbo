@@ -125,28 +125,28 @@ window.NCBO_DATA = {
     }
   ],
   "about": {
-    "label": "What We Are",
+    "label": "What we are",
     "headline": [
-      "Not another open show.",
-      "A real <span class='accent'>collegiate sport.</span>"
+      "Built by the students",
+      "<span class='accent'>who run the clubs.</span>"
     ],
     "body": [
-      "NCBO is being built to sit alongside independently-run student clubs and give them what a single club can't build alone: a season, school-vs-school competition, coaching access, and a national network.",
-      "At a traditional open show, \"collegiate\" is just an eligibility checkbox. We're adding the part that's been missing — a club at your school, a season to train for, and a community that shows up year-round.",
-      "We're early, and we'd rather say so. NCBO is a Pennsylvania nonprofit corporation in formation. Our founding chapters are live; the season, the competition calendar and the dues model are still being built."
+      "NCBO is a network of collegiate bodybuilding and fitness club boards. It exists so the people running these clubs can reach each other: ask a question, borrow a template, and find out how another school solved the thing in front of you.",
+      "It is 100% student run. Every person listed on this page runs or has run a club. There is no staff, no office, and nothing to pay, because there is nothing to pay for.",
+      "The org is there when it is needed, not there when it's not."
     ],
     "stats": [
       {
         "num": "6",
-        "lab": "Founding chapters"
+        "lab": "Member clubs"
       },
       {
         "num": "4",
         "lab": "States"
       },
       {
-        "num": "In formation",
-        "lab": "Org status"
+        "num": "Free",
+        "lab": "Cost to join"
       }
     ]
   },
@@ -247,23 +247,23 @@ window.NCBO_DATA = {
   "joinSteps": [
     {
       "step": "01",
-      "title": "Find your chapter",
-      "text": "Check the Find a Club section. If your school is listed, you're one message away."
+      "title": "Find two or three people",
+      "text": "A club needs a few committed students before it needs anything else. Start with the people who already train together."
     },
     {
       "step": "02",
-      "title": "No club yet?",
-      "text": "Start one. We give you the playbook, templates, and support to launch."
+      "title": "Check your school's process",
+      "text": "Every student activities office has its own forms, deadlines, and advisor requirement. Find that page first, before you plan anything."
     },
     {
       "step": "03",
-      "title": "Join through your club",
-      "text": "Membership runs through your campus club. Dues aren't finalized yet — we'll publish the model before anyone is asked to pay anything."
+      "title": "Borrow what exists",
+      "text": "Constitutions, waivers, budgets, and callout flyers have all been written by boards before you. Ask us and we will send what we have."
     },
     {
       "step": "04",
-      "title": "Train with your club",
-      "text": "Show up and train. When the first season runs, you'll have the option to represent your school."
+      "title": "Hold a first meeting",
+      "text": "Pick a date, put it up, and run it. The first meeting is how you find out who is actually in."
     }
   ],
   "board": [],

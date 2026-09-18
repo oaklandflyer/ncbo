@@ -4,13 +4,158 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About — NCBO</title>
-  <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://thencbo.org/#about">
-  <meta http-equiv="refresh" content="0; url=index.html#about">
+  <meta name="description" content="NCBO is a free, 100% student-run network of collegiate bodybuilding and fitness club boards. What it is, what it is not, and the students who run it.">
+  <meta name="keywords" content="NCBO, thencbo, the NCBO, National Collegiate Bodybuilding Organization, student run organization, collegiate bodybuilding network, club board network, NCBO executive board, thencbo.org">
+  <meta name="author" content="NCBO — National Collegiate Bodybuilding Organization">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://thencbo.org/about.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NCBO — National Collegiate Bodybuilding Organization">
+  <meta property="og:title" content="About — NCBO">
+  <meta property="og:description" content="A free, 100% student-run network of collegiate bodybuilding and fitness club boards. What it is, what it is not, and who runs it.">
+  <meta property="og:url" content="https://thencbo.org/about.html">
+  <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="About — NCBO">
+  <meta name="twitter:description" content="A free, 100% student-run network of collegiate bodybuilding and fitness club boards. What it is, what it is not, and who runs it.">
+  <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
+  <meta name="theme-color" content="#F4F8FD">
   <link rel="icon" href="assets/ncbo-logo.webp?v=2026-08-15">
-  <script>location.replace('index.html#about');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-08-15">
 </head>
 <body>
-  <p>About now lives on the NCBO home page. <a href="index.html#about">Continue to About</a>.</p>
+  <header id="site-nav"></header>
+
+  <section class="page-hero">
+    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="wrap">
+      <p class="eyebrow">About</p>
+      <h1 class="h-display">Who we are.</h1>
+      <p>A free network of collegiate bodybuilding and fitness club boards, run entirely by students.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <p class="eyebrow" id="about-label"></p>
+        <h2 class="h-display" style="margin-top:1.1rem" id="about-head"></h2>
+      </div>
+      <div class="reveal">
+        <div id="about-body"></div>
+        <div class="stats" id="about-stats"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE ARE NOT
+       The old site's biggest misread was that NCBO governs or sanctions the
+       clubs. Saying plainly what it is not is the correction, and it belongs
+       above the people, not buried under them. -->
+  <section class="section band">
+    <div class="wrap">
+      <div class="reveal" style="max-width:660px">
+        <p class="eyebrow">To be clear</p>
+        <h2 class="h-display" style="margin-top:1rem">What NCBO is not.</h2>
+      </div>
+      <div class="cards" style="margin-top:2.4rem">
+        <div class="card reveal">
+          <div class="num">01</div>
+          <h3>Not a governing body</h3>
+          <p>We do not sanction, rank, or approve anything. Your club answers to your school, not to us.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">02</div>
+          <h3>Not a membership you buy</h3>
+          <p>There are no dues, no fees, and no individual memberships. Boards join, and joining is free.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">03</div>
+          <h3>Not a promoter</h3>
+          <p>We do not run shows or sell tickets. Clubs compete wherever they choose to compete.</p>
+        </div>
+        <div class="card reveal">
+          <div class="num">04</div>
+          <h3>Not a staffed organization</h3>
+          <p>No employees and no office. Students who run clubs, helping other students who run clubs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="team">
+    <div class="wrap">
+      <div class="reveal" style="margin-bottom:1.8rem">
+        <p class="eyebrow">Who runs it</p>
+        <h2 class="h-display" style="margin-top:1rem">Executive board.</h2>
+        <p class="lead" style="margin-top:1rem">Students and recent grads running NCBO on top of their own clubs and coursework.</p>
+      </div>
+      <div class="people" id="leadership"></div>
+
+      <!-- Team members reporting into an executive board director. One tier
+           down visually; hidden while the list is empty. -->
+      <div id="team-members-block" hidden>
+        <div class="reveal" style="margin:3rem 0 1.6rem">
+          <p class="eyebrow">Supporting the directors</p>
+          <h2 class="h-display" style="margin-top:1rem">Team.</h2>
+        </div>
+        <div class="people people-sm" id="team-members"></div>
+      </div>
+
+      <!-- Club leads, built from the clubs in data.js that have a named lead,
+           so adding a lead in the admin puts them here automatically. Hidden
+           while no club has a confirmed lead. -->
+      <div id="club-leads-block" hidden>
+        <div class="reveal" style="margin:3rem 0 1.6rem">
+          <p class="eyebrow">On campus</p>
+          <h2 class="h-display" style="margin-top:1rem">Board leads.</h2>
+          <p class="lead" style="margin-top:1rem">The students running each member club day to day.</p>
+        </div>
+        <div class="people" id="club-leads"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="reveal" style="max-width:660px">
+        <p class="eyebrow">Join the network</p>
+        <h2 class="h-display" style="margin-top:1rem">Bring your board in.</h2>
+        <p class="lead" style="margin-top:1rem">If you run a club, you are who this is for. It costs nothing.</p>
+      </div>
+      <div class="hero-actions" style="margin-top:2.2rem">
+        <a class="btn btn-primary" href="contact.html">Join the Network</a>
+      </div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js?v=2026-08-15"></script>
+  <script>
+    window.NCBO_PAGE = function (R) {
+      const D = window.NCBO_DATA, $ = s => document.querySelector(s);
+
+      $('#about-label').textContent = D.about.label;
+      $('#about-head').innerHTML = D.about.headline.join('<br>');
+      $('#about-body').innerHTML = D.about.body.map(p => `<p class="lead">${p}</p>`).join('');
+      /* A stat value isn't always a number. "Free" is a word, and it
+         shouldn't render at numeral size. */
+      $('#about-stats').innerHTML = D.about.stats.map(s =>
+        `<div class="stat"><span class="stat-num${String(s.num).length > 4 ? ' is-text' : ''}">${s.num}</span><span class="stat-lab">${s.lab}</span></div>`).join('');
+
+      /* Every people block but the executive board stays hidden while empty,
+         so an empty heading never ships. */
+      R.people($('#leadership'), D.leadership);
+      if (R.people($('#team-members'), D.teamMembers) > 0) $('#team-members-block').hidden = false;
+      if (R.clubLeads($('#club-leads')) > 0) $('#club-leads-block').hidden = false;
+    };
+  </script>
+  <script src="assets/site.js?v=2026-08-15"></script>
 </body>
 </html>
