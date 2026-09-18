@@ -1,7 +1,7 @@
 /* ============================================================================
-   NCBO — admin/gate.js
+   NCBO admin/gate.js
    The password on the content manager. One file, no dependencies, no network,
-   no third-party service — just the browser's own WebCrypto.
+   no third-party service, just the browser's own WebCrypto.
 
    In each admin page's <head>, first thing:
 
@@ -9,7 +9,7 @@
 
    Order of business:
      1. Hide the body immediately, with a <style> injected before the parser
-        reaches any content — the page must never flash before we've decided.
+        reaches any content. The page must never flash before we've decided.
      2. Ask for the passphrase. Check it as PBKDF2-SHA256 against the salt and
         hash below, at 310000 iterations.
      3. Right → drop the hiding style and reveal the page.
@@ -69,7 +69,7 @@
       sessionStorage.setItem(KEY, String(until));
       if (remember) localStorage.setItem(KEY, String(until));
       else localStorage.removeItem(KEY);
-    } catch (e) { /* private mode — this session only */ }
+    } catch (e) { /* private mode: this session only */ }
   }
 
   /* ── the check ────────────────────────────────────────────────────── */

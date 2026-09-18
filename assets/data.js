@@ -1,5 +1,5 @@
 /* ============================================================================
-   NCBO_DATA — single source of truth for site content.
+   NCBO_DATA: single source of truth for site content.
    Generated/edited via the admin content manager (admin/photos.html).
    You can still hand-edit this file; the admin overwrites the whole object.
 
@@ -14,6 +14,10 @@
      3. NCBO is free. No dues, no fees, no payment language anywhere.
      4. Do not publish an email address that nobody monitors.
      5. No em dashes in published copy.
+
+   There is no `news` array any more: news.html is retired and nothing
+   renders it. `voices`/`voicesHeld` are likewise unrendered, kept only so
+   the quotes are not lost if they are ever sourced.
 
    The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are
    entries that are deliberately NOT published pending confirmation. Nothing
@@ -125,47 +129,55 @@ window.NCBO_DATA = {
     }
   ],
   "about": {
-    "label": "What We Are",
+    "label": "What we are",
     "headline": [
-      "Not another open show.",
-      "A real <span class='accent'>collegiate sport.</span>"
+      "Built by the students",
+      "<span class='accent'>who run the clubs.</span>"
     ],
     "body": [
-      "NCBO is being built to sit alongside independently-run student clubs and give them what a single club can't build alone: a season, school-vs-school competition, coaching access, and a national network.",
-      "At a traditional open show, \"collegiate\" is just an eligibility checkbox. We're adding the part that's been missing — a club at your school, a season to train for, and a community that shows up year-round.",
-      "We're early, and we'd rather say so. NCBO is a Pennsylvania nonprofit corporation in formation. Our founding chapters are live; the season, the competition calendar and the dues model are still being built."
+      "NCBO is a network of collegiate bodybuilding and fitness club boards. It exists so the people running these clubs can reach each other: ask a question, borrow a template, and find out how another school solved the thing in front of you.",
+      "It is 100% student run. Every person listed on this page runs or has run a club. There is no staff, no office, and nothing to pay, because there is nothing to pay for.",
+      "The org is there when it is needed, not there when it's not."
     ],
     "stats": [
       {
         "num": "6",
-        "lab": "Founding chapters"
+        "lab": "Member clubs"
       },
       {
         "num": "4",
         "lab": "States"
       },
       {
-        "num": "In formation",
-        "lab": "Org status"
+        "num": "Free",
+        "lab": "Cost to join"
       }
     ]
   },
   "pillars": [
     {
-      "title": "Coach & pro access",
-      "text": "Posing and prep guidance we're lining up for our chapters, so members aren't figuring out stage craft alone."
+      "title": "A peer network of officers",
+      "text": "Ask the board at another school how they did it. Recruiting, elections, gym access, a first show. Someone has already solved it."
     },
     {
-      "title": "A club operating system",
-      "text": "Recruiting templates, officer structure, and a run-it playbook so your club doesn't start from zero."
+      "title": "A shared resource library",
+      "text": "Event playbooks, budget templates, waivers, sponsor decks, student government funding applications, and recruiting materials, built by boards like yours."
     },
     {
-      "title": "Legitimacy on campus",
-      "text": "Shared structure and standards you can take to your student activities office when you apply for recognition."
+      "title": "Leadership handoff support",
+      "text": "Most clubs die in the gap between one board and the next. We help you hand over what you built so the club survives the turnover."
     },
     {
-      "title": "A national network",
-      "text": "Cross-campus connection, shared events, and a path to school-vs-school competition."
+      "title": "Coaching advisors",
+      "text": "Access to competitive bodybuilding coaches who advise our member clubs on training and posing."
+    },
+    {
+      "title": "National affiliation",
+      "text": "Being part of a national network helps when you go to your student activities office for recognition, space, or funding."
+    },
+    {
+      "title": "No cost, ever",
+      "text": "No dues, no fees, no obligations. Nothing to sign, and nothing to pay. Use what helps and ignore the rest."
     }
   ],
   "clubs": [
@@ -239,23 +251,23 @@ window.NCBO_DATA = {
   "joinSteps": [
     {
       "step": "01",
-      "title": "Find your chapter",
-      "text": "Check the Find a Club section. If your school is listed, you're one message away."
+      "title": "Find two or three people",
+      "text": "A club needs a few committed students before it needs anything else. Start with the people who already train together."
     },
     {
       "step": "02",
-      "title": "No club yet?",
-      "text": "Start one. We give you the playbook, templates, and support to launch."
+      "title": "Check your school's process",
+      "text": "Every student activities office has its own forms, deadlines, and advisor requirement. Find that page first, before you plan anything."
     },
     {
       "step": "03",
-      "title": "Join through your club",
-      "text": "Membership runs through your campus club. Dues aren't finalized yet — we'll publish the model before anyone is asked to pay anything."
+      "title": "Borrow what exists",
+      "text": "Constitutions, waivers, budgets, and callout flyers have all been written by boards before you. Ask us and we will send what we have."
     },
     {
       "step": "04",
-      "title": "Train with your club",
-      "text": "Show up and train. When the first season runs, you'll have the option to represent your school."
+      "title": "Hold a first meeting",
+      "text": "Pick a date, put it up, and run it. The first meeting is how you find out who is actually in."
     }
   ],
   "board": [],
@@ -283,7 +295,7 @@ window.NCBO_DATA = {
     },
     {
       "name": "Vincent Panzica",
-      "role": "Director of Club Relations",
+      "role": "Director of Club Expansion",
       "img": "assets/img/team-vincent.jpg"
     }
   ],
@@ -333,7 +345,7 @@ window.NCBO_DATA = {
       "img": "assets/img/voice-1.jpg"
     },
     {
-      "quote": "The structure is the difference. A season to point at, a club to run, people to answer to — it makes the work mean something.",
+      "quote": "The structure is the difference. A season to point at, a club to run, people to answer to. It makes the work mean something.",
       "name": "Club officer",
       "club": "Purdue club",
       "img": "assets/img/voice-2.jpg"
@@ -348,58 +360,35 @@ window.NCBO_DATA = {
   "faqs": [
     {
       "q": "What is NCBO?",
-      "a": "NCBO is a national organization being built for collegiate bodybuilding. The idea is to sit alongside independently-run student clubs and provide the season, competition structure, coaching access, and network that an individual club can't build on its own. Our founding chapters are live; most of the rest is in development."
+      "a": "A network of the students who run collegiate bodybuilding and fitness clubs. Boards use it to ask each other for help, share resources, and hand the club off cleanly when officers change. It is 100% student run."
     },
     {
-      "q": "Is NCBO a registered nonprofit?",
-      "a": "Not yet. NCBO is a Pennsylvania nonprofit corporation in formation. We intend to apply for 501(c)(3) status, but that status has not been granted and contributions are not tax-deductible."
+      "q": "What does it cost?",
+      "a": "Nothing. There are no dues, no fees, and no payment of any kind. NCBO is free for every member club."
     },
     {
-      "q": "Who governs NCBO?",
-      "a": "NCBO is led by a chief executive officer and an executive board that runs day to day operations. As part of our nonprofit formation we are seating an independent board of directors responsible for financial oversight, the mission, and leadership accountability. Our coaching advisors support the campus clubs and are separate from governance."
+      "q": "Does NCBO run our club?",
+      "a": "No. We are not a governing body. Your club stays yours, run your way, under your school's rules. There is nothing to sign and no standard to comply with. The org is there when it is needed, not there when it's not."
     },
     {
-      "q": "How will this be different from competing at an open show?",
-      "a": "At an open show, \"collegiate\" is just an eligibility line. NCBO adds a club at your school and a year-round community — and, once it's built, a structured season and school-vs-school competition."
+      "q": "Who can join?",
+      "a": "Any bodybuilding or fitness club board at a college or university. You join as a board, not as individual students."
     },
     {
-      "q": "What will it cost?",
-      "a": "We haven't finalized dues. Two models are still being worked through with our chapters, and neither has been approved. We'll publish the model here before anyone is asked to pay anything."
+      "q": "What if my school has no club?",
+      "a": "Start one. Head to Start a Club for the short guide, and get in touch if you want help."
     },
     {
-      "q": "My school doesn't have a club. Can I start one?",
-      "a": "Yes — that's how our chapters began. Head to Start a Club and we'll give you the playbook, templates, and support to launch."
+      "q": "What is actually in the resource library?",
+      "a": "Event playbooks, budget templates, waivers, sponsor decks, student government funding applications, and recruiting materials. It is built from what member boards have already made, so it grows as clubs join."
     },
     {
-      "q": "Do I need to compete to be a member?",
-      "a": "No. Plenty of members join for the community and the training. Competition will be there when you're ready for it."
+      "q": "What do you ask of member clubs?",
+      "a": "Nothing required. Share what you have built when you can, and answer another board when they ask. That is the whole deal."
     },
     {
       "q": "Who runs NCBO?",
-      "a": "A founding team of students and recent grads. You can see them in the Executive board section above."
-    }
-  ],
-  "news": [
-    {
-      "date": "Coming soon",
-      "tag": "Season",
-      "title": "Founding season details",
-      "text": "We're working toward a first event. Nothing is scheduled yet — dates and format will be posted here once they are.",
-      "img": "assets/img/news-1.jpg"
-    },
-    {
-      "date": "Coming soon",
-      "tag": "Chapters",
-      "title": "New chapters joining the network",
-      "text": "More campuses are in conversation with us. Watch this space as the map fills in.",
-      "img": "assets/img/news-2.jpg"
-    },
-    {
-      "date": "Coming soon",
-      "tag": "Coaching",
-      "title": "Pro posing workshops",
-      "text": "We're working on a workshop schedule with coaches we're bringing in. Nothing is booked yet.",
-      "img": "assets/img/news-3.jpg"
+      "a": "Students. An executive board of club officers and recent grads, listed on the About page."
     }
   ],
   "forms": {

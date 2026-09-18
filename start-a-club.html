@@ -3,14 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Start a Club — NCBO</title>
-  <meta name="robots" content="noindex, follow">
-  <link rel="canonical" href="https://thencbo.org/#start">
-  <meta http-equiv="refresh" content="0; url=index.html#start">
+  <title>Start a Club | NCBO</title>
+  <meta name="description" content="How to start a bodybuilding or fitness club at your school: find a few people, check your student activities process, borrow what other clubs have written, and hold a first meeting. Free help from NCBO.">
+  <meta name="keywords" content="NCBO, thencbo, start a bodybuilding club, start a fitness club, how to start a college club, student club constitution, campus club recognition, club callout meeting, collegiate bodybuilding, thencbo.org">
+  <meta name="author" content="NCBO, the National Collegiate Bodybuilding Organization">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://thencbo.org/start-a-club.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NCBO, the National Collegiate Bodybuilding Organization">
+  <meta property="og:title" content="Start a Club | NCBO">
+  <meta property="og:description" content="The short guide to starting a bodybuilding or fitness club at your school, plus free help from boards who have already done it.">
+  <meta property="og:url" content="https://thencbo.org/start-a-club.html">
+  <meta property="og:image" content="https://thencbo.org/assets/ncbo-logo.webp">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Start a Club | NCBO">
+  <meta name="twitter:description" content="The short guide to starting a bodybuilding or fitness club at your school, plus free help from boards who have already done it.">
+  <meta name="twitter:image" content="https://thencbo.org/assets/ncbo-logo.webp">
+  <meta name="theme-color" content="#F4F8FD">
   <link rel="icon" href="assets/ncbo-logo.webp?v=2026-08-15">
-  <script>location.replace('index.html#start');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css?v=2026-08-15">
 </head>
 <body>
-  <p>Start a Club now lives on the NCBO home page. <a href="index.html#start">Continue to Start a Club</a>.</p>
+  <header id="site-nav"></header>
+
+  <section class="page-hero">
+    <img class="page-hero-crest" src="assets/ncbo-logo.webp" alt="">
+    <div class="wrap">
+      <p class="eyebrow">No club yet</p>
+      <h1 class="h-display">Start one.</h1>
+      <p>Every club in the network started with one student and no idea what they were doing. Here is the short version of what worked.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="reveal" style="max-width:660px">
+        <p class="eyebrow">The guide</p>
+        <h2 class="h-display" style="margin-top:1rem">Four steps.</h2>
+        <p class="lead" style="margin-top:1rem">This is the order that has worked at six schools. None of it requires NCBO, and none of it costs anything.</p>
+      </div>
+      <div class="steps" id="start-steps" style="margin-top:2.4rem"></div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="split">
+        <div class="reveal">
+          <p class="eyebrow">Where we help</p>
+          <h2 class="h-display" style="margin-top:1.1rem">Ask before<br>you start.</h2>
+        </div>
+        <div class="reveal">
+          <p class="lead">The slowest part of starting a club is writing documents that already exist. Constitutions, waivers, first-year budgets, and callout flyers have all been through a student activities office before.</p>
+          <p class="lead">Tell us your school and what you are stuck on. We will send what member boards have shared and put you in touch with someone who did this last year.</p>
+          <p class="lead">There is no cost and no commitment. You do not have to join anything to ask.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT
+       Same pattern as contact.html: no server behind this site, so the form
+       composes a mail message in the visitor's own client rather than
+       claiming a submission succeeded. -->
+  <section class="section">
+    <div class="wrap split">
+      <div class="reveal">
+        <p class="eyebrow">Get in touch</p>
+        <h2 class="h-display" style="margin-top:1rem">Tell us about<br>your campus.</h2>
+        <p class="lead" style="margin-top:1.4rem">We are students too, so give us a few days to come back to you.</p>
+        <div style="margin-top:1.4rem">
+          <a id="sc-email" href="#" style="color:var(--white); font-size:1.1rem"></a>
+        </div>
+      </div>
+      <div class="reveal">
+        <form class="form" data-startclub>
+          <div class="field">
+            <label for="sname">Name</label>
+            <input id="sname" name="name" type="text" required>
+          </div>
+          <div class="field">
+            <label for="semail">Email</label>
+            <input id="semail" name="email" type="email" required>
+          </div>
+          <div class="field">
+            <label for="sschool">School</label>
+            <input id="sschool" name="school" type="text" required>
+          </div>
+          <div class="field">
+            <label for="sstage">Where you are</label>
+            <select id="sstage" name="stage">
+              <option>Just an idea so far</option>
+              <option>A few people interested</option>
+              <option>Going through school recognition</option>
+              <option>Club exists, not in the network yet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="smsg">What would help most?</label>
+            <textarea id="smsg" name="message" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Compose message</button>
+          <p class="form-note">This site has no server behind it, so this form opens the
+            message in your own email app for you to send.</p>
+          <p class="nl-msg" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/data.js?v=2026-08-15"></script>
+  <script>
+    window.NCBO_PAGE = function (R) {
+      const D = window.NCBO_DATA, $ = s => document.querySelector(s);
+
+      R.steps($('#start-steps'));
+
+      const em = $('#sc-email');
+      em.textContent = D.org.email;
+      em.href = 'mailto:' + D.org.email;
+
+      const form = $('form[data-startclub]');
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const get = n => (form.querySelector('[name="' + n + '"]') || {}).value || '';
+        const subject = `[NCBO] Starting a club at ${get('school') || 'my school'}`;
+        const body = `${get('message')}\n\nWhere we are: ${get('stage')}\nSchool: ${get('school')}\n\n--\n${get('name')}\n${get('email')}`;
+        window.location.href = 'mailto:' + D.org.email +
+          '?subject=' + encodeURIComponent(subject) +
+          '&body=' + encodeURIComponent(body);
+        form.querySelector('.nl-msg').textContent =
+          "Opening your email app. If nothing happens, email us directly at " + D.org.email + ".";
+      });
+    };
+  </script>
+  <script src="assets/site.js?v=2026-08-15"></script>
 </body>
 </html>
