@@ -1,5 +1,5 @@
 /* ============================================================================
-   NCBO  —  shared site script
+   NCBO: shared site script
    - Injects the nav + footer (defined once, used on every page)
    - Renders data-driven sections from NCBO_DATA
    - Handles: mobile menu, scrolled-nav, scroll reveal, photo slots,
@@ -267,7 +267,7 @@
         </div>`).join('');
     },
     /* Renders a people grid. Returns the number rendered so a page can hide
-       the whole block (heading included) when a list is empty — an empty
+       the whole block (heading included) when a list is empty. An empty
        "Advisory board" heading is worse than no heading. A person with no
        confirmed title renders with the name alone; we never fill the gap. */
     people(el, list) {
@@ -285,7 +285,7 @@
       return people.length;
     },
     /* Board of directors. Same card as `people`, plus the director's outside
-       professional title on a second line — the board office is the primary
+       professional title on a second line. The board office is the primary
        line because that's the role they hold here. Returns the count so the
        page can keep the whole block hidden while no director is seated. */
     board(el, list) {
@@ -305,7 +305,7 @@
     },
     /* Club leads for the Team section, from two places that add up to one list:
 
-         D.clubLeads   the roster edited in the admin's Team tab — the only
+         D.clubLeads   the roster edited in the admin's Team tab, the only
                        place a lead gets a photo, and where a club with more
                        than one lead gets its second and third
          D.clubs       any club whose "Lead / contact" names someone not
@@ -314,7 +314,7 @@
 
        Matched on name, case- and space-insensitively, so the same person
        entered in both places appears once. A club with no confirmed lead
-       contributes nobody — we never invent a name to fill the grid. */
+       contributes nobody. We never invent a name to fill the grid. */
     clubLeads(el) {
       if (!el) return 0;
       const key = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');

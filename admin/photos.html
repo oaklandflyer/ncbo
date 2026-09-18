@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>NCBO — Admin (content & photos)</title>
+<title>NCBO Admin (content & photos)</title>
 <script src="../assets/data.js?v=2026-08-15"></script>
 <script src="../assets/usmap.js?v=2026-08-15"></script>
 <style>
@@ -156,7 +156,7 @@
 
 <header class="top">
   <h1>NCBO Admin</h1>
-  <p>Internal tool — not linked from the site. Edit site content &amp; photos, then commit straight to GitHub.
+  <p>Internal tool, not linked from the site. Edit site content &amp; photos, then commit straight to GitHub.
      <span style="float:right;"><a href="index.html">Admin home</a> ·
      <a href="#" id="adminSignOut">Sign out</a></span></p>
   <div class="tabs" id="tabs"></div>
@@ -187,7 +187,7 @@
         Create a <b>fine-grained</b> personal access token at
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>,
         scoped only to the <code>ncbo</code> repository, with <b>Contents: Read and write</b> permission and nothing else.
-        The token is only ever sent directly from your browser to <code>api.github.com</code> — this page has no
+        The token is only ever sent directly from your browser to <code>api.github.com</code>. This page has no
         server of its own and nobody else sees it. Each save here is a real commit to the
         <code id="branchLabel">main</code> branch, which GitHub Pages deploys automatically.
       </div>
@@ -209,7 +209,7 @@
 <!-- Cropper -->
 <div class="modal-bg" id="cropModal">
   <div class="modal">
-    <h3>Adjust photo — drag to reposition, slider to zoom</h3>
+    <h3>Adjust photo: drag to reposition, slider to zoom</h3>
     <div class="crop-viewport" id="cropViewport">
       <img id="cropImg" alt="">
       <div class="grid-overlay"></div>
@@ -233,7 +233,7 @@
   const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'item';
 
-  /* "Sign out" just leaves the tool — there is no session here. */
+  /* "Sign out" just leaves the tool. There is no session here. */
   const signOutLink = $('#adminSignOut');
   if (signOutLink) signOutLink.addEventListener('click', e => {
     e.preventDefault();
@@ -269,7 +269,7 @@
       if(res.status===404){ setStatus(connectStatus,'Repo not found or token lacks access (404).','err'); return; }
       if(!res.ok){ setStatus(connectStatus,`GitHub returned ${res.status}.`,'err'); return; }
       const d=await res.json();
-      setStatus(connectStatus,`Connected to ${d.full_name}${d.permissions&&d.permissions.push?' — push access confirmed.':' — warning: token may lack write access.'}`,'ok');
+      setStatus(connectStatus,`Connected to ${d.full_name}${d.permissions&&d.permissions.push?'. Push access confirmed.':'. Warning: token may lack write access.'}`,'ok');
     }catch(e){ setStatus(connectStatus,'Network error reaching GitHub: '+e.message,'err'); }
   });
 
@@ -412,7 +412,7 @@
         croppedCanvas=canvas;
         img.src=canvas.toDataURL('image/jpeg',0.9); // preview
         uploadBtn.disabled=false;
-        setStatus(status,'Cropped — ready to upload.','');
+        setStatus(status,'Cropped. Ready to upload.','');
       });
     });
     uploadBtn.addEventListener('click', async ()=>{
@@ -462,7 +462,7 @@
     const lab=document.createElement('label'); lab.textContent=labelText;
     const sel=document.createElement('select');
     const cur=get()||'';
-    if(opts.blank!==false){ const b=document.createElement('option'); b.value=''; b.textContent=opts.blankLabel||'— choose —'; sel.appendChild(b); }
+    if(opts.blank!==false){ const b=document.createElement('option'); b.value=''; b.textContent=opts.blankLabel||'choose'; sel.appendChild(b); }
     options.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op); });
     if(cur && options.indexOf(cur)===-1){ const op=document.createElement('option'); op.value=cur; op.textContent=cur; sel.appendChild(op); }
     sel.value=cur;
@@ -618,7 +618,7 @@
       r1.appendChild(fieldText('Eyebrow', ()=>h.eyebrow, v=>h.eyebrow=v, {full:true}));
       p.appendChild(r1);
       h.title=h.title||['','',''];
-      p.appendChild(subhead('Headline (three lines — the accent span in line 3 is styled highlight)'));
+      p.appendChild(subhead('Headline (three lines; the accent span in line 3 is styled highlight)'));
       [0,1,2].forEach(i=>{ const r=document.createElement('div'); r.className='row'; r.appendChild(fieldText('Line '+(i+1), ()=>h.title[i], v=>h.title[i]=v, {full:true})); p.appendChild(r); });
       const r2=document.createElement('div'); r2.className='row';
       r2.appendChild(fieldText('Sub-text', ()=>h.sub, v=>h.sub=v, {full:true, textarea:true, rows:3}));
@@ -636,7 +636,7 @@
       p=panel('Hero background photos'); DATA.heroPhotos=DATA.heroPhotos||[];
       p.appendChild(noteEl('These crossfade behind the headline, in this order, one every 6.5 seconds. '+
         'A photo only appears once its file exists, so an entry with nothing uploaded yet is skipped rather than showing a gap. '+
-        'Wide landscape shots work best — the headline sits over the left half, so keep that side uncluttered.'));
+        'Wide landscape shots work best, since the headline sits over the left half, so keep that side uncluttered.'));
       p.appendChild(photoList(DATA.heroPhotos,{ aspect:16/9, prefix:'hero', addLabel:'Add hero photo' }));
       frag.appendChild(p);
 
@@ -662,6 +662,7 @@
 
       // About band
       p=panel('“What we are” band'); DATA.about=DATA.about||{};
+      p.appendChild(noteEl('Shows on the <b>About</b> page (about.html). Despite sitting on the Home tab, this no longer shows on the home page.'));
       const a=DATA.about; a.headline=a.headline||['',''];a.body=a.body||['',''];a.stats=a.stats||[];
       p.appendChild(fieldRowFull(fieldText('Label', ()=>a.label, v=>a.label=v, {full:true})));
       p.appendChild(subhead('Headline (two lines)'));
@@ -678,6 +679,7 @@
 
       // Pillars
       p=panel('Value pillars'); DATA.pillars=DATA.pillars||[];
+      p.appendChild(noteEl('The six reasons on <b>Why Join</b> (why-join.html). Despite sitting on the Home tab, these no longer show on the home page.'));
       p.appendChild(objectList(DATA.pillars,{
         titleKey:'title', addLabel:'Add pillar', newItem:()=>({title:'',text:''}),
         fields:(it,card,upd)=>{
@@ -688,6 +690,8 @@
 
       // Voices
       p=panel('Member voices'); DATA.voices=DATA.voices||[];
+      p.appendChild(noteEl('<b>Nothing on the site renders these right now.</b> The quotes block was pulled because the quotes could not be tied to real people who agreed to be quoted, '+
+        'and the new site has no place for it yet. Anything entered here is saved and stays saved, but it will not appear on any page.'));
       p.appendChild(objectList(DATA.voices,{
         titleKey:'name', imgKey:'img', imgPrefix:'voice', aspect:4/3, addLabel:'Add voice',
         newItem:()=>({quote:'',name:'',club:'',img:''}),
@@ -706,8 +710,8 @@
     'Join': ()=>{
       const frag=document.createDocumentFragment();
 
-      p=panel('How to join — steps'); DATA.joinSteps=DATA.joinSteps||[];
-      p.appendChild(noteEl('Shows in the <b>Join</b> section of the home page (index.html#join) and on join.html.'));
+      p=panel('Start a club: steps'); DATA.joinSteps=DATA.joinSteps||[];
+      p.appendChild(noteEl('The four steps on <b>Start a Club</b> (start-a-club.html). These are the guide for a school with no club yet, not a membership flow: NCBO has no members and no dues.'));
       p.appendChild(objectList(DATA.joinSteps,{
         titleKey:'title', addLabel:'Add step', newItem:()=>({step:'',title:'',text:''}),
         fields:(it,card,upd)=>{
@@ -728,26 +732,31 @@
     'Clubs': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Clubs'); DATA.clubs=DATA.clubs||[];
-      p.appendChild(noteEl('Shows on the home page under <b>Find a Club</b> (index.html#clubs) — on the map and in the cards below it. '+
+      p.appendChild(noteEl('Shows on the <b>Clubs</b> page (clubs.html), on the map and in the cards below it, and as the three-club preview on the home page. '+
         'Add new clubs here. When you fill in the school name and upload a photo, an image path is generated automatically. Status is usually “Active” or “Forming”.<br><br>'+
+        '<b>Instagram and board contact are what the directory is for.</b> A board at another school uses them to get in touch. '+
+        'Leave either set to <b>TODO</b> and the card shows “TODO” on the live site: that is on purpose, so a gap is visible and gets filled, '+
+        'but do not leave it that way for long. Never put in a handle or an address you have not confirmed with that board.<br><br>'+
         '<b>The map looks after itself.</b> Pick the club’s state and it appears on the map right away, pinned at the middle of that state. '+
-        'To put the pin on the actual campus, use <b>Place on map</b> below and click the spot — that also fills in the state for you. '+
+        'To put the pin on the actual campus, use <b>Place on map</b> below and click the spot, which also fills in the state for you. '+
         'The five founding chapters have hand-placed pins already and ignore these fields.<br><br>'+
-        '<b>Leads show up twice.</b> A name in “Lead / contact” appears on the club card and in <b>Club leads</b> under Team on the home page. '+
-        'Leave it blank and the card offers a contact link instead — never a name we can’t source.<br><br>'+
+        '<b>Leads show up twice.</b> A name in “Lead / contact” appears on the club card and in <b>Board leads</b> on the About page. '+
+        'Leave it blank and the card offers a contact link instead, never a name we can’t source.<br><br>'+
         '<b>Photos and extra leads live on the Team tab.</b> This field holds one name per club and can’t take a photo. '+
-        'For a lead’s headshot, or for a club with two or three leads, open <b>Team → Club leads</b> — there’s a one-click button there to pull in everyone named here.'));
+        'For a lead’s headshot, or for a club with two or three leads, open <b>Team → Club leads</b>, where there is a one-click button to pull in everyone named here.'));
 
       let redrawMap=()=>{};   /* set once the map panel below exists */
 
       const list=objectList(DATA.clubs,{
         titleKey:'school', imgKey:'img', imgPrefix:'club', aspect:16/10, addLabel:'Add club',
-        newItem:()=>({school:'',name:'',lead:'',status:'Forming',img:'',state:''}),
+        newItem:()=>({school:'',name:'',lead:'',instagram:'TODO',contact:'TODO',status:'Forming',img:'',state:''}),
         fields:(it,card,upd)=>{
           const g=document.createElement('div'); g.className='grid-2';
           g.appendChild(fieldText('School', ()=>it.school, v=>{it.school=v;upd();redrawMap();}));
           g.appendChild(fieldText('Club name', ()=>it.name, v=>it.name=v));
           g.appendChild(fieldText('Lead / contact', ()=>it.lead, v=>it.lead=v));
+          g.appendChild(fieldText('Instagram handle', ()=>it.instagram, v=>it.instagram=v));
+          g.appendChild(fieldText('Board contact email', ()=>it.contact, v=>it.contact=v));
 
           const sf=document.createElement('div'); sf.className='field';
           const lab=document.createElement('label'); lab.textContent='Status';
@@ -766,7 +775,7 @@
           const stf=document.createElement('div'); stf.className='field';
           const stl=document.createElement('label'); stl.textContent='State (map)';
           const stsel=document.createElement('select');
-          const blank=document.createElement('option'); blank.value=''; blank.textContent='— not on the map —'; stsel.appendChild(blank);
+          const blank=document.createElement('option'); blank.value=''; blank.textContent='not on the map'; stsel.appendChild(blank);
           Object.keys((window.NCBO_USMAP&&window.NCBO_USMAP.STATES)||{}).sort().forEach(code=>{
             const op=document.createElement('option'); op.value=code; op.textContent=code;
             if((it.state||'').toUpperCase()===code) op.selected=true; stsel.appendChild(op);
@@ -855,7 +864,8 @@
     'Start a Club': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Start-a-club application'); DATA.forms=DATA.forms||{};
-      p.appendChild(noteEl('Shows on the home page under <b>Start a Club</b> (index.html#start). Set the Google Form link people are sent to when they apply.'));
+      p.appendChild(noteEl('<b>Not currently used.</b> start-a-club.html asks people to email instead of filling in a Google Form, because a mail thread is how this actually gets answered. '+
+        'The link is kept here in case a form comes back.'));
       p.appendChild(fieldRowFull(fieldText('Start-a-club form link', ()=>DATA.forms.startClub, v=>DATA.forms.startClub=v, {full:true})));
       frag.appendChild(p);
       return frag;
@@ -870,8 +880,8 @@
          `board` publishes, `boardHeld` stages someone whose appointment isn't
          confirmed in writing yet. Nothing renders `boardHeld`. */
       let p=panel('Board of directors'); DATA.board=DATA.board||[]; DATA.boardHeld=DATA.boardHeld||[];
-      p.appendChild(noteEl('Shows on the home page under <b>Team → Board of directors</b> (index.html#team), above the executive board. '+
-        'The whole section, heading included, stays hidden on the live site until at least one director is published here.<br><br>'+
+      p.appendChild(noteEl('<b>Nothing on the site renders these right now.</b> NCBO is student run and has no seated board of directors; if one is ever seated, a block for it goes on the About page. '+
+        'Anything entered here is saved and stays saved, but it will not appear on any page.<br><br>'+
         '<b>Board role</b> is the office they hold at NCBO and is the line people read first. '+
         '<b>Professional title</b> is their outside job, e.g. “CFO, Example Nonprofit”, and sits underneath it.<br><br>'+
         '<b>Staged directors</b> below are saved but never published. Use that list for anyone whose appointment isn’t confirmed in writing yet, '+
@@ -950,7 +960,7 @@
       frag.appendChild(p);
 
       p=panel('Executive board: positions & photos'); DATA.leadership=DATA.leadership||[];
-      p.appendChild(noteEl('Shows on the home page under <b>Team → Executive board</b> (index.html#team). '+
+      p.appendChild(noteEl('Shows on the <b>About</b> page (about.html) under <b>Executive board</b>. '+
         'The CEO and the directors running day to day operations. This is management, not the board of directors above. '+
         'Order here is the order shown. Upload square photos (they crop to a square on the site).'));
       p.appendChild(objectList(DATA.leadership,{
@@ -982,15 +992,15 @@
         }
       })); frag.appendChild(p);
 
-      /* Club leads — the roster behind the "Club leads" block on the home page.
+      /* Club leads: the roster behind the "Board leads" block on the About page.
          This is where a lead gets a photo, and where a club with more than one
          lead gets its second and third; the Clubs tab only holds one name per
          club and has no upload. */
       p=panel('Club leads'); DATA.clubLeads=DATA.clubLeads||[];
       p.appendChild(noteEl('Shows on the home page under <b>Team → Club leads</b>. '+
-        'Add as many people as you like — a club can have more than one, and this is the only place a lead gets a photo. '+
+        'Add as many people as you like. A club can have more than one, and this is the only place a lead gets a photo. '+
         'Fill in the name first, then upload; the image path is generated from the name. Square photos work best.<br><br>'+
-        'A name typed into “Lead / contact” on the <b>Clubs</b> tab also appears in that block, so you don’t have to enter anyone twice — '+
+        'A name typed into “Lead / contact” on the <b>Clubs</b> tab also appears in that block, so you don’t have to enter anyone twice: '+
         'but to give that person a photo, add them here with the same spelling and they’ll merge into one entry.'));
 
       /* One-click import so nobody has to retype the leads already on the
@@ -1065,7 +1075,7 @@
     'FAQs': ()=>{
       const frag=document.createDocumentFragment();
       const p=panel('Frequently asked questions'); DATA.faqs=DATA.faqs||[];
-      p.appendChild(noteEl('Shows on the home page under <b>FAQs</b> (index.html#faqs), as an accordion.'));
+      p.appendChild(noteEl('Shows on <b>Why Join</b> (why-join.html#faqs), as an accordion.'));
       p.appendChild(objectList(DATA.faqs,{
         titleKey:'q', addLabel:'Add FAQ', newItem:()=>({q:'',a:''}),
         fields:(it,card,upd)=>{
@@ -1076,29 +1086,18 @@
       return frag;
     },
 
-    'News': ()=>{
-      const frag=document.createDocumentFragment();
-      const p=panel('News / updates'); DATA.news=DATA.news||[];
-      p.appendChild(objectList(DATA.news,{
-        titleKey:'title', imgKey:'img', imgPrefix:'news', aspect:16/9, addLabel:'Add news item',
-        newItem:()=>({date:'Coming soon',tag:'',title:'',text:'',img:''}),
-        fields:(it,card,upd)=>{
-          const g=document.createElement('div'); g.className='grid-2';
-          g.appendChild(fieldText('Date', ()=>it.date, v=>it.date=v));
-          g.appendChild(fieldText('Tag', ()=>it.tag, v=>it.tag=v));
-          card.appendChild(g);
-          card.appendChild(fieldRowFull(fieldText('Title', ()=>it.title, v=>{it.title=v;upd();}, {full:true})));
-          card.appendChild(fieldRowFull(fieldText('Text', ()=>it.text, v=>it.text=v, {full:true,textarea:true})));
-        }
-      })); frag.appendChild(p);
-      return frag;
+    /* The News tab is gone with news.html. The page carried three "Coming
+       soon" placeholders about a season that is not being built, updates go
+       to Instagram now, and NCBO_DATA.news was deleted rather than left to
+       be edited into a page nothing renders. Both are in git history if
+       there is ever real news to post. */
     }
   };
 
   function fieldRowFull(fieldEl){ const r=document.createElement('div'); r.className='row'; r.appendChild(fieldEl); return r; }
 
   /* ---------------- tab navigation ---------------- */
-  const NAV=['Home','Clubs','Start a Club','Team','FAQs','Join','News'];
+  const NAV=['Home','Clubs','Start a Club','Team','FAQs','Join'];
   const tabsHost=$('#tabs'), sectionsHost=$('#sections');
   let current=NAV[0];
   function renderTabs(){
@@ -1118,7 +1117,7 @@
   /* ---------------- save / revert ---------------- */
   function serialize(){
     const header='/* ============================================================================\n'+
-      '   NCBO_DATA — single source of truth for site content.\n'+
+      '   NCBO_DATA: single source of truth for site content.\n'+
       '   Generated/edited via the admin content manager (admin/photos.html).\n'+
       '   You can still hand-edit this file; the admin overwrites the whole object.\n'+
       '\n'+
@@ -1128,11 +1127,11 @@
       '\n'+
       '     1. Do not publish a name, school, number, date or title that is not\n'+
       '        confirmed in writing. If it cannot be sourced, cut it or ask.\n'+
-      '     2. Anything not yet running (the season, competitions, the dues model,\n'+
-      '        the app) is described in forward-looking language, never as existing.\n'+
-      '     3. NCBO is a Pennsylvania nonprofit corporation IN FORMATION. It is not\n'+
-      '        a 501(c)(3). Nothing may imply donations are tax-deductible.\n'+
+      '     2. Anything not yet running is described in forward-looking language,\n'+
+      '        never as existing.\n'+
+      '     3. NCBO is free. No dues, no fees, no payment language anywhere.\n'+
       '     4. Do not publish an email address that nobody monitors.\n'+
+      '     5. No em dashes in published copy.\n'+
       '\n'+
       '   The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are\n'+
       '   entries that are deliberately NOT published pending confirmation. Nothing\n'+

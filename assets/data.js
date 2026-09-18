@@ -1,5 +1,5 @@
 /* ============================================================================
-   NCBO_DATA — single source of truth for site content.
+   NCBO_DATA: single source of truth for site content.
    Generated/edited via the admin content manager (admin/photos.html).
    You can still hand-edit this file; the admin overwrites the whole object.
 
@@ -14,6 +14,10 @@
      3. NCBO is free. No dues, no fees, no payment language anywhere.
      4. Do not publish an email address that nobody monitors.
      5. No em dashes in published copy.
+
+   There is no `news` array any more: news.html is retired and nothing
+   renders it. `voices`/`voicesHeld` are likewise unrendered, kept only so
+   the quotes are not lost if they are ever sourced.
 
    The `clubsHeld`, `boardHeld`, `advisoryHeld` and `voicesHeld` arrays are
    entries that are deliberately NOT published pending confirmation. Nothing
@@ -341,7 +345,7 @@ window.NCBO_DATA = {
       "img": "assets/img/voice-1.jpg"
     },
     {
-      "quote": "The structure is the difference. A season to point at, a club to run, people to answer to — it makes the work mean something.",
+      "quote": "The structure is the difference. A season to point at, a club to run, people to answer to. It makes the work mean something.",
       "name": "Club officer",
       "club": "Purdue club",
       "img": "assets/img/voice-2.jpg"
@@ -385,29 +389,6 @@ window.NCBO_DATA = {
     {
       "q": "Who runs NCBO?",
       "a": "Students. An executive board of club officers and recent grads, listed on the About page."
-    }
-  ],
-  "news": [
-    {
-      "date": "Coming soon",
-      "tag": "Season",
-      "title": "Founding season details",
-      "text": "We're working toward a first event. Nothing is scheduled yet — dates and format will be posted here once they are.",
-      "img": "assets/img/news-1.jpg"
-    },
-    {
-      "date": "Coming soon",
-      "tag": "Chapters",
-      "title": "New chapters joining the network",
-      "text": "More campuses are in conversation with us. Watch this space as the map fills in.",
-      "img": "assets/img/news-2.jpg"
-    },
-    {
-      "date": "Coming soon",
-      "tag": "Coaching",
-      "title": "Pro posing workshops",
-      "text": "We're working on a workshop schedule with coaches we're bringing in. Nothing is booked yet.",
-      "img": "assets/img/news-3.jpg"
     }
   ],
   "forms": {
